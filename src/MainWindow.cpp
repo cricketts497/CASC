@@ -56,12 +56,14 @@ void MainWindow::setStatus(bool changed)
 {
 	QString message;
 
-	if (pdlScanner->stopped){
-		message = ready_message;
-	} else if (pdlScanner->up_direction){
-		message = "Scanning PDL for higher wavelengths";
-	} else{
-		message = "Scanning PDL for lower wavelengths";
+	if (PDL_open){
+		if (pdlScanner->stopped){
+			message = ready_message;
+		} else if (pdlScanner->up_direction){
+			message = "Scanning PDL for higher wavelengths";
+		} else{
+			message = "Scanning PDL for lower wavelengths";
+		}
 	}
 
 	status->setText(message);
