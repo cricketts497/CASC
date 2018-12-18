@@ -1,0 +1,22 @@
+Makefile
+*.pro
+
+# In repository we don't need to have:
+# Compiled object files
+*.o
+
+# Generated MOC, resource and UI files
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# .log files (usually created by QtTest - thanks to VestniK)
+*.log
+
+# Built windows .exe and linux binaries
+*.dll
+casc
+
+# Editors temporary files 
+*~
