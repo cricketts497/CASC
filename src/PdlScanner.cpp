@@ -27,6 +27,7 @@ void PdlScanner::createButtons()
 	}
 	connect(speedGroup, SIGNAL(buttonClicked(int)), this, SLOT(speedClicked(int)));
 	speedButtons[speedDefault]->setChecked(true);
+	// speedLayout->setSpacing(2);
 	layout->addLayout(speedLayout, 0,0);
 
 	multiplierLayout = new QVBoxLayout;

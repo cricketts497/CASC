@@ -19,13 +19,15 @@ public:
 	
 private slots:
 	void togglePdl();
-	void setStatus(bool changed);
+	void setStatusPDL(bool changed);
 
 private:
 	void createActions();
 	void createStatusBar();
+	void createDevicesBar();
 
 	QToolBar *taskBar;
+	QToolBar *devicesBar;
 	QWidget *mainWindow;
 	QHBoxLayout *mainLayout;
 
@@ -40,6 +42,13 @@ private:
 
 	//open close flags
 	bool PDL_open;
+
+	//devices
+	//start/stop actions
+	QAction *pdlDeviceAct;
+
+	//buttons
+	QPushButton *pdlDeviceButton;
 };
 
 #endif //MAIN_WINDOW_H

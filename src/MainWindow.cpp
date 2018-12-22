@@ -9,6 +9,7 @@ PDL_open(false)
 {
 	createActions();
 	createStatusBar();
+	createDevicesBar();
 
 	mainWindow = new QWidget();
 	mainLayout = new QHBoxLayout;
@@ -37,6 +38,28 @@ void MainWindow::createStatusBar()
 	statusBar()->addWidget(status);
 }
 
+void MainWindow::createDevicesBar()
+{
+	devicesBar = new QToolBar("&Devices", this);
+
+	QWidgetAction *pdlDeviceAct = new QWidgetAction(this);
+	pdlDeviceButton = new QPushButton("PDL");
+
+	//set red
+	// pdlDeviceButton->setFlat(true);
+	// QPalette pal = pdlDeviceButton->palette();
+	// pal.setColor(QPalette::Button, QColor(Qt::red));
+	// pdlDeviceButton->setAutoFillBackground(true);
+	// pdlDeviceButton->setPalette(pal);
+	// pdlDeviceButton->update();
+
+	pdlDeviceAct->setDefaultWidget(pdlDeviceButton);
+	pdlDeviceButton->setStatusTip("Start the PDL scanner device");
+	devicesBar->addAction(pdlDeviceAct);
+
+	addToolBar(Qt::LeftToolBarArea, devicesBar);
+}
+
 void MainWindow::togglePdl()
 {
 	if (PDL_open){
@@ -47,19 +70,20 @@ void MainWindow::togglePdl()
 		status->setText(ready_message);
 	}else{
 		pdlScanner = new PdlScanner("PDL Scanner", this);
-		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatus(bool)));
+		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
 		mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
 		pdlAct->setStatusTip("Close the PDL scanner");
 		PDL_open = true;
-		setStatus(false);
+		setStatusPDL(false);
 	}
 }
 
-void MainWindow::setStatus(bool changed)
+void MainWindow::setStatusPDL(bool changed)
 {
 	QString message_str;
 	QTextStream message(&message_str);
 
+	//PDL
 	if (PDL_open){
 		if (pdlScanner->stopped){
 			message << ready_message; 
