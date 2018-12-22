@@ -4,8 +4,7 @@
 
 #include "include/MainWindow.h"
 
-MainWindow::MainWindow() :
-PDL_open(false)
+MainWindow::MainWindow()
 {
 	createActions();
 	createStatusBar();
@@ -42,24 +41,37 @@ void MainWindow::createDevicesBar()
 {
 	devicesBar = new QToolBar("&Devices", this);
 
-	QWidgetAction *pdlDeviceAct = new QWidgetAction(this);
 	pdlDeviceButton = new QPushButton("PDL");
 
-	//set red
-	// pdlDeviceButton->setFlat(true);
-	// QPalette pal = pdlDeviceButton->palette();
-	// pal.setColor(QPalette::Button, QColor(Qt::red));
-	// pdlDeviceButton->setAutoFillBackground(true);
-	// pdlDeviceButton->setPalette(pal);
-	// pdlDeviceButton->update();
+	//set grey
+	setButtonColour(pdlDeviceButton, QColor(Qt::white));
+	pdlDeviceButton->setAutoFillBackground(true);
 
-	pdlDeviceAct->setDefaultWidget(pdlDeviceButton);
 	pdlDeviceButton->setStatusTip("Start the PDL scanner device");
-	devicesBar->addAction(pdlDeviceAct);
+	connect(pdlDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleDevicePdl);
+	devicesBar->addWidget(pdlDeviceButton);
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
 }
 
+void MainWindow::toggleDevicePdl()
+{
+	if(device_PDL_started){
+		pdlDeviceButton->setFlat(false);
+		setButtonColour(pdlDeviceButton, QColor(Qt::white));
+		device_PDL_started = false;
+		statusBar()->showMessage("PDL Device Stopped", 2000);
+		pdlDeviceButton->setStatusTip("Start the PDL scanner device");
+	} else{
+		pdlDeviceButton->setFlat(true);
+		setButtonColour(pdlDeviceButton, QColor(Qt::green));
+		device_PDL_started = true;
+		statusBar()->showMessage("PDL Device Started", 2000);
+		pdlDeviceButton->setStatusTip("Stop the PDL scanner device");
+	}
+}
+
+//widgets
 void MainWindow::togglePdl()
 {
 	if (PDL_open){
@@ -69,6 +81,10 @@ void MainWindow::togglePdl()
 		PDL_open = false;
 		status->setText(ready_message);
 	}else{
+		if (!device_PDL_started){
+			toggleDevicePdl();
+		}		
+
 		pdlScanner = new PdlScanner("PDL Scanner", this);
 		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
 		mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
@@ -106,4 +122,12 @@ void MainWindow::setStatusPDL(bool changed)
 
 	QFontMetrics fm(font());
 	setMinimumWidth(fm.width(message_str)+30);
+}
+
+void MainWindow::setButtonColour(QPushButton *button, QColor colour)
+{
+	QPalette pal = button->palette();
+	pal.setColor(QPalette::Button, colour);
+	button->setPalette(pal);
+	button->update();
 }
