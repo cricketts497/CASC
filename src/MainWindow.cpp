@@ -1,5 +1,6 @@
 #include <QtWidgets>
 #include <QFlags>
+#include <sstream>
 
 #include "include/MainWindow.h"
 
@@ -43,28 +44,42 @@ void MainWindow::togglePdl()
 		delete pdlScanner;
 		pdlAct->setStatusTip("Open the PDL scanner");
 		PDL_open = false;
+		status->setText(ready_message);
 	}else{
 		pdlScanner = new PdlScanner("PDL Scanner", this);
 		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatus(bool)));
-		mainLayout->addWidget(pdlScanner);
+		mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
 		pdlAct->setStatusTip("Close the PDL scanner");
 		PDL_open = true;
+		setStatus(false);
 	}
 }
 
 void MainWindow::setStatus(bool changed)
 {
-	QString message;
+	QString message_str;
+	QTextStream message(&message_str);
 
 	if (PDL_open){
 		if (pdlScanner->stopped){
-			message = ready_message;
-		} else if (pdlScanner->up_direction){
-			message = "Scanning PDL for higher wavelengths";
-		} else{
-			message = "Scanning PDL for lower wavelengths";
+			message << ready_message; 
+		} else {
+			message << "Scanning PDL";
 		}
-	}
 
-	status->setText(message);
+		if (pdlScanner->up_direction){
+			message << " for higher wavelengths";
+		} else{
+			message << " for lower wavelengths";
+		}
+
+		message << ", Speed: "<< pdlScanner->speed_values[pdlScanner->currentSpeed]*pdlScanner->multiplier_values[pdlScanner->currentMultiplier]
+		<< " nm/s";
+	}
+	
+	message_str = message.readAll();
+	status->setText(message_str);
+
+	QFontMetrics fm(font());
+	setMinimumWidth(fm.width(message_str)+30);
 }
