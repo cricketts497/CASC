@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "include/PdlScanner.h"
+#include "include/DeviceButton.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -20,8 +21,6 @@ public:
 	const QString ready_message = "Ready";
 	
 private slots:
-	void toggleDevicePdl();
-
 	void togglePdl();
 	void setStatusPDL(bool changed);
 
@@ -29,8 +28,6 @@ private:
 	void createActions();
 	void createStatusBar();
 	void createDevicesBar();
-
-	void setButtonColour(QPushButton *button, QColor colour);
 
 	QToolBar *taskBar;
 	QToolBar *devicesBar;
@@ -49,13 +46,7 @@ private:
 	//open close flags
 	bool PDL_open = false;
 
-	//devices
-	//buttons
-	QPushButton *pdlDeviceButton;
-	// QPalette pdlDevicePal;
-
-	//started/ stopped flags
-	bool device_PDL_started = false;
+	DeviceButton *pdlDeviceButton;
 };
 
 #endif //MAIN_WINDOW_H
