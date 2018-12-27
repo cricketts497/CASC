@@ -5,14 +5,14 @@ DeviceButton::DeviceButton(const char *name, QToolBar *parent, const char *start
 QPushButton(name, parent),
 started(false),
 startTip(startTip),
-stopTip(stopTip)
+stopTip(stopTip),
+local(local)
 {
 	setButtonColour(closed_colour);
 	setAutoFillBackground(true);
 	setStatusTip(startTip);
 
 	connect(this, &QAbstractButton::clicked, this, &DeviceButton::toggle);
-
 }
 
 void DeviceButton::setButtonColour(QColor colour)
@@ -26,11 +26,15 @@ void DeviceButton::setButtonColour(QColor colour)
 void DeviceButton::toggle()
 {
 	if(started){
+		emit toggle_device(false);
+
 		setFlat(false);
 		setButtonColour(closed_colour);
 		started = false;
 		setStatusTip(startTip);
 	} else{
+		emit toggle_device(true);
+
 		setFlat(true);
 		setButtonColour(ok_colour);
 		started = true;

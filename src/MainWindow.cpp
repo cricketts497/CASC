@@ -42,6 +42,7 @@ void MainWindow::createDevicesBar()
 	devicesBar = new QToolBar("&Devices", this);
 
 	pdlDeviceButton = new DeviceButton("PDL", devicesBar, "Start the PDL scanner device", "Stop the PDL scanner device");
+	connect(pdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(togglePdlDevice(bool)));
 
 	devicesBar->addWidget(pdlDeviceButton);
 
@@ -101,3 +102,23 @@ void MainWindow::setStatusPDL(bool changed)
 	QFontMetrics fm(font());
 	setMinimumWidth(fm.width(message_str)+30);
 }
+
+//devices
+//only local devices atm
+void MainWindow::togglePdlDevice(bool start)
+{
+	if(start){
+		pdlDevice = new PdlDevice(1000, this);
+		connect(pdlDevice, SIGNAL(newValue(double)), this, SLOT(updatePdlValue(double)));
+		status->setText(QString::number(pdlDevice->current_value()));
+	}else{
+		delete pdlDevice;
+		status->setText(ready_message);
+	}
+}
+
+void MainWindow::updatePdlValue(double value)
+{
+	status->setText(QString::number(pdlDevice->current_value()));
+}
+

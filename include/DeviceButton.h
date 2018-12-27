@@ -16,6 +16,9 @@ public:
 
 	bool started;
 
+signals:
+	void toggle_device(bool start);
+
 private:
 	void setButtonColour(QColor colour);
 
@@ -26,8 +29,8 @@ private:
 
 	const char *startTip;
 	const char *stopTip;
+
+	bool local;
 };
-
-
 
 #endif //DEVICE_BUTTON

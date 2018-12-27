@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "include/PdlScanner.h"
 #include "include/DeviceButton.h"
+#include "include/PdlDevice.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -21,8 +22,13 @@ public:
 	const QString ready_message = "Ready";
 	
 private slots:
+	//widgets
 	void togglePdl();
 	void setStatusPDL(bool changed);
+
+	//devices
+	void togglePdlDevice(bool start);
+	void updatePdlValue(double value);
 
 private:
 	void createActions();
@@ -47,6 +53,7 @@ private:
 	bool PDL_open = false;
 
 	DeviceButton *pdlDeviceButton;
+	PdlDevice *pdlDevice;
 };
 
 #endif //MAIN_WINDOW_H
