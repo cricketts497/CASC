@@ -14,6 +14,9 @@ PdlScanner::PdlScanner(const char *name="PDL scanner", QMainWindow *parent=nullp
 
 void PdlScanner::createButtons()
 {
+	pdlValue = new QLabel("0");
+	layout->addWidget(pdlValue, 0,0,1,2);
+
 	speedLayout = new QVBoxLayout;
 	QRadioButton *speedButtons[nSpeedButtons];
 	QButtonGroup *speedGroup = new QButtonGroup;
@@ -28,7 +31,7 @@ void PdlScanner::createButtons()
 	connect(speedGroup, SIGNAL(buttonClicked(int)), this, SLOT(speedClicked(int)));
 	speedButtons[speedDefault]->setChecked(true);
 	// speedLayout->setSpacing(2);
-	layout->addLayout(speedLayout, 0,0);
+	layout->addLayout(speedLayout, 1,0);
 
 	multiplierLayout = new QVBoxLayout;
 	QRadioButton *multiplierButtons[nMultiplierButtons];
@@ -43,15 +46,15 @@ void PdlScanner::createButtons()
 	}
 	connect(multiplierGroup, SIGNAL(buttonClicked(int)), this, SLOT(multiplierClicked(int)));
 	multiplierButtons[multiplierDefault]->setChecked(true);
-	layout->addLayout(multiplierLayout, 0,1);
-
-	startStopButton = new QPushButton("Start");
-	connect(startStopButton, &QAbstractButton::clicked, this, &PdlScanner::startStopClicked);
-	layout->addWidget(startStopButton, 1,1);
+	layout->addLayout(multiplierLayout, 1,1);
 
 	directionButton = new QPushButton("Down");
 	connect(directionButton, &QAbstractButton::clicked, this, &PdlScanner::directionClicked);
-	layout->addWidget(directionButton, 1,0);
+	layout->addWidget(directionButton, 2,0);
+
+	startStopButton = new QPushButton("Start");
+	connect(startStopButton, &QAbstractButton::clicked, this, &PdlScanner::startStopClicked);
+	layout->addWidget(startStopButton, 2,1);
 
 	setFixedSize(layout->minimumSize());
 }
@@ -103,4 +106,9 @@ void PdlScanner::write()
 {
 	emit valueChanged(true);
 	return;
+}
+
+void PdlScanner::updateValue(double value)
+{
+	pdlValue->setText(QString::number(value));
 }

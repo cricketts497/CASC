@@ -7,6 +7,7 @@ class QGridLayout;
 class QVBoxLayout;
 class QPushButton;
 class QMainWindow;
+class QLabel;
 
 class PdlScanner : public QGroupBox
 {
@@ -21,6 +22,8 @@ private slots:
 	void speedClicked(int id);
 	void multiplierClicked(int id);
 
+	void updateValue(double value);
+
 signals:
 	void valueChanged(bool changed);
 
@@ -28,6 +31,9 @@ private:
 	void createButtons();
 
 	QGridLayout *layout;
+
+	//current PDL value
+	QLabel *pdlValue;
 
 	//buttons
 	static const int nSpeedButtons = 5;

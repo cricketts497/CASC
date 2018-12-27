@@ -62,10 +62,13 @@ void MainWindow::togglePdl()
 	}else{
 		if (!pdlDeviceButton->started){
 			pdlDeviceButton->toggle();
-		}		
+		}
 
 		pdlScanner = new PdlScanner("PDL Scanner", this);
+		
 		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
+		connect(pdlDevice, SIGNAL(newValue(double)), pdlScanner, SLOT(updateValue(double)));
+
 		mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
 		pdlAct->setStatusTip("Close the PDL scanner");
 		PDL_open = true;
@@ -109,16 +112,19 @@ void MainWindow::togglePdlDevice(bool start)
 {
 	if(start){
 		pdlDevice = new PdlDevice(1000, this);
-		connect(pdlDevice, SIGNAL(newValue(double)), this, SLOT(updatePdlValue(double)));
-		status->setText(QString::number(pdlDevice->current_value()));
+		// connect(pdlDevice, SIGNAL(newValue(double)), this, SLOT(updatePdlValue(double)));
+		
+		// connect(pdlDeviceButton, SIGNAL(toggle_device), pdlDevice, SLOT(pdlDevice->deleteLater()));
+		// status->setText(QString::number(pdlDevice->current_value()));
 	}else{
 		delete pdlDevice;
-		status->setText(ready_message);
+		// status->setText(ready_message);
+		// return;
 	}
 }
 
 void MainWindow::updatePdlValue(double value)
 {
-	status->setText(QString::number(pdlDevice->current_value()));
+	status->setText(QString::number(value));
 }
 

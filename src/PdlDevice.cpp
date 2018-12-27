@@ -4,7 +4,7 @@
 PdlDevice::PdlDevice(int interval, QMainWindow *parent) :
 QTimer(parent)
 {
-	value = 10000.0;
+	value = 100.0;
 
 	connect(this, SIGNAL(timeout()), this, SLOT(increaseValue()));
 
