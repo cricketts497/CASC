@@ -5,6 +5,7 @@
 #include "include/PdlScanner.h"
 #include "include/DeviceButton.h"
 #include "include/PdlDevice.h"
+#include "include/GenericGraph.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -12,6 +13,7 @@ class QAction;
 class QWidgetAction;
 class QLabel;
 class QPushButton;
+// class QDockWidget;
 
 class MainWindow: public QMainWindow
 {
@@ -28,7 +30,6 @@ private slots:
 
 	//devices
 	void togglePdlDevice(bool start);
-	void updatePdlValue(double value);
 
 private:
 	void createActions();
@@ -37,8 +38,8 @@ private:
 
 	QToolBar *taskBar;
 	QToolBar *devicesBar;
-	QWidget *mainWindow;
-	QHBoxLayout *mainLayout;
+	// QWidget *mainWindow;
+	// QHBoxLayout *mainLayout;
 
 	//main status text
 	QLabel *status;
@@ -46,7 +47,11 @@ private:
 	//open close actions
 	QAction *pdlAct;
 
+	//graph widget as central of main window
+	GenericGraph *centralGraph;
+
 	//task widgets
+	// QDockWidget *pdlScannerDock;
 	PdlScanner *pdlScanner;
 
 	//open close flags

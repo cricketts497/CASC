@@ -2,14 +2,23 @@
 #include "include/PdlScanner.h"
 
 PdlScanner::PdlScanner(const char *name="PDL scanner", QMainWindow *parent=nullptr) :
-	QGroupBox(name, parent),
+// PdlScanner::PdlScanner(const char *name="PDL scanner", QDockWidget *parent=nullptr) :
+	// QGroupBox(name, parent),
+	QDockWidget(name, parent),
 	stopped(true),
 	up_direction(true)
 {
+	QWidget *widget = new QWidget(this);
 	layout = new QGridLayout;
-	setLayout(layout);
+	widget->setLayout(layout);
+	setWidget(widget);
 
 	createButtons();
+}
+
+void PdlScanner::closeEvent(QCloseEvent *event)
+{
+	emit closing(true);
 }
 
 void PdlScanner::createButtons()
@@ -31,7 +40,7 @@ void PdlScanner::createButtons()
 	connect(speedGroup, SIGNAL(buttonClicked(int)), this, SLOT(speedClicked(int)));
 	speedButtons[speedDefault]->setChecked(true);
 	// speedLayout->setSpacing(2);
-	layout->addLayout(speedLayout, 1,0);
+	layout->addLayout(speedLayout, 1,1);
 
 	multiplierLayout = new QVBoxLayout;
 	QRadioButton *multiplierButtons[nMultiplierButtons];
@@ -46,11 +55,22 @@ void PdlScanner::createButtons()
 	}
 	connect(multiplierGroup, SIGNAL(buttonClicked(int)), this, SLOT(multiplierClicked(int)));
 	multiplierButtons[multiplierDefault]->setChecked(true);
-	layout->addLayout(multiplierLayout, 1,1);
+	layout->addLayout(multiplierLayout, 1,0);
 
-	directionButton = new QPushButton("Down");
-	connect(directionButton, &QAbstractButton::clicked, this, &PdlScanner::directionClicked);
-	layout->addWidget(directionButton, 2,0);
+	// directionButton = new QPushButton("Down");
+	// connect(directionButton, &QAbstractButton::clicked, this, &PdlScanner::directionClicked);
+	// layout->addWidget(directionButton, 2,0);
+	directionLayout = new QVBoxLayout;
+	QButtonGroup *directionGroup = new QButtonGroup;
+	QRadioButton *upButton = new QRadioButton("Up");
+	directionLayout->addWidget(upButton);
+	directionGroup->addButton(upButton, 0);
+	QRadioButton *downButton = new QRadioButton("Down");
+	directionLayout->addWidget(downButton);
+	directionGroup->addButton(downButton, 1);
+	connect(directionGroup, SIGNAL(buttonClicked(int)), this, SLOT(directionClicked(int)));
+	upButton->setChecked(true);
+	layout->addLayout(directionLayout, 2,0);
 
 	startStopButton = new QPushButton("Start");
 	connect(startStopButton, &QAbstractButton::clicked, this, &PdlScanner::startStopClicked);
@@ -75,19 +95,21 @@ void PdlScanner::startStopClicked()
 	}
 }
 
-void PdlScanner::directionClicked()
+void PdlScanner::directionClicked(int id)
 {
-	if(up_direction){
-		//change to down
-		up_direction = false;
-		write();
-		directionButton->setText("Up");
-	}else{
-		//change to up
-		up_direction = true;
-		write();
-		directionButton->setText("Down");
-	}
+	// if(up_direction){
+	// 	//change to down
+	// 	up_direction = false;
+	// 	write();
+	// 	directionButton->setText("Up");
+	// }else{
+	// 	//change to up
+	// 	up_direction = true;
+	// 	write();
+	// 	directionButton->setText("Down");
+	// }
+	currentDirection = id;
+	write();
 }
 
 void PdlScanner::speedClicked(int id)

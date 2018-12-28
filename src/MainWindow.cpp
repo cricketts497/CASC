@@ -10,10 +10,13 @@ MainWindow::MainWindow()
 	createStatusBar();
 	createDevicesBar();
 
-	mainWindow = new QWidget();
-	mainLayout = new QHBoxLayout;
-	mainWindow->setLayout(mainLayout);
-	setCentralWidget(mainWindow);
+	// mainWindow = new QWidget();
+	// mainLayout = new QHBoxLayout;
+	// mainWindow->setLayout(mainLayout);
+	// setCentralWidget(mainWindow);
+
+	centralGraph = new GenericGraph(this);
+	setCentralWidget(centralGraph);
 
 	setWindowTitle("CASC");
 }
@@ -54,8 +57,10 @@ void MainWindow::createDevicesBar()
 void MainWindow::togglePdl()
 {
 	if (PDL_open){
-		mainLayout->removeWidget(pdlScanner);
+		// mainLayout->removeWidget(pdlScanner);
 		delete pdlScanner;
+
+		// delete pdlScannerDock;
 		pdlAct->setStatusTip("Open the PDL scanner");
 		PDL_open = false;
 		status->setText(ready_message);
@@ -64,12 +69,19 @@ void MainWindow::togglePdl()
 			pdlDeviceButton->toggle();
 		}
 
+		// pdlScannerDock = new QDockWidget("PDL Scanner", this);
 		pdlScanner = new PdlScanner("PDL Scanner", this);
+		// pdlScanner = new PdlScanner("PDL Scanner", pdlScannerDock);
 		
+		connect(pdlScanner, SIGNAL(closing(bool)), this, SLOT(togglePdl()));
 		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
 		connect(pdlDevice, SIGNAL(newValue(double)), pdlScanner, SLOT(updateValue(double)));
 
-		mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
+		// mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
+		// pdlScannerDock->setWidget(pdlScanner);
+		// addDockWidget(Qt::LeftDockWidgetArea, pdlScannerDock);
+		addDockWidget(Qt::LeftDockWidgetArea, pdlScanner);
+
 		pdlAct->setStatusTip("Close the PDL scanner");
 		PDL_open = true;
 		setStatusPDL(false);
@@ -89,7 +101,8 @@ void MainWindow::setStatusPDL(bool changed)
 			message << "Scanning PDL";
 		}
 
-		if (pdlScanner->up_direction){
+		// if (pdlScanner->up_direction){
+		if (pdlScanner->currentDirection == 0){
 			message << " for higher wavelengths";
 		} else{
 			message << " for lower wavelengths";
@@ -112,19 +125,8 @@ void MainWindow::togglePdlDevice(bool start)
 {
 	if(start){
 		pdlDevice = new PdlDevice(1000, this);
-		// connect(pdlDevice, SIGNAL(newValue(double)), this, SLOT(updatePdlValue(double)));
-		
-		// connect(pdlDeviceButton, SIGNAL(toggle_device), pdlDevice, SLOT(pdlDevice->deleteLater()));
-		// status->setText(QString::number(pdlDevice->current_value()));
 	}else{
 		delete pdlDevice;
-		// status->setText(ready_message);
-		// return;
 	}
-}
-
-void MainWindow::updatePdlValue(double value)
-{
-	status->setText(QString::number(value));
 }
 

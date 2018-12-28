@@ -1,31 +1,39 @@
 #ifndef PDL_SCANNER_H
 #define PDL_SCANNER_H
 
-#include <QGroupBox>
+// #include <QGroupBox>
+#include <QDockWidget>
 
 class QGridLayout;
 class QVBoxLayout;
 class QPushButton;
-class QMainWindow;
+// class QMainWindow;
+class QDockWidget;
 class QLabel;
 
-class PdlScanner : public QGroupBox
+// class PdlScanner : public QGroupBox
+class PdlScanner : public QDockWidget
 {
 	Q_OBJECT
 
 public:
 	PdlScanner(const char *name, QMainWindow *parent);
+	// PdlScanner(const char *name, QDockWidget *parent);
+
+protected:
+	void closeEvent(QCloseEvent *event);
 
 private slots:
 	void startStopClicked();
-	void directionClicked();
+	void directionClicked(int id);
 	void speedClicked(int id);
 	void multiplierClicked(int id);
 
 	void updateValue(double value);
 
 signals:
-	void valueChanged(bool changed);
+	void valueChanged(bool x);
+	void closing(bool x);
 
 private:
 	void createButtons();
@@ -47,7 +55,11 @@ private:
 	const int multiplierDefault = 0;
 
 	QPushButton *startStopButton;
-	QPushButton *directionButton;
+
+	//id: 0=>up, 1=>down
+	// QPushButton *directionButton;
+	QVBoxLayout *directionLayout;
+	const int directionDefault = 0;
 
 	//writing to NI card
 	void write();
@@ -62,6 +74,8 @@ public:
 
 	const double multiplier_values[nMultiplierButtons] = {1, 0.5, 0.25, 0.05};
 	int currentMultiplier = multiplierDefault;
+
+	int currentDirection = directionDefault;
 };
 
 #endif //PDL_SCANNER_H
