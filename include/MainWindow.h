@@ -6,6 +6,7 @@
 #include "include/DeviceButton.h"
 #include "include/PdlDevice.h"
 #include "include/GenericGraph.h"
+#include "include/fakeTagger.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -30,6 +31,9 @@ private slots:
 
 	//devices
 	void togglePdlDevice(bool start);
+	void toggleTaggerDevice(bool start);
+
+	void setStatusTagger(int hits);
 
 private:
 	void createActions();
@@ -51,7 +55,6 @@ private:
 	GenericGraph *centralGraph;
 
 	//task widgets
-	// QDockWidget *pdlScannerDock;
 	PdlScanner *pdlScanner;
 
 	//open close flags
@@ -59,6 +62,9 @@ private:
 
 	DeviceButton *pdlDeviceButton;
 	PdlDevice *pdlDevice;
+
+	DeviceButton *taggerDeviceButton;
+	FakeTagger *taggerDevice;
 };
 
 #endif //MAIN_WINDOW_H

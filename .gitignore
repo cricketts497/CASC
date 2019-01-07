@@ -20,3 +20,6 @@ casc
 
 # Editors temporary files 
 *~
+
+#generated data files
+*.dat

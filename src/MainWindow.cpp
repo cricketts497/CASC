@@ -47,7 +47,11 @@ void MainWindow::createDevicesBar()
 	pdlDeviceButton = new DeviceButton("PDL", devicesBar, "Start the PDL scanner device", "Stop the PDL scanner device");
 	connect(pdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(togglePdlDevice(bool)));
 
+	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device");
+	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
+
 	devicesBar->addWidget(pdlDeviceButton);
+	devicesBar->addWidget(taggerDeviceButton);
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
 }
@@ -57,10 +61,8 @@ void MainWindow::createDevicesBar()
 void MainWindow::togglePdl()
 {
 	if (PDL_open){
-		// mainLayout->removeWidget(pdlScanner);
 		delete pdlScanner;
 
-		// delete pdlScannerDock;
 		pdlAct->setStatusTip("Open the PDL scanner");
 		PDL_open = false;
 		status->setText(ready_message);
@@ -69,17 +71,12 @@ void MainWindow::togglePdl()
 			pdlDeviceButton->toggle();
 		}
 
-		// pdlScannerDock = new QDockWidget("PDL Scanner", this);
 		pdlScanner = new PdlScanner("PDL Scanner", this);
-		// pdlScanner = new PdlScanner("PDL Scanner", pdlScannerDock);
 		
 		connect(pdlScanner, SIGNAL(closing(bool)), this, SLOT(togglePdl()));
 		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
 		connect(pdlDevice, SIGNAL(newValue(double)), pdlScanner, SLOT(updateValue(double)));
 
-		// mainLayout->addWidget(pdlScanner, 0, Qt::AlignLeft|Qt::AlignTop);
-		// pdlScannerDock->setWidget(pdlScanner);
-		// addDockWidget(Qt::LeftDockWidgetArea, pdlScannerDock);
 		addDockWidget(Qt::LeftDockWidgetArea, pdlScanner);
 
 		pdlAct->setStatusTip("Close the PDL scanner");
@@ -119,6 +116,7 @@ void MainWindow::setStatusPDL(bool changed)
 	setMinimumWidth(fm.width(message_str)+30);
 }
 
+
 //devices
 //only local devices atm
 void MainWindow::togglePdlDevice(bool start)
@@ -130,3 +128,28 @@ void MainWindow::togglePdlDevice(bool start)
 	}
 }
 
+void MainWindow::toggleTaggerDevice(bool start)
+{
+	if(start){
+		//1s^-1 fake rate
+		taggerDevice = new FakeTagger(1, this);
+		connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusTagger(int)));
+	}else{
+		delete taggerDevice;
+		status->setText(ready_message);
+	}
+}
+
+void MainWindow::setStatusTagger(int hits)
+{
+	QString message_str;
+	QTextStream message(&message_str);
+
+	message << "Packet hits: " << hits;
+
+	message_str = message.readAll();
+	status->setText(message_str);
+
+	QFontMetrics fm(font());
+	setMinimumWidth(fm.width(message_str)+30);
+}
