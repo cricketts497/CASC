@@ -11,13 +11,14 @@ class FakeTagger: public QTimer
 	Q_OBJECT
 	
 public:
-  FakeTagger(int rate, QMainWindow *parent);
+  FakeTagger(int rate, const QString file_path, QMainWindow *parent);
 	
 private slots:
 	void hit();
 
 signals:
 	void updateHits(int packetHits);
+	void update(bool newPackets);
 	
 private:
 	void newPacket();
@@ -27,6 +28,8 @@ private:
 	//raw timestamp, increases with timer timeout
 	quint64 timestamp;
 	uint timestamp_interval;
+
+	quint64 packet_hits;
 	
 	//flag for the packet, set zero
 	uchar flag;
@@ -34,8 +37,9 @@ private:
 	//the hit data
 	const quint32 hit_data;
 
-	quint64 packet_hits;
-	
-	QFile *fake_tag_temp_file;	
+	QFile *fake_tag_temp_file;
+
+	const uint packets_to_read;
+	uint packets;	
 };
 #endif //FAKE_TAGGER

@@ -23,6 +23,8 @@ class MainWindow: public QMainWindow
 public:
 	MainWindow();
 	const QString ready_message = "Ready";
+
+	const QString tagger_temp_path = "./temp/fake_tag_temp.dat";
 	
 private slots:
 	//widgets
