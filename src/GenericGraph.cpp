@@ -1,8 +1,9 @@
 #include "include/GenericGraph.h"
 #include <QtWidgets>
 
-GenericGraph::GenericGraph(const QString tag_path, QMainWindow *parent) :
+GenericGraph::GenericGraph(uint bin_width, const QString tag_path, QMainWindow *parent) :
 QCustomPlot(parent),
+binWidth(bin_width),
 tag_path(tag_path),
 tag_pos(0)
 {
@@ -11,6 +12,11 @@ tag_pos(0)
 	graph()->setPen(QPen(pen_colour));
 	graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
 	graph()->setLineStyle((QCPGraph::LineStyle)QCPGraph::lsNone);
+
+	//convert to units of 500ps
+	// binWidth *= 2e6;
+	// binEdges = new QVector<double>();
+	// counts = new QVector<double>();
 
 	tag_file = new QFile(tag_path);
 }
@@ -46,12 +52,47 @@ void GenericGraph::updateTag(bool newPackets)
 			in >> hit;
 		}
 
+		// //put into bin
+		// int bin = timestamp / binWidth;
+		// if(bin < counts->size()){
+		// 	//remove the old data at that point
+		// 	double index = graph()->data()->at(binEdges->at(bin));
+		// 	graph()->data()->remove(index);
+		// }else{
+		// 	counts->resize(bin+1);
+		// 	while(binEdges->size() < counts->size()){
+		// 		binEdges->append(binEdges->last()+binWidth);
+		// 	}
+		// }
+		// counts[bin] += packet_hits;
+		// graph()->addData(binEdges->at(bin), counts->at(bin));
+
+		// //put into bin
+		// uint bin = binCount;
+		// for(uint i=0; i<binCount; i++){
+		// 	uint edge = binEdges[i];
+		// 	if(timestamp <= edge){
+		// 		bin = i;
+		// 		if(i > maxFilledBin){
+		// 			maxFilledBin = i;
+		// 		}
+		// 		break;
+		// 	}
+		// }
+		// counts[bin] += packet_hits;
+
 		//add the new packet to the graph
 		graph()->addData(timestamp, packet_hits);
 	}
+
 	tag_pos = tag_file->pos();
 	tag_file->close();
 
 	graph()->rescaleAxes();
 	replot();
 }
+
+// void GenericGraph::newBinSet()
+// {
+
+// }

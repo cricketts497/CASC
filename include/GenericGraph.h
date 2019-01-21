@@ -8,13 +8,18 @@ class GenericGraph : public QCustomPlot
 	Q_OBJECT
 
 public:
-	GenericGraph(const QString tag_path, QMainWindow *parent);
+	GenericGraph(uint binWidth, const QString tag_path, QMainWindow *parent);
 
 private slots:
 	void updateTag(bool newPackets);
 
 private:
 	QColor pen_colour = QColor(Qt::black);
+
+	// //graph data
+	uint binWidth;
+	// QVector<double> *binEdges;
+	// QVector<double> *counts;
 
 	//tagger data
 	const QString tag_path;

@@ -15,7 +15,7 @@ MainWindow::MainWindow()
 	// mainWindow->setLayout(mainLayout);
 	// setCentralWidget(mainWindow);
 
-	centralGraph = new GenericGraph(tagger_temp_path, this);
+	centralGraph = new GenericGraph(1, tagger_temp_path, this);
 	setCentralWidget(centralGraph);
 
 	setWindowTitle("CASC");
