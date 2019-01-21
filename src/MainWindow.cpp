@@ -15,7 +15,7 @@ MainWindow::MainWindow()
 	// mainWindow->setLayout(mainLayout);
 	// setCentralWidget(mainWindow);
 
-	centralGraph = new GenericGraph(1, tagger_temp_path, this);
+	centralGraph = new GenericGraph(10000, tagger_temp_path, this);
 	setCentralWidget(centralGraph);
 
 	setWindowTitle("CASC");
@@ -131,8 +131,8 @@ void MainWindow::togglePdlDevice(bool start)
 void MainWindow::toggleTaggerDevice(bool start)
 {
 	if(start){
-		//1s^-1 fake rate
-		taggerDevice = new FakeTagger(100, tagger_temp_path, this);
+		//2s^-1 fake rate
+		taggerDevice = new FakeTagger(50, tagger_temp_path, this);
 		connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusTagger(int)));
 		connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
 	}else{

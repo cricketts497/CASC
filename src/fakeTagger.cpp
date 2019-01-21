@@ -9,7 +9,7 @@ timestamp(0),
 flag(0),
 hit_data(0b00000000001001110001000000000000),
 packet_hits(0),
-packets_to_read(30),
+packets_to_read(3),
 packets(0)
 {
 	uint interval = 1000/rate;

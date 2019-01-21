@@ -2,23 +2,43 @@
 #include <QtWidgets>
 
 GenericGraph::GenericGraph(uint bin_width, const QString tag_path, QMainWindow *parent) :
-QCustomPlot(parent),
+QChartView(new QChart(), parent),
 binWidth(bin_width),
 tag_path(tag_path),
-tag_pos(0)
+tag_pos(0),
+binned_changed(false),
+timeStep(5),
+countsStep(5),
+graphUpdateTime(1000)
 {
 	//graph formatting	
-	addGraph();
-	graph()->setPen(QPen(pen_colour));
-	graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
-	graph()->setLineStyle((QCPGraph::LineStyle)QCPGraph::lsNone);
+	series = new QScatterSeries();
+	series->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+	series->setMarkerSize(15.0);
+	chart()->addSeries(series);
 
-	//convert to units of 500ps
-	// binWidth *= 2e6;
-	// binEdges = new QVector<double>();
-	// counts = new QVector<double>();
+	timeAxis = new QValueAxis;
+	timeAxis->setTitleText("Time / s");
+	timeAxis->setRange(0,timeStep);
+	chart()->setAxisX(timeAxis, series);
+
+	countsAxis = new QValueAxis;
+	countsAxis->setTitleText("Counts");
+	countsAxis->setRange(0,countsStep);
+	// countsAxis->setTickCount(16);
+	chart()->setAxisY(countsAxis, series);
 
 	tag_file = new QFile(tag_path);
+
+	QTimer *graphUpdateTimer = new QTimer();
+	connect(graphUpdateTimer, SIGNAL(timeout()), this, SLOT(updateGraph()));
+	graphUpdateTimer->start(graphUpdateTime);
+
+	//debug
+	// binEdges.append(0);
+	// binned.append(QPointF(0,0));
+	// binned_changed = true;
+	// updateGraph();
 }
 
 //update graph with each new packet
@@ -26,6 +46,8 @@ void GenericGraph::updateTag(bool newPackets)
 {
 	if(!newPackets)
 		return;
+
+	binned_changed = newPackets;
 
 	if(!tag_file->open(QIODevice::ReadOnly)){
 		qDebug() << "Couldn't open file for reading";
@@ -52,47 +74,51 @@ void GenericGraph::updateTag(bool newPackets)
 			in >> hit;
 		}
 
-		// //put into bin
-		// int bin = timestamp / binWidth;
-		// if(bin < counts->size()){
-		// 	//remove the old data at that point
-		// 	double index = graph()->data()->at(binEdges->at(bin));
-		// 	graph()->data()->remove(index);
-		// }else{
-		// 	counts->resize(bin+1);
-		// 	while(binEdges->size() < counts->size()){
-		// 		binEdges->append(binEdges->last()+binWidth);
-		// 	}
-		// }
-		// counts[bin] += packet_hits;
-		// graph()->addData(binEdges->at(bin), counts->at(bin));
+		//convert to s from units of 500ps
+		qreal time = timestamp / 2e6;
 
-		// //put into bin
-		// uint bin = binCount;
-		// for(uint i=0; i<binCount; i++){
-		// 	uint edge = binEdges[i];
-		// 	if(timestamp <= edge){
-		// 		bin = i;
-		// 		if(i > maxFilledBin){
-		// 			maxFilledBin = i;
-		// 		}
-		// 		break;
-		// 	}
-		// }
-		// counts[bin] += packet_hits;
+		//put into bin
+		if(time > binEdges.last() || binned.isEmpty()){
+			binEdges.append(time - uint(time)%binWidth + binWidth);
+			binned.append(QPointF(time,packet_hits));
+		}
+		else{
+			QPointF last = binned.last();
+			last.setX((last.x()*last.y()+time)/(last.y()+1));
+			last.ry()+=packet_hits;
+			binned.replace(binned.size()-1, last);
+		}
 
-		//add the new packet to the graph
-		graph()->addData(timestamp, packet_hits);
+		// binned.append(QPointF(time, packet_hits));
+		// binned.append(QPointF(holder, packet_hits));
+		// holder+=1e4;
 	}
 
 	tag_pos = tag_file->pos();
 	tag_file->close();
-
-	graph()->rescaleAxes();
-	replot();
 }
 
-// void GenericGraph::newBinSet()
-// {
+void GenericGraph::updateGraph()
+{
+	if(!binned_changed)
+		return;
 
-// }
+	//debug
+	// binned.append(QPointF(holder,5));
+	// holder++;
+
+	if(binned.last().x() >= timeAxis->max()){
+		timeAxis->setMax(binned.last().x() - uint(binned.last().x())%timeStep + timeStep);
+		// timeAxis->setMax(timeAxis->max()+timeStep);
+		// axisX->setTickCount(axisX->max()+1/5+1);
+	}
+	if(binned.last().y() >= countsAxis->max()){
+		countsAxis->setMax(binned.last().y() - uint(binned.last().y())%countsStep + countsStep);
+		// countsAxis->setMax(countsAxis->max()+countsStep);
+		// axisY->setTickCount(axisX->max()+1/5+1);
+	}
+
+	series->replace(binned);
+
+	binned_changed = false;
+}

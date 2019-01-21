@@ -1,9 +1,9 @@
 #ifndef GENERIC_GRAPH
 #define GENERIC_GRAPH
 
-#include "include/qcustomplot.h"
+#include <QtCharts>
 
-class GenericGraph : public QCustomPlot
+class GenericGraph : public QChartView
 {
 	Q_OBJECT
 
@@ -12,21 +12,32 @@ public:
 
 private slots:
 	void updateTag(bool newPackets);
+	void updateGraph();
 
 private:
-	QColor pen_colour = QColor(Qt::black);
+	//graph data
+	QScatterSeries *series;
+	QValueAxis *timeAxis;
+	QValueAxis *countsAxis;
 
-	// //graph data
+	//graph updating
+	uint graphUpdateTime;
+	uint timeStep;
+	uint countsStep;
+	bool binned_changed;
+
+	//binned data
 	uint binWidth;
-	// QVector<double> *binEdges;
-	// QVector<double> *counts;
+	QVector<quint64> binEdges;
+	QVector<QPointF> binned;
 
 	//tagger data
 	const QString tag_path;
 	QFile *tag_file;
 	qint64 tag_pos;
+
+	//debug
+	// int holder = 1e4;
 };
-
-
 
 #endif //GENERIC_GRAPH
