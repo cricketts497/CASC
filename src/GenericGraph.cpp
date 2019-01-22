@@ -75,7 +75,7 @@ void GenericGraph::updateTag(bool newPackets)
 		}
 
 		//convert to s from units of 500ps
-		qreal time = timestamp / 2e6;
+		qreal time = timestamp / 2e9;
 
 		//put into bin
 		if(time > binEdges.last() || binned.isEmpty()){
