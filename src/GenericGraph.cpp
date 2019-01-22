@@ -7,9 +7,9 @@ binWidth(bin_width),
 tag_path(tag_path),
 tag_pos(0),
 binned_changed(false),
-timeStep(5),
-countsStep(5),
-graphUpdateTime(1000)
+timeStep(4),//as 4 axis divisions
+countsStep(4),
+graphUpdateTime(100)
 {
 	//graph formatting	
 	series = new QScatterSeries();
@@ -20,11 +20,13 @@ graphUpdateTime(1000)
 	timeAxis = new QValueAxis;
 	timeAxis->setTitleText("Time / s");
 	timeAxis->setRange(0,timeStep);
+	timeAxis->setLabelFormat("%.i");
 	chart()->setAxisX(timeAxis, series);
 
 	countsAxis = new QValueAxis;
 	countsAxis->setTitleText("Counts");
 	countsAxis->setRange(0,countsStep);
+	countsAxis->setLabelFormat("%.i");
 	// countsAxis->setTickCount(16);
 	chart()->setAxisY(countsAxis, series);
 
@@ -106,19 +108,19 @@ void GenericGraph::updateGraph()
 	//debug
 	// binned.append(QPointF(holder,5));
 	// holder++;
+	series->replace(binned);
 
 	if(binned.last().x() >= timeAxis->max()){
-		timeAxis->setMax(binned.last().x() - uint(binned.last().x())%timeStep + timeStep);
+		// timeAxis->setMax(binned.last().x() - uint(binned.last().x())%timeStep + 2*timeStep);
+		timeAxis->setMax(uint(binned.last().x())- uint(binned.last().x())%timeStep +2*timeStep);
 		// timeAxis->setMax(timeAxis->max()+timeStep);
 		// axisX->setTickCount(axisX->max()+1/5+1);
 	}
 	if(binned.last().y() >= countsAxis->max()){
-		countsAxis->setMax(binned.last().y() - uint(binned.last().y())%countsStep + countsStep);
+		countsAxis->setMax(uint(binned.last().y()*8/7) - uint(binned.last().y()*8/7)%countsStep +2*countsStep);
 		// countsAxis->setMax(countsAxis->max()+countsStep);
 		// axisY->setTickCount(axisX->max()+1/5+1);
 	}
-
-	series->replace(binned);
 
 	binned_changed = false;
 }
