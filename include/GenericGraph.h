@@ -3,22 +3,32 @@
 
 #include <QtCharts>
 
-class GenericGraph : public QChartView
+class GenericGraph : public QWidget
 {
 	Q_OBJECT
 
 public:
-	GenericGraph(uint binWidth, const QString tag_path, QMainWindow *parent);
+	GenericGraph(const QString tag_path, QMainWindow *parent);
+	void newTagger();
 
 private slots:
 	void updateTag(bool newPackets);
 	void updateGraph();
+	void changeBinWidth();
 
 private:
+	//widget layout
+	QGridLayout *layout;
+
 	//graph data
+	QChartView *chartView;
 	QScatterSeries *series;
 	QValueAxis *timeAxis;
 	QValueAxis *countsAxis;
+
+	//binWidth editing
+	QSpinBox *binWidthEdit;
+	const uint maxBinWidth;
 
 	//graph updating
 	uint graphUpdateTime;
@@ -30,6 +40,8 @@ private:
 	uint binWidth;
 	QVector<quint64> binEdges;
 	QVector<QPointF> binned;
+	uint maxValueX;
+	double maxValueY;
 
 	//tagger data
 	const QString tag_path;
