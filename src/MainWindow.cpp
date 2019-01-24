@@ -131,6 +131,7 @@ void MainWindow::togglePdlDevice(bool start)
 void MainWindow::toggleTaggerDevice(bool start)
 {
 	if(start){
+		//100 events per second
 		taggerDevice = new FakeTagger(100, tagger_temp_path, this);
 		connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusTagger(int)));
 		connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));

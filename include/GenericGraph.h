@@ -15,6 +15,7 @@ private slots:
 	void updateTag(bool newPackets);
 	void updateGraph();
 	void changeBinWidth();
+	void changeYAxis(int newIndex);
 
 private:
 	//widget layout
@@ -25,10 +26,15 @@ private:
 	QScatterSeries *series;
 	QValueAxis *timeAxis;
 	QValueAxis *countsAxis;
+	QValueAxis *rateAxis;
 
 	//binWidth editing
 	QSpinBox *binWidthEdit;
 	const uint maxBinWidth;
+
+	//axes editing
+	QComboBox *yAxisCombo;
+	uint yAxisIndex;
 
 	//graph updating
 	uint graphUpdateTime;
@@ -38,10 +44,12 @@ private:
 
 	//binned data
 	uint binWidth;
-	QVector<quint64> binEdges;
+	QVector<uint> binEdges;
 	QVector<QPointF> binned;
+	QVector<uint> counts;
 	uint maxValueX;
 	double maxValueY;
+	qreal lastPacketTime;
 
 	//tagger data
 	const QString tag_path;
