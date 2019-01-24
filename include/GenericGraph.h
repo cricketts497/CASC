@@ -44,9 +44,12 @@ private:
 
 	//binned data
 	uint binWidth;
+
 	QVector<uint> binEdges;
-	QVector<QPointF> binned;
+	QVector<qreal> times;
 	QVector<uint> counts;
+	QVector<qreal> delts;
+
 	uint maxValueX;
 	double maxValueY;
 	qreal lastPacketTime;
@@ -55,6 +58,7 @@ private:
 	const QString tag_path;
 	QFile *tag_file;
 	qint64 tag_pos;
+	bool tagger_started;
 
 	//debug
 	// int holder = 1e4;

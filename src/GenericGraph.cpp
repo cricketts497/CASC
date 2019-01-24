@@ -13,7 +13,8 @@ countsStep(4),
 maxValueX(0),
 maxValueY(0),
 graphUpdateTime(100),
-yAxisIndex(0)
+yAxisIndex(0),
+tagger_started(false)
 {
 	//main layout
 	layout = new QGridLayout(this);
@@ -96,10 +97,9 @@ void GenericGraph::updateTag(bool newPackets)
 	quint64 timestamp;
 	quint64 packet_hits;
 	uchar flag;
+	quint32 hit;
 	qreal time;
-	qreal del_t;
-	QPointF last;
-
+	
 	tag_file->seek(tag_pos);
 	QDataStream in(tag_file);
 	if(tag_pos == 0){
@@ -111,64 +111,71 @@ void GenericGraph::updateTag(bool newPackets)
 		in >> timestamp >> packet_hits >> flag;
 
 		//get the hits
-		quint32 hit;
 		for(uint i=0; i<packet_hits; i++){
 			in >> hit;
 		}
 
-		//convert to s from units of 500ps
 		time = timestamp / 2e9;
 
-		//put into bin
-		if(time > binEdges.last() || binned.isEmpty()){
-			binEdges.append(time - uint(time)%binWidth + binWidth);
-			if(yAxisIndex == 0)
-				binned.append(QPointF(time,packet_hits));
-			//ignore the first packet for rate
-			else if(yAxisIndex == 1 && tag_pos!=0){
-				del_t = time - lastPacketTime;
-				binned.append(QPointF(time,packet_hits/del_t));
+		//ignore the first packet for the rate calculations
+		if(tag_pos!=0){
+			if(time > binEdges.last() || binEdges.isEmpty()){
+				binEdges.append(time - uint(time)%binWidth + binWidth);
+				times.append(time*packet_hits);
 				counts.append(packet_hits);
+				delts.append(time-lastPacketTime);
+			}else{
+				times.last() += time*packet_hits;
+				counts.last() += packet_hits;
+				delts.last() += (time-lastPacketTime);
 			}
 		}
-		else{
-			last = binned.last();
-			if(yAxisIndex == 0){
-				last.setX((last.x()*last.y()+time*packet_hits)/(last.y()+packet_hits));
-				last.ry()+=packet_hits;
-			}else if(yAxisIndex == 1){
-				del_t = time - lastPacketTime;
-				last.setX((last.x()*counts.last()+time*packet_hits)/(counts.last()+packet_hits));
-				last.setY((counts.last()+packet_hits)/(counts.last()/last.y()+del_t));
-				counts.last()+=packet_hits;
-			}
-			binned.replace(binned.size()-1, last);
-		}
-
-		if(binned.last().x() >= maxValueX)
-			maxValueX = binned.last().x();
-		if(binned.last().y() >= maxValueY)
-			maxValueY = binned.last().y();
 
 		lastPacketTime = time;
 		tag_pos = tag_file->pos();
 
-		// binned.append(QPointF(time, packet_hits));
-		// binned.append(QPointF(holder, packet_hits));
-		// holder+=1e4;
 	}
 	tag_file->close();
 }
 
 void GenericGraph::updateGraph()
 {
-	if(!binned_changed)
+	if(!binned_changed || !tagger_started)
 		return;
+
+	series->clear();
+	maxValueX = 0;
+	maxValueY = 0;
+	if(yAxisIndex == 0){
+		for(int i=0; i<times.size(); i++){
+			qreal x = times.at(i)/counts.at(i);
+			qreal y = counts.at(i);
+
+			if(x > maxValueX)
+				maxValueX = x;
+			if(y > maxValueY)
+				maxValueY = y;
+
+			series->append(x, y);
+		}
+	}else if(yAxisIndex == 1){
+		for(int i=0; i<times.size(); i++){
+			qreal x = times.at(i)/counts.at(i);
+			qreal y = counts.at(i)/delts.at(i);
+
+			if(x > maxValueX)
+				maxValueX = x;
+			if(y > maxValueY)
+				maxValueY = y;
+
+			series->append(x, y);
+		}
+	}
 
 	//debug
 	// binned.append(QPointF(holder,5));
 	// holder++;
-	series->replace(binned);
+	// series->replace(binned);
 
 	// if(maxValueX >= timeAxis->max()){
 		// timeAxis->setMax(binned.last().x() - uint(binned.last().x())%timeStep + 2*timeStep);
@@ -191,7 +198,9 @@ void GenericGraph::changeBinWidth()
 
 	//clear the current binned data
 	binEdges.clear();
-	binned.clear();
+	times.clear();
+	counts.clear();
+	delts.clear();
 
 	maxValueX = 0;
 	maxValueY = 0;
@@ -211,11 +220,13 @@ void GenericGraph::changeYAxis(int newIndex)
 	}else if(newIndex == 1){
 		countsAxis->setTitleText("Rate / s^-1");
 	}
-	changeBinWidth();
+	binned_changed = true;
+	updateGraph();
 }
 
-//When tagger device is restarted
+//When tagger device is started
 void GenericGraph::newTagger()
 {
+	tagger_started = true;
 	changeBinWidth();
 }
