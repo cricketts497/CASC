@@ -14,14 +14,16 @@ maxValueX(0),
 maxValueY(0),
 graphUpdateTime(100),
 yAxisIndex(0),
-tagger_started(false)
+tagger_started(false),
+zoomed(false)
 {
 	//main layout
 	layout = new QGridLayout(this);
-	setLayout(layout);
+	// setLayout(layout);
 
 	//main chart
-	chartView = new QChartView(this);
+	// PanChart *chart = new PanChart();
+	chartView = new PanChartView(this);
 	layout->addWidget(chartView,0,0);
 
 	//graph formatting	
@@ -33,19 +35,19 @@ tagger_started(false)
 	timeAxis = new QValueAxis(this);
 	timeAxis->setTitleText("Time / s");
 	timeAxis->setRange(0,timeStep);
-	timeAxis->setLabelFormat("%.i");
+	timeAxis->setLabelFormat("%.3f");
 	chartView->chart()->setAxisX(timeAxis, series);
 
 	countsAxis = new QValueAxis(this);
 	countsAxis->setTitleText("Counts");
 	countsAxis->setRange(0,countsStep);
-	countsAxis->setLabelFormat("%.i");
+	// countsAxis->setRange(0,150);
+	countsAxis->setLabelFormat("%.3f");
 	// countsAxis->setTickCount(16);
 	chartView->chart()->setAxisY(countsAxis, series);
 
-
-	//bin width edit box and two combo boxes to change axes
-	QHBoxLayout *bottomLayout = new QHBoxLayout(this);
+	//bin width edit box, a combo box to change the y-axis and a reset button for zoom
+	QHBoxLayout *bottomLayout = new QHBoxLayout;
 
 	QLabel *binWidthLabel = new QLabel("Bin width / s:", this);
 	binWidthEdit = new QSpinBox(this);
@@ -53,19 +55,22 @@ tagger_started(false)
 	binWidthEdit->setRange(1,maxBinWidth);
 	connect(binWidthEdit, SIGNAL(editingFinished()), this, SLOT(changeBinWidth()));
 
+	QPushButton *resetButton = new QPushButton("Reset axes", this);
+	connect(resetButton, SIGNAL(clicked()), this, SLOT(resetAxes()));
+
 	QLabel *yAxisLabel = new QLabel("y:", this);
 	yAxisCombo = new QComboBox(this);
 	yAxisCombo->addItem("Tagger counts");
 	yAxisCombo->addItem("Tagger rate / s^-1");
 	connect(yAxisCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeYAxis(int)));
 
+	bottomLayout->addWidget(resetButton);
 	bottomLayout->addWidget(yAxisLabel);
 	bottomLayout->addWidget(yAxisCombo);
 	bottomLayout->addStretch();
 	bottomLayout->addWidget(binWidthLabel);
 	bottomLayout->addWidget(binWidthEdit);
 	layout->addLayout(bottomLayout,1,0);
-
 
 	tag_file = new QFile(tag_path, this);
 
@@ -179,17 +184,23 @@ void GenericGraph::updateGraph()
 
 	// if(maxValueX >= timeAxis->max()){
 		// timeAxis->setMax(binned.last().x() - uint(binned.last().x())%timeStep + 2*timeStep);
-	timeAxis->setMax(uint(maxValueX)- uint(maxValueX)%timeStep +2*timeStep);
+	if(!zoomed){
+		timeAxis->setMax(uint(maxValueX)- uint(maxValueX)%timeStep +2*timeStep);
 		// timeAxis->setMax(timeAxis->max()+timeStep);
 		// axisX->setTickCount(axisX->max()+1/5+1);
 	// }
 	// if(maxValueY >= countsAxis->max()){
-	countsAxis->setMax(uint(maxValueY*8/7) - uint(maxValueY*8/7)%countsStep +2*countsStep);
+		countsAxis->setMax(uint(maxValueY*8/7) - uint(maxValueY*8/7)%countsStep +2*countsStep);
 		// countsAxis->setMax(countsAxis->max()+countsStep);
 		// axisY->setTickCount(axisX->max()+1/5+1);
-	// }
+	}
 
 	binned_changed = false;
+}
+
+void GenericGraph::chartZoomed()
+{
+	zoomed = true;
 }
 
 void GenericGraph::changeBinWidth()
@@ -230,3 +241,14 @@ void GenericGraph::newTagger()
 	tagger_started = true;
 	changeBinWidth();
 }
+
+void GenericGraph::resetAxes()
+{
+	timeAxis->setRange(0,timeStep);
+	countsAxis->setRange(0,countsStep);	
+
+	zoomed = false;
+	binned_changed = true;
+	updateGraph();
+}
+
