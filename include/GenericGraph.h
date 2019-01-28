@@ -1,8 +1,7 @@
 #ifndef GENERIC_GRAPH
 #define GENERIC_GRAPH
 
-#include "include/PanChart.h"
-#include "include/PanChartView.h"
+#include "include/ZoomChartView.h"
 #include <QtCharts>
 
 class GenericGraph : public QWidget
@@ -18,7 +17,7 @@ private slots:
 	void updateGraph();
 	void changeBinWidth();
 	void changeYAxis(int newIndex);
-	void chartZoomed();
+	void chartZoomed(bool zoom);
 	void resetAxes();
 
 private:
@@ -26,7 +25,7 @@ private:
 	QGridLayout *layout;
 
 	//graph data
-	PanChartView *chartView;
+	ZoomChartView *chartView;
 	QScatterSeries *series;
 	QValueAxis *timeAxis;
 	QValueAxis *countsAxis;

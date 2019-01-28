@@ -22,8 +22,8 @@ zoomed(false)
 	// setLayout(layout);
 
 	//main chart
-	// PanChart *chart = new PanChart();
-	chartView = new PanChartView(this);
+	chartView = new ZoomChartView(this);
+	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed(bool)));
 	layout->addWidget(chartView,0,0);
 
 	//graph formatting	
@@ -198,9 +198,9 @@ void GenericGraph::updateGraph()
 	binned_changed = false;
 }
 
-void GenericGraph::chartZoomed()
+void GenericGraph::chartZoomed(bool zoom)
 {
-	zoomed = true;
+	zoomed = zoom;
 }
 
 void GenericGraph::changeBinWidth()
@@ -221,6 +221,7 @@ void GenericGraph::changeBinWidth()
 	updateTag(true);
 }
 
+//When the parameter on the y-axis is changed using the combo box
 void GenericGraph::changeYAxis(int newIndex)
 {
 	yAxisIndex = newIndex;
@@ -231,8 +232,7 @@ void GenericGraph::changeYAxis(int newIndex)
 	}else if(newIndex == 1){
 		countsAxis->setTitleText("Rate / s^-1");
 	}
-	binned_changed = true;
-	updateGraph();
+	resetAxes();
 }
 
 //When tagger device is started
@@ -242,6 +242,7 @@ void GenericGraph::newTagger()
 	changeBinWidth();
 }
 
+//when the reset axes push button is pressed
 void GenericGraph::resetAxes()
 {
 	timeAxis->setRange(0,timeStep);
