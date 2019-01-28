@@ -25,6 +25,7 @@ public:
 	const QString ready_message = "Ready";
 
 	const QString tagger_temp_path = "./temp/fake_tag_temp.dat";
+	const QString pdl_temp_path = "./temp/fake_pdl_temp.dat";
 	
 private slots:
 	//widgets
@@ -35,7 +36,7 @@ private slots:
 	void togglePdlDevice(bool start);
 	void toggleTaggerDevice(bool start);
 
-	void setStatusTagger(int hits);
+	void setStatusTagger(int value);
 
 private:
 	void createActions();

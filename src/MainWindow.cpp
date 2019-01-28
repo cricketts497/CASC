@@ -15,7 +15,7 @@ MainWindow::MainWindow()
 	// mainWindow->setLayout(mainLayout);
 	// setCentralWidget(mainWindow);
 
-	centralGraph = new GenericGraph(tagger_temp_path, this);
+	centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	setCentralWidget(centralGraph);
 
 	setWindowTitle("CASC");
@@ -122,9 +122,12 @@ void MainWindow::setStatusPDL(bool changed)
 void MainWindow::togglePdlDevice(bool start)
 {
 	if(start){
-		pdlDevice = new PdlDevice(1000, this);
+		pdlDevice = new PdlDevice(100, pdl_temp_path, this);
+		connect(pdlDevice, SIGNAL(newValue(int)), this, SLOT(setStatusTagger(int)));
+		// centralGraph->newPdl();
 	}else{
 		delete pdlDevice;
+		status->setText(ready_message);
 	}
 }
 
@@ -133,8 +136,8 @@ void MainWindow::toggleTaggerDevice(bool start)
 	if(start){
 		//100 events per second
 		taggerDevice = new FakeTagger(100, tagger_temp_path, this);
-		connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusTagger(int)));
-		connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
+		// connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusTagger(int)));
+		// connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
 		centralGraph->newTagger();
 	}else{
 		delete taggerDevice;
@@ -142,12 +145,13 @@ void MainWindow::toggleTaggerDevice(bool start)
 	}
 }
 
-void MainWindow::setStatusTagger(int hits)
+void MainWindow::setStatusTagger(int value)
 {
 	QString message_str;
 	QTextStream message(&message_str);
 
-	message << "Packet hits: " << hits;
+	// message << "Packet hits: " << hits;
+	message << "Value: " << value;
 
 	message_str = message.readAll();
 	status->setText(message_str);

@@ -4,12 +4,12 @@
 
 FakeTagger::FakeTagger(int rate, const QString file_path, QMainWindow *parent) :
 QTimer(parent),
-hits_per_packet(2),
+hits_per_packet(5),
 timestamp(0),
 flag(0),
 hit_data(0b00000000001001110001000000000000),
 packet_hits(0),
-packets_to_read(3),
+// packets_to_read(3),
 packets(0)
 {
 	uint interval = 1000/rate;
@@ -88,9 +88,9 @@ void FakeTagger::newPacket()
 	packet_hits = 0;
 	packets++;
 
-	if(packets >= packets_to_read){
-		emit update(true);
-		packets = 0;
-	}
+	// if(packets >= packets_to_read){
+	// 	emit update(true);
+	// 	packets = 0;
+	// }
 }
 

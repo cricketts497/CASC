@@ -9,13 +9,16 @@ class GenericGraph : public QWidget
 	Q_OBJECT
 
 public:
-	GenericGraph(const QString tag_path, QMainWindow *parent);
+	GenericGraph(const QString tag_path, const QString pdl_path, QMainWindow *parent);
 	void newTagger();
+	void newPdl();
 
 private slots:
-	void updateTag(bool newPackets);
+	void updateTag();
+	void updatePdl();
 	void updateGraph();
 	void changeBinWidth();
+	void changeXAxis(int newIndex);
 	void changeYAxis(int newIndex);
 	void chartZoomed(bool zoom);
 	void resetAxes();
@@ -27,8 +30,8 @@ private:
 	//graph data
 	ZoomChartView *chartView;
 	QScatterSeries *series;
-	QValueAxis *timeAxis;
-	QValueAxis *countsAxis;
+	QValueAxis *xAxis;
+	QValueAxis *yAxis;
 	QValueAxis *rateAxis;
 
 	//binWidth editing
@@ -38,31 +41,44 @@ private:
 	//axes editing
 	QComboBox *yAxisCombo;
 	uint yAxisIndex;
+	QComboBox *xAxisCombo;
+	uint xAxisIndex;
 
 	//graph updating
-	uint graphUpdateTime;
-	uint timeStep;
-	uint countsStep;
+	const uint graphUpdateTime;
+	uint xStep;
+	uint yStep;
 	bool binned_changed;
 	bool zoomed;
 
 	//binned data
 	uint binWidth;
-
 	QVector<uint> binEdges;
-	QVector<qreal> times;
-	QVector<uint> counts;
-	QVector<qreal> delts;
 
 	uint maxValueX;
 	double maxValueY;
 	qreal lastPacketTime;
 
 	//tagger data
-	const QString tag_path;
 	QFile *tag_file;
 	qint64 tag_pos;
 	bool tagger_started;
+	const uint taggerUpdateTime;
+	QTimer *taggerUpdateTimer;
+
+	QVector<qreal> tag_times;
+	QVector<uint> counts;
+	QVector<qreal> delts;
+
+	//pdl data
+	QFile *pdl_file;
+	qint64 pdl_pos;
+	bool pdl_started;
+	const uint pdlUpdateTime;
+	QTimer *pdlUpdateTimer;
+
+	QVector<uint> pdl_wavenumbers;
+	QVector<uint> pdl_counts;
 
 	//debug
 	// int holder = 1e4;

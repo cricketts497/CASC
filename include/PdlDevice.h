@@ -4,25 +4,29 @@
 #include <QTimer>
 
 class QMainWindow;
+class QFile;
 
 class PdlDevice : public QTimer
 {
 	Q_OBJECT	
 
 public:
-	PdlDevice(int interval, QMainWindow *parent);
+	PdlDevice(uint interval, const QString file_path, QMainWindow *parent);
 
-	double current_value();
+	uint current_value();
 
 signals:
-	void newValue(double value);
+	void newValue(int value);
 
 private slots:
 	void increaseValue();
 
 private:
-	double value;
+	uint timestamp_interval;
+	QFile *fake_pdl_temp_file;
 
+	quint64 timestamp;
+	quint64 value;
 };
 
 #endif //PDL_DEVICE
