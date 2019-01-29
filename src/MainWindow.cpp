@@ -16,6 +16,7 @@ MainWindow::MainWindow()
 	// setCentralWidget(mainWindow);
 
 	centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
+	connect(centralGraph, SIGNAL(newEdge(qreal)), this, SLOT(setStatusValue(qreal)));
 	setCentralWidget(centralGraph);
 
 	setWindowTitle("CASC");
@@ -122,12 +123,12 @@ void MainWindow::setStatusPDL(bool changed)
 void MainWindow::togglePdlDevice(bool start)
 {
 	if(start){
-		pdlDevice = new PdlDevice(100, pdl_temp_path, this);
-		connect(pdlDevice, SIGNAL(newValue(int)), this, SLOT(setStatusTagger(int)));
-		// centralGraph->newPdl();
+		pdlDevice = new PdlDevice(500, pdl_temp_path, this);
+		// connect(pdlDevice, SIGNAL(newValue(int)), this, SLOT(setStatusTagger(int)));
+		centralGraph->newPdl();
 	}else{
 		delete pdlDevice;
-		status->setText(ready_message);
+		// status->setText(ready_message);
 	}
 }
 
@@ -141,11 +142,11 @@ void MainWindow::toggleTaggerDevice(bool start)
 		centralGraph->newTagger();
 	}else{
 		delete taggerDevice;
-		status->setText(ready_message);
+		// status->setText(ready_message);
 	}
 }
 
-void MainWindow::setStatusTagger(int value)
+void MainWindow::setStatusValue(qreal value)
 {
 	QString message_str;
 	QTextStream message(&message_str);

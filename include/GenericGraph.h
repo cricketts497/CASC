@@ -13,6 +13,9 @@ public:
 	void newTagger();
 	void newPdl();
 
+signals:
+	void newEdge(qreal edge);
+
 private slots:
 	void updateTag();
 	void updatePdl();
@@ -54,6 +57,7 @@ private:
 	//binned data
 	uint binWidth;
 	QVector<uint> binEdges;
+	qreal start_time;
 
 	uint maxValueX;
 	double maxValueY;

@@ -36,7 +36,7 @@ private slots:
 	void togglePdlDevice(bool start);
 	void toggleTaggerDevice(bool start);
 
-	void setStatusTagger(int value);
+	void setStatusValue(qreal value);
 
 private:
 	void createActions();

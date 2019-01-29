@@ -25,6 +25,8 @@ private:
 	uint timestamp_interval;
 	QFile *fake_pdl_temp_file;
 
+	QDateTime *time;
+
 	quint64 timestamp;
 	quint64 value;
 };

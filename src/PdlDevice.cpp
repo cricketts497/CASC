@@ -7,18 +7,20 @@ QTimer(parent),
 value(10),
 timestamp(0)
 {
-	timestamp_interval = interval*2000000;
+	// timestamp_interval = interval*2000000;
+	time = new QDateTime();
+
+	connect(this, SIGNAL(timeout()), this, SLOT(increaseValue()));
 
 	fake_pdl_temp_file = new QFile(file_path);
 	if(!fake_pdl_temp_file->open(QIODevice::WriteOnly)){
-		qDebug() << "Couldn't open new tagger file";
+		qDebug() << "Couldn't open new pdl file";
 		return;
 	}
 	QDataStream out(fake_pdl_temp_file);
-	out << QString("PDL");
+	quint64 header = time->currentMSecsSinceEpoch();
+	out << header;
 	fake_pdl_temp_file->close();
-
-	connect(this, SIGNAL(timeout()), this, SLOT(increaseValue()));
 
 	start(interval);
 }
@@ -30,8 +32,11 @@ uint PdlDevice::current_value()
 
 void PdlDevice::increaseValue()
 {
-	if(!fake_pdl_temp_file->open(QIODevice::WriteOnly)){
-		qDebug() << "Couldn't open new tagger file";
+	value += 1;
+	timestamp = time->currentMSecsSinceEpoch();
+
+	if(!fake_pdl_temp_file->open(QIODevice::Append)){
+		qDebug() << "Couldn't open pdl file";
 		return;
 	}
 	QDataStream out(fake_pdl_temp_file);
@@ -41,7 +46,5 @@ void PdlDevice::increaseValue()
 
 	fake_pdl_temp_file->close();
 
-	value += 5;
-	timestamp += timestamp_interval;
 	emit newValue(value);
 }

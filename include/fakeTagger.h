@@ -26,6 +26,7 @@ private:
 	const uint hits_per_packet;
 
 	//raw timestamp, increases with timer timeout
+	QDateTime *time;
 	quint64 timestamp;
 	uint timestamp_interval;
 

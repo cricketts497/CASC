@@ -13,7 +13,8 @@ packet_hits(0),
 packets(0)
 {
 	uint interval = 1000/rate;
-	timestamp_interval = interval*2000000;
+	// timestamp_interval = interval*2000000;
+	time = new QDateTime();
 	
 	connect(this, SIGNAL(timeout()), this, SLOT(hit()));
 	
@@ -29,7 +30,8 @@ packets(0)
 		return;
 	}
 	QDataStream out(fake_tag_temp_file);
-	out << QString("TAGGER");
+	quint64 header = time->currentMSecsSinceEpoch()*2e6;
+	out << header;
 	fake_tag_temp_file->close();
 	
 	start(interval);
@@ -54,6 +56,11 @@ void FakeTagger::hit()
 //need to make this thread safe if adding threading to rest
 void FakeTagger::newPacket()
 {
+	//increase the coarse packet timestamp
+	//interval in ms, timestamp in multiples of 500ps
+	// timestamp += timestamp_interval*packet_hits;
+	timestamp = time->currentMSecsSinceEpoch()*2e6;
+
 	if(!fake_tag_temp_file->open(QIODevice::Append)){
 		qDebug() << "Couldn't open file to append data";
 		return;
@@ -82,9 +89,6 @@ void FakeTagger::newPacket()
 
 	// emit update(true);
 
-	//increase the coarse packet timestamp
-	//interval in ms, timestamp in multiples of 500ps
-	timestamp += timestamp_interval*packet_hits;
 	packet_hits = 0;
 	packets++;
 
