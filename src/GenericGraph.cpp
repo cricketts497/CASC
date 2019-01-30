@@ -15,13 +15,13 @@ pdlUpdateTime(100),
 binned_changed(false),
 xStep(4),//as 4 axis divisions
 yStep(4),
-maxValueX(0),
-maxValueY(0),
+// maxValueX(0),
+// maxValueY(0),
 xAxisIndex(0),
 yAxisIndex(0),
 zoomed(false),
 graphUpdateTime(45),
-start_time(-1.0)
+start_time(0)
 {
 	//main layout
 	layout = new QGridLayout(this);
@@ -57,7 +57,7 @@ start_time(-1.0)
 
 	QLabel *binWidthLabel = new QLabel("Bin width / s:", this);
 	binWidthEdit = new QSpinBox(this);
-	binWidthEdit->setValue(binWidth);
+	binWidthEdit->setValue(int(binWidth));
 	binWidthEdit->setRange(1,maxBinWidth);
 	connect(binWidthEdit, SIGNAL(editingFinished()), this, SLOT(changeBinWidth()));
 
@@ -108,6 +108,33 @@ start_time(-1.0)
 	// updateGraph();
 }
 
+void GenericGraph::appendZeros()
+{
+	tag_times.append(0);
+	counts.append(0);
+	delts.append(0);
+	pdl_wavenumbers.append(0);
+	pdl_counts.append(0);
+}
+
+void GenericGraph::prependZeros()
+{
+	tag_times.prepend(0);
+	counts.prepend(0);
+	delts.prepend(0);
+	pdl_wavenumbers.prepend(0);
+	pdl_counts.prepend(0);
+}
+
+void GenericGraph::clearAll()
+{
+	tag_times.clear();
+	counts.clear();
+	delts.clear();
+	pdl_wavenumbers.clear();
+	pdl_counts.clear();
+}
+
 //update graph with each new set of packets
 // change so not linked to the tagger device? read a set of packets at a set rate?
 void GenericGraph::updateTag()
@@ -122,7 +149,7 @@ void GenericGraph::updateTag()
 		return;
 	}
 	
-	quint64 timestamp;
+	qint64 timestamp;
 	quint64 packet_hits;
 	uchar flag;
 	quint32 hit;
@@ -132,10 +159,11 @@ void GenericGraph::updateTag()
 	// emit newEdge(tag_pos);
 	QDataStream in(tag_file);
 	if(tag_pos == 0){
-		quint64 header;
+		qint64 header;
 		in >> header;
-		start_time = header / 2e9;
-		emit newEdge(start_time);
+		// start_time = header / 2e9;
+		start_time = qreal(header) / 1000;
+		// emit newEdge(start_time);
 		tag_pos = tag_file->pos();
 	}else{
 		while(!tag_file->atEnd()){
@@ -148,51 +176,45 @@ void GenericGraph::updateTag()
 			}
 
 			//since Epoch? in units of 500ps
-			time = timestamp / 2e9;
+			// time = timestamp / 2e9;
+			time = qreal(timestamp) / 1000;
 			time -= start_time;
+
+			emit newEdge(time);
 
 			//ignore the first packet for the rate calculations
 			if(binEdges.isEmpty()){
-				binEdges.append(uint(time) - uint(time)%binWidth + binWidth);
+				binEdges.append(int(time) - int(time)%binWidth + binWidth);
 				
-				// emit newEdge(0);
-				tag_times.append(time*packet_hits);
-				counts.append(packet_hits);
-				delts.append(time-lastPacketTime);
-				pdl_wavenumbers.append(0);
-				pdl_counts.append(0);
-			}else if(time >= binEdges.last()){
-				while(time >= binEdges.last()){
+				appendZeros();
+				tag_times.last() += time*packet_hits;
+				counts.last() += packet_hits;
+				delts.last() += (time-lastPacketTime);
+
+			}else if(int(time) >= binEdges.last()){
+				while(int(time) >= binEdges.last()){
 					binEdges.append(binEdges.last() + binWidth);
 					// emit newEdge(int(binEdges.last()));
 					// emit newEdge(1);
-					tag_times.append(0);
-					counts.append(0);
-					delts.append(0);
-					pdl_wavenumbers.append(0);
-					pdl_counts.append(0);
+					appendZeros();
 				}
 				tag_times.last() += time*packet_hits;
 				counts.last() += packet_hits;
 				delts.last() += (time-lastPacketTime);
 				// emit newEdge(int(counts.last()));
-			}else if(time < binEdges.first()){
-				while(time < binEdges.first()){
+			}else if(int(time) < binEdges.first()-binWidth){
+				while(int(time) < binEdges.first()-binWidth){
 					binEdges.prepend(binEdges.first() - binWidth);
 					// emit newEdge(int(binEdges.first()));
 					// emit newEdge(2);
-					tag_times.prepend(0);
-					counts.prepend(0);
-					delts.prepend(0);
-					pdl_wavenumbers.prepend(0);
-					pdl_counts.prepend(0);
+					prependZeros();
 				}
 				tag_times.first() += time*packet_hits;
 				counts.first() += packet_hits;
 				delts.first() += (time-lastPacketTime);
 			}else{
 				for(int i=0; i<binEdges.size(); i++){
-					if(time < binEdges.at(i)){
+					if(int(time) < binEdges.at(i)){
 						tag_times[i] += time*packet_hits;
 						counts[i] += packet_hits;
 						delts[i] += (time-lastPacketTime);
@@ -203,6 +225,7 @@ void GenericGraph::updateTag()
 			// emit newEdge(int(binEdges.last()));
 			
 			lastPacketTime = time;
+			// emit newEdge(lastPacketTime);
 			tag_pos = tag_file->pos();
 
 		}
@@ -236,47 +259,37 @@ void GenericGraph::updatePdl()
 		in >> timestamp >> pdl_wavenumber;
 
 		//timestamp since epoch in ms
-		time = timestamp /1000;
+		time = qreal(timestamp)/1000;
 		time -= start_time;
 
 		if(binEdges.isEmpty()){
-			binEdges.append(uint(time) - uint(time)%binWidth + binWidth);
-			emit newEdge(int(binEdges.last()));
+			binEdges.append(int(time) - int(time)%binWidth + binWidth);
+			// emit newEdge(int(binEdges.last()));
 			// emit newEdge(int(time));
-			pdl_wavenumbers.append(pdl_wavenumber);
-			pdl_counts.append(1);
-			tag_times.append(0);
-			counts.append(0);
-			delts.append(0);
-		}else if(time >= binEdges.last()){
-			while(time >= binEdges.last()){
+			appendZeros();
+			pdl_wavenumbers.last() += pdl_wavenumber;
+			pdl_counts.last()++;
+		}else if(int(time) >= binEdges.last()){
+			while(int(time) >= binEdges.last()){
 				binEdges.append(binEdges.last() + binWidth);
-				emit newEdge(int(binEdges.last()));
+				// emit newEdge(int(binEdges.last()));
 				// emit newEdge(int(time));
-				pdl_wavenumbers.append(0);
-				pdl_counts.append(0);
-				tag_times.append(0);
-				counts.append(0);
-				delts.append(0);
+				appendZeros();
 			}
 			pdl_wavenumbers.last() += pdl_wavenumber;
 			pdl_counts.last()++;
-		}else if(time < binEdges.first()){
-			while(time < binEdges.first()){
+		}else if(int(time) < binEdges.first()-binWidth){
+			while(int(time) < binEdges.first()-binWidth){
 				binEdges.prepend(binEdges.first() - binWidth);
-				emit newEdge(int(binEdges.first()));
+				// emit newEdge(int(binEdges.first()));
 				// emit newEdge(int(time));
-				pdl_wavenumbers.prepend(0);
-				pdl_counts.prepend(0);
-				tag_times.prepend(0);
-				counts.prepend(0);
-				delts.prepend(0);
+				prependZeros();
 			}
 			pdl_wavenumbers.first() += pdl_wavenumber;
 			pdl_counts.first()++;
 		}else{
 			for(int i=0; i<binEdges.size(); i++){
-				if(time < binEdges.at(i)){
+				if(int(time) < binEdges.at(i)){
 					pdl_wavenumbers[i] += pdl_wavenumber;
 					pdl_counts[i]++;
 					break;
@@ -291,6 +304,18 @@ void GenericGraph::updatePdl()
 		binned_changed = true;
 }
 
+void GenericGraph::checkMinMax(qreal x, qreal y)
+{
+	if(x > maxValueX)
+		maxValueX = x;
+	if(x < minValueX)
+		minValueX = x;
+	if(y > maxValueY)
+		maxValueY = y;
+	if(y < minValueY)
+		minValueY = y;
+}
+
 void GenericGraph::updateGraph()
 {
 	if(!binned_changed || !tagger_started)
@@ -299,6 +324,9 @@ void GenericGraph::updateGraph()
 	series->clear();
 	maxValueX = 0;
 	maxValueY = 0;
+	minValueX = 1e10;
+	minValueY = 1e10;
+
 	//time
 	if(xAxisIndex == 0){
 		//counts
@@ -309,25 +337,19 @@ void GenericGraph::updateGraph()
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i);
 
-				if(x > maxValueX)
-					maxValueX = x;
-				if(y > maxValueY)
-					maxValueY = y;
+				checkMinMax(x,y);
 
 				series->append(x, y);
 			}
 		//rate
 		}else if(yAxisIndex == 1){
 			for(int i=0; i<binEdges.size(); i++){
-				if(counts.at(i) <= 0)
+				if(counts.at(i) <= 0 || delts.at(i) <= 0)
 					continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i)/delts.at(i);
 
-				if(x > maxValueX)
-					maxValueX = x;
-				if(y > maxValueY)
-					maxValueY = y;
+				checkMinMax(x,y);
 
 				series->append(x, y);
 			}
@@ -342,25 +364,19 @@ void GenericGraph::updateGraph()
 				qreal x = pdl_wavenumbers.at(i)/pdl_counts.at(i);
 				qreal y = counts.at(i);
 
-				if(x > maxValueX)
-					maxValueX = x;
-				if(y > maxValueY)
-					maxValueY = y;
+				checkMinMax(x,y);
 
 				series->append(x, y);
 			}
 		//rate
 		}else if(yAxisIndex == 1){
 			for(int i=0; i<binEdges.size(); i++){
-				if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0)
+				if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0 || delts.at(i) <=0)
 					continue;
 				qreal x = pdl_wavenumbers.at(i)/pdl_counts.at(i);
 				qreal y = counts.at(i)/delts.at(i);
 
-				if(x > maxValueX)
-					maxValueX = x;
-				if(y > maxValueY)
-					maxValueY = y;
+				checkMinMax(x,y);
 
 				series->append(x, y);
 			}
@@ -375,12 +391,15 @@ void GenericGraph::updateGraph()
 	// if(maxValueX >= xAxis->max()){
 		// xAxis->setMax(binned.last().x() - uint(binned.last().x())%xStep + 2*xStep);
 	if(!zoomed){
-		xAxis->setMax(uint(maxValueX)- uint(maxValueX)%xStep +2*xStep);
+		// xAxis->setMax(uint(maxValueX)- uint(maxValueX)%xStep +2*xStep);
+		xAxis->setRange(uint(minValueX)-uint(minValueX)%xStep, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
 		// xAxis->setMax(xAxis->max()+xStep);
 		// axisX->setTickCount(axisX->max()+1/5+1);
 	// }
 	// if(maxValueY >= yAxis->max()){
-		yAxis->setMax(uint(maxValueY*8/7) - uint(maxValueY*8/7)%yStep +2*yStep);
+		// yAxis->setMax(uint(maxValueY*8/7) - uint(maxValueY*8/7)%yStep +2*yStep);
+		// yAxis->setRange(uint(minValueY)-uint(minValueY)%yStep, uint(maxValueY) - uint(maxValueY)%yStep +yStep);
+		yAxis->setRange(0, uint(maxValueY*8/7) - uint(maxValueY*8/7)%yStep +yStep);
 		// yAxis->setMax(yAxis->max()+yStep);
 		// axisY->setTickCount(axisX->max()+1/5+1);
 	}
@@ -398,11 +417,7 @@ void GenericGraph::changeBinWidth()
 	binWidth = binWidthEdit->value();
 	//clear the current binned data
 	binEdges.clear();
-	tag_times.clear();
-	counts.clear();
-	delts.clear();
-	pdl_wavenumbers.clear();
-	pdl_counts.clear();
+	clearAll();
 
 	if(tagger_started){
 		//read all the tagger data
@@ -415,7 +430,7 @@ void GenericGraph::changeBinWidth()
 		pdl_pos = 0;
 		updatePdl();
 	}
-
+	resetAxes();
 }
 
 //When the parameter on the x-axis is changed using the combo box
@@ -424,15 +439,11 @@ void GenericGraph::changeXAxis(int newIndex)
 	
 	//time
 	if(newIndex == 0){
-		// if(pdlUpdateTimer->isActive())
-		// 	pdlUpdateTimer->stop();
 		xAxisIndex = newIndex;
 		xAxis->setTitleText("Time / s");
 	//pdl wavenumber
 	}else if(newIndex == 1){
 		if(pdl_started){
-			// if(!pdlUpdateTimer->isActive())
-			// 	pdlUpdateTimer->start(pdlUpdateTime);
 			xAxisIndex = newIndex;
 			xAxis->setTitleText("PDL Wavenumber / cm^-1");
 		}else{

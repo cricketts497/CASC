@@ -4,7 +4,7 @@
 
 FakeTagger::FakeTagger(int rate, const QString file_path, QMainWindow *parent) :
 QTimer(parent),
-hits_per_packet(5),
+hits_per_packet(1),
 timestamp(0),
 flag(0),
 hit_data(0b00000000001001110001000000000000),
@@ -12,7 +12,7 @@ packet_hits(0),
 // packets_to_read(3),
 packets(0)
 {
-	uint interval = 1000/rate;
+	int interval = 999/rate;
 	// timestamp_interval = interval*2000000;
 	time = new QDateTime();
 	
@@ -30,7 +30,7 @@ packets(0)
 		return;
 	}
 	QDataStream out(fake_tag_temp_file);
-	quint64 header = time->currentMSecsSinceEpoch()*2e6;
+	qint64 header = time->currentMSecsSinceEpoch();//*2e6;
 	out << header;
 	fake_tag_temp_file->close();
 	
@@ -59,7 +59,7 @@ void FakeTagger::newPacket()
 	//increase the coarse packet timestamp
 	//interval in ms, timestamp in multiples of 500ps
 	// timestamp += timestamp_interval*packet_hits;
-	timestamp = time->currentMSecsSinceEpoch()*2e6;
+	timestamp = time->currentMSecsSinceEpoch();//*2e6;
 
 	if(!fake_tag_temp_file->open(QIODevice::Append)){
 		qDebug() << "Couldn't open file to append data";

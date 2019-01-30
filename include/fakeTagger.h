@@ -27,7 +27,7 @@ private:
 
 	//raw timestamp, increases with timer timeout
 	QDateTime *time;
-	quint64 timestamp;
+	qint64 timestamp;
 	uint timestamp_interval;
 
 	quint64 packet_hits;

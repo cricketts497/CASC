@@ -55,12 +55,18 @@ private:
 	bool zoomed;
 
 	//binned data
-	uint binWidth;
-	QVector<uint> binEdges;
+	int binWidth;
+	QVector<int> binEdges;
 	qreal start_time;
+	void appendZeros();
+	void prependZeros();
+	void clearAll();
 
-	uint maxValueX;
-	double maxValueY;
+	void checkMinMax(qreal x, qreal y);
+	qreal maxValueX;
+	qreal maxValueY;
+	qreal minValueX;
+	qreal minValueY;
 	qreal lastPacketTime;
 
 	//tagger data
