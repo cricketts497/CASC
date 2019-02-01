@@ -38,6 +38,7 @@ private:
 	QValueAxis *rateAxis;
 
 	//binWidth editing
+	QLabel *binWidthLabel;
 	QSpinBox *binWidthEdit;
 	const uint maxBinWidth;
 
@@ -67,20 +68,24 @@ private:
 	qreal maxValueY;
 	qreal minValueX;
 	qreal minValueY;
-	qreal lastPacketTime;
-
+	
 	//tagger data
+	void binTagger_byTime(qreal time, quint64 packet_hits);
+	void binTagger_byPdl(qreal time, quint64 packet_hits);
 	QFile *tag_file;
 	qint64 tag_pos;
 	bool tagger_started;
 	const uint taggerUpdateTime;
 	QTimer *taggerUpdateTimer;
+	qreal lastPacketTime;
 
 	QVector<qreal> tag_times;
 	QVector<uint> counts;
 	QVector<qreal> delts;
 
 	//pdl data
+	void binPdl_byTime(qreal time, quint64 pdl_wavenumber);
+	void binPdl_byPdl(qreal time, quint64 pdl_wavenumber);
 	QFile *pdl_file;
 	qint64 pdl_pos;
 	bool pdl_started;
@@ -89,6 +94,8 @@ private:
 
 	QVector<uint> pdl_wavenumbers;
 	QVector<uint> pdl_counts;
+	
+	QVector<uint> binEdges_pdl;
 
 	//debug
 	// int holder = 1e4;
