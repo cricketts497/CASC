@@ -128,6 +128,7 @@ void MainWindow::togglePdlDevice(bool start)
 		centralGraph->newPdl();
 	}else{
 		delete pdlDevice;
+		centralGraph->closedPdl();
 		// status->setText(ready_message);
 	}
 }

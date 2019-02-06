@@ -12,6 +12,7 @@ public:
 	GenericGraph(const QString tag_path, const QString pdl_path, QMainWindow *parent);
 	void newTagger();
 	void newPdl();
+	void closedPdl();
 
 signals:
 	void newEdge(qreal edge);
@@ -57,7 +58,8 @@ private:
 
 	//binned data
 	int binWidth;
-	QVector<int> binEdges;
+	QVector<QVector<qreal>> binEdges;
+	int bindex;
 	qreal start_time;
 	void appendZeros();
 	void prependZeros();
@@ -84,7 +86,7 @@ private:
 	QVector<qreal> delts;
 
 	//pdl data
-	void binPdl_byTime(qreal time, quint64 pdl_wavenumber);
+	// void binPdl_byTime(qreal time, quint64 pdl_wavenumber);
 	void binPdl_byPdl(qreal time, quint64 pdl_wavenumber);
 	QFile *pdl_file;
 	qint64 pdl_pos;
@@ -96,6 +98,8 @@ private:
 	QVector<uint> pdl_counts;
 	
 	QVector<uint> binEdges_pdl;
+	
+	// uint pdl_wavenumber_edge;
 
 	//debug
 	// int holder = 1e4;
