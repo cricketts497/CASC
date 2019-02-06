@@ -245,6 +245,9 @@ void GenericGraph::binTagger_byPdl(qreal time, quint64 packet_hits)
 
 void GenericGraph::updatePdl()
 {
+	if(xAxisIndex != 1)
+		return;
+
 	uint cur_pdl_pos = pdl_pos;
 
 	if(!pdl_file->open(QIODevice::ReadOnly)){
@@ -509,8 +512,8 @@ void GenericGraph::closedPdl()
 //when the reset axes push button is pressed
 void GenericGraph::resetAxes()
 {
-	// xAxis->setRange(0,xStep);
-	// yAxis->setRange(0,yStep);	
+	xAxis->setRange(0,xStep);
+	yAxis->setRange(0,yStep);	
 
 	zoomed = false;
 	binned_changed = true;
