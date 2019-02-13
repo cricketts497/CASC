@@ -20,7 +20,9 @@ yAxisIndex(0),
 zoomed(false),
 graphUpdateTime(45),
 start_time(0),
-bindex(-1)
+bindex(-1),
+max_tof(50.0),
+min_tof(0.0)
 {
 	//main layout
 	layout = new QGridLayout(this);
@@ -28,6 +30,7 @@ bindex(-1)
 
 	//main chart
 	chartView = new ZoomChartView(this);
+	chartView->chart()->legend()->setVisible(false);
 	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed(bool)));
 	layout->addWidget(chartView,0,0);
 
@@ -36,7 +39,6 @@ bindex(-1)
 	series->setMarkerShape(QScatterSeries::MarkerShapeCircle);
 	series->setMarkerSize(15.0);
 	chartView->chart()->addSeries(series);
-
 
 	xAxis = new QValueAxis(this);
 	xAxis->setTitleText("Time / s");
@@ -135,7 +137,11 @@ void GenericGraph::updateTag()
 	uchar flag;
 	quint32 hit;
 	qreal time;
-	
+
+	int offset;
+	int max_tof_int = int(max_tof*2000);
+	int min_tof_int = int(min_tof*2000);
+
 	tag_file->seek(tag_pos);
 	QDataStream in(tag_file);
 	if(tag_pos == 0){
@@ -152,6 +158,9 @@ void GenericGraph::updateTag()
 		//get the hits
 		for(uint i=0; i<packet_hits; i++){
 			in >> hit;
+			offset = hit>>8&0xffffff;
+			if(offset<min_tof_int || offset>max_tof_int)
+				packet_hits--;
 		}
 
 		//since Epoch? in units of 500ps
@@ -188,9 +197,11 @@ void GenericGraph::binTagger_byTime(qreal time, quint64 packet_hits)
 			bindex = binEdges.size()-1;
 		}
 	}
-	tag_times[bindex] += time*packet_hits;
-	counts[bindex] += packet_hits;
-	delts[bindex] += (time-lastPacketTime);
+	if(time-lastPacketTime>0){
+		tag_times[bindex] += time*packet_hits;
+		counts[bindex] += packet_hits;
+		delts[bindex] += (time-lastPacketTime);
+	}
 }
 
 
@@ -328,13 +339,10 @@ void GenericGraph::updateGraph()
 					continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i);
-				
+
 				checkMinMax(x,y);
 
 				series->append(x, y);
-
-				
-
 			}
 		//rate
 		}else if(yAxisIndex == 1){
@@ -388,9 +396,10 @@ void GenericGraph::updateGraph()
 	if(!zoomed){
 		// xAxis->setMax(uint(maxValueX)- uint(maxValueX)%xStep +2*xStep);
 		// xAxis->setRange(uint(minValueX)-uint(minValueX)%xStep-xStep, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
-		xAxis->setRange(0, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
+		// xAxis->setRange(uint(minValueX)-uint(minValueX)%xStep-xStep, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
 		// xAxis->setMax(xAxis->max()+xStep);
 		// axisX->setTickCount(axisX->max()+1/5+1);
+		xAxis->setRange(floor(minValueX/binWidth)*binWidth-binWidth, ceil(maxValueX/binWidth)*binWidth+binWidth);
 	// }
 	// if(maxValueY >= yAxis->max()){
 		// yAxis->setMax(uint(maxValueY*8/7) - uint(maxValueY*8/7)%yStep +2*yStep);

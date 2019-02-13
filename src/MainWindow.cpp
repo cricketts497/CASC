@@ -4,7 +4,10 @@
 
 #include "include/MainWindow.h"
 
-MainWindow::MainWindow()
+MainWindow::MainWindow() :
+tofHist_open(false),
+PDL_open(false),
+tagger_started(false)
 {
 	createActions();
 	createStatusBar();
@@ -33,6 +36,13 @@ void MainWindow::createActions()
 	pdlAct->setStatusTip("Open the PDL scanner");
 	connect(pdlAct, &QAction::triggered, this, &MainWindow::togglePdl);
 	taskBar->addAction(pdlAct);
+
+	//TOF spectrum
+	const QIcon tofIcon = QIcon("./resources/tof.png");
+	tofAct = new QAction(tofIcon, "&TOF", this);
+	tofAct->setStatusTip("Open the tagger time of flight histogram");
+	connect(tofAct, &QAction::triggered, this, &MainWindow::toggleTof);
+	taskBar->addAction(tofAct);
 }
 
 void MainWindow::createStatusBar()
@@ -117,6 +127,31 @@ void MainWindow::setStatusPDL(bool changed)
 	setMinimumWidth(fm.width(message_str)+30);
 }
 
+void MainWindow::toggleTof()
+{
+	if(tofHist_open){
+		delete tofHist;
+
+		tofAct->setStatusTip("Open the tagger time of flight histogram");
+		status->setText(ready_message);
+		tofHist_open = false;
+	}else{
+		tofHist = new TofHistogram(tagger_temp_path, this);
+
+		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
+		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
+
+		addDockWidget(Qt::RightDockWidgetArea, tofHist);
+
+		//tell the histogram the tagger is running
+		if(tagger_started){
+			tofHist->newTagger();
+		}
+		tofAct->setStatusTip("Close the tagger time of flight histogram");
+		tofHist_open = true;
+	}
+}
+
 
 //devices
 //only local devices atm
@@ -141,6 +176,9 @@ void MainWindow::toggleTaggerDevice(bool start)
 		// connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusValue(int)));
 		// connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
 		centralGraph->newTagger();
+		if(tofHist_open)
+			tofHist->newTagger();
+		tagger_started = true;
 	}else{
 		delete taggerDevice;
 		// status->setText(ready_message);

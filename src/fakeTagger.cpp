@@ -4,10 +4,11 @@
 
 FakeTagger::FakeTagger(int rate, const QString file_path, QMainWindow *parent) :
 QTimer(parent),
-hits_per_packet(1),
+hits_per_packet(2),
 timestamp(0),
 flag(0),
 hit_data(0b00000000001001110001000000000000),
+hit_data2(0b00000000110000110101000000000000),
 packet_hits(0),
 // packets_to_read(3),
 packets(0)
@@ -39,9 +40,12 @@ packets(0)
 
 void FakeTagger::hit()
 {
-	//hit timestamp: 10000*500ps=5us, flag: 0, channel: A
+	//hit_data timestamp: 10000*500ps=5us, flag: 0, channel: A
 	//          timestamp           flag chan
 	//0000 0000 0010 0111 0001 0000 0000 0000
+	//hit_data2 timestamp: 50000*500ps=25us, flag: 0, channel: A
+	//          timestamp           flag chan
+	//0000 0000 1100 0011 0101 0000 0000 0000
 	//append to end of packet data
 	
 	packet_hits++;
@@ -83,6 +87,7 @@ void FakeTagger::newPacket()
 	
 	for(uint i=0; i<packet_hits; i++){
 		out << hit_data;
+		// out << hit_data2;
 	}
 	
 	fake_tag_temp_file->close();

@@ -87,6 +87,10 @@ private:
 	QVector<uint> counts;
 	QVector<qreal> delts;
 
+	//tagger tof gating, us
+	qreal max_tof;
+	qreal min_tof;
+
 	//pdl data
 	// void binPdl_byTime(qreal time, quint64 pdl_wavenumber);
 	void binPdl_byPdl(qreal time, quint64 pdl_wavenumber);

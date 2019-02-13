@@ -37,6 +37,7 @@ private:
 
 	//the hit data
 	const quint32 hit_data;
+	const quint32 hit_data2;
 
 	QFile *fake_tag_temp_file;
 

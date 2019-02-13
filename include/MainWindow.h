@@ -7,6 +7,7 @@
 #include "include/PdlDevice.h"
 #include "include/GenericGraph.h"
 #include "include/fakeTagger.h"
+#include "include/TofHistogram.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -32,6 +33,8 @@ private slots:
 	void togglePdl();
 	void setStatusPDL(bool changed);
 
+	void toggleTof();
+
 	//devices
 	void togglePdlDevice(bool start);
 	void toggleTaggerDevice(bool start);
@@ -53,21 +56,25 @@ private:
 
 	//open close actions
 	QAction *pdlAct;
+	QAction *tofAct;
 
 	//graph widget as central of main window
 	GenericGraph *centralGraph;
 
 	//task widgets
 	PdlScanner *pdlScanner;
+	TofHistogram *tofHist;
 
 	//open close flags
-	bool PDL_open = false;
+	bool PDL_open;
+	bool tofHist_open;
 
 	DeviceButton *pdlDeviceButton;
 	PdlDevice *pdlDevice;
 
 	DeviceButton *taggerDeviceButton;
 	FakeTagger *taggerDevice;
+	bool tagger_started;
 };
 
 #endif //MAIN_WINDOW_H
