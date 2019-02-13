@@ -22,6 +22,8 @@ private slots:
 	void increaseValue();
 
 private:
+	void changeSignStep();
+
 	uint timestamp_interval;
 	QFile *fake_pdl_temp_file;
 
@@ -29,6 +31,8 @@ private:
 
 	quint64 timestamp;
 	quint64 value;
+	int value_step;
+	int steps;
 };
 
 #endif //PDL_DEVICE

@@ -15,8 +15,6 @@ pdlUpdateTime(100),
 binned_changed(false),
 xStep(4),//as 4 axis divisions
 yStep(4),
-// maxValueX(0),
-// maxValueY(0),
 xAxisIndex(0),
 yAxisIndex(0),
 zoomed(false),
@@ -38,6 +36,7 @@ bindex(-1)
 	series->setMarkerShape(QScatterSeries::MarkerShapeCircle);
 	series->setMarkerSize(15.0);
 	chartView->chart()->addSeries(series);
+
 
 	xAxis = new QValueAxis(this);
 	xAxis->setTitleText("Time / s");
@@ -145,8 +144,6 @@ void GenericGraph::updateTag()
 		// start_time = header / 2e9;
 		if(start_time < 1)
 			start_time = qreal(header) / 1000;
-		// lastPacketTime = start_time;
-		lastPacketTime = 0;
 	}
 	while(!tag_file->atEnd()){
 		//get the packet header
@@ -276,6 +273,7 @@ void GenericGraph::updatePdl()
 void GenericGraph::binPdl_byPdl(qreal time, quint64 pdl_wavenumber)
 {
 	if(binEdges.isEmpty() || pdl_wavenumber >= binEdges_pdl[bindex]+binWidth || pdl_wavenumber < binEdges_pdl[bindex]){
+		emit newEdge(qreal(pdl_wavenumber));
 		//stop time
 		if(!binEdges.isEmpty()){
 			binEdges[bindex].append(time);
@@ -330,10 +328,13 @@ void GenericGraph::updateGraph()
 					continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i);
-
+				
 				checkMinMax(x,y);
 
 				series->append(x, y);
+
+				
+
 			}
 		//rate
 		}else if(yAxisIndex == 1){

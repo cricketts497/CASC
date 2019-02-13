@@ -34,6 +34,7 @@ private:
 	//graph data
 	ZoomChartView *chartView;
 	QScatterSeries *series;
+	QBoxPlotSeries *errorSeries;
 	QValueAxis *xAxis;
 	QValueAxis *yAxis;
 	QValueAxis *rateAxis;

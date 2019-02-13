@@ -4,8 +4,10 @@
 
 PdlDevice::PdlDevice(uint interval, const QString file_path, QMainWindow *parent) :
 QTimer(parent),
-value(10),
-timestamp(0)
+value(100),
+timestamp(0),
+value_step(-1),
+steps(0)
 {
 	// timestamp_interval = interval*2000000;
 	time = new QDateTime();
@@ -32,7 +34,7 @@ uint PdlDevice::current_value()
 
 void PdlDevice::increaseValue()
 {
-	value += 1;
+	value += value_step;
 	timestamp = time->currentMSecsSinceEpoch();
 
 	if(!fake_pdl_temp_file->open(QIODevice::Append)){
@@ -47,4 +49,14 @@ void PdlDevice::increaseValue()
 	fake_pdl_temp_file->close();
 
 	emit newValue(value);
+
+	steps += 1;
+
+	if(steps%30==0)
+		changeSignStep();
+}
+
+void PdlDevice::changeSignStep()
+{
+	value_step *= (-1);
 }
