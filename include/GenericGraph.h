@@ -60,6 +60,7 @@ private:
 	int binWidth;
 	QVector<QVector<qreal>> binEdges;
 	int bindex;
+	int time_index;
 	qreal start_time;
 	void appendZeros();
 	void prependZeros();

@@ -100,13 +100,6 @@ bindex(-1)
 	connect(graphUpdateTimer, SIGNAL(timeout()), this, SLOT(updateGraph()));
 	graphUpdateTimer->start(graphUpdateTime);
 
-	
-
-	//debug
-	// binEdges.append(0);
-	// binned.append(QPointF(0,0));
-	// binned_changed = true;
-	// updateGraph();
 }
 
 void GenericGraph::appendZeros()
@@ -116,15 +109,6 @@ void GenericGraph::appendZeros()
 	delts.append(0);
 	pdl_wavenumbers.append(0);
 	pdl_counts.append(0);
-}
-
-void GenericGraph::prependZeros()
-{
-	tag_times.prepend(0);
-	counts.prepend(0);
-	delts.prepend(0);
-	pdl_wavenumbers.prepend(0);
-	pdl_counts.prepend(0);
 }
 
 void GenericGraph::clearAll()
@@ -140,9 +124,6 @@ void GenericGraph::clearAll()
 // change so not linked to the tagger device? read a set of packets at a set rate?
 void GenericGraph::updateTag()
 {
-	// if(!newPackets)
-	// 	return;
-
 	uint cur_tag_pos = tag_pos;
 
 	if(!tag_file->open(QIODevice::ReadOnly)){
@@ -164,7 +145,8 @@ void GenericGraph::updateTag()
 		// start_time = header / 2e9;
 		if(start_time < 1)
 			start_time = qreal(header) / 1000;
-		lastPacketTime = start_time;
+		// lastPacketTime = start_time;
+		lastPacketTime = 0;
 	}
 	while(!tag_file->atEnd()){
 		//get the packet header
@@ -220,25 +202,29 @@ void GenericGraph::binTagger_byPdl(qreal time, quint64 packet_hits)
 	if(binEdges.isEmpty()){
 		//need pdl numbers to bin, do that first
 		updatePdl();
-	}else{
-		int bin;
+	}else if(!time_index || time < binEdges[bindex].at(time_index) || time >= binEdges[bindex].at(time_index+1)){
+		bool found_bin = false;
 		for(int i=0; i<binEdges.size(); i++){
 			for(int j=0; j<binEdges[i].size(); j+=2){
 				if(time>=binEdges[i].at(j) && (time<binEdges[i].at(j+1) || j+1>=binEdges[i].size())){
-					bin = i;
+					bindex = i;
+					time_index = j;
+					found_bin = true;
 					break;
 				}
 			}
 
-			if(bin)
+			if(found_bin){
+				tag_times[bindex] += time*packet_hits;
+				counts[bindex] += packet_hits;
+				delts[bindex] += (time-lastPacketTime);
 				break;
+			}
 		}
-
-		if(bin){
-			tag_times[bin] += time*packet_hits;
-			counts[bin] += packet_hits;
-			delts[bin] += (time-lastPacketTime);
-		}
+	}else{
+		tag_times[bindex] += time*packet_hits;
+		counts[bindex] += packet_hits;
+		delts[bindex] += (time-lastPacketTime);
 	}
 }
 
@@ -399,7 +385,6 @@ void GenericGraph::updateGraph()
 	// if(maxValueX >= xAxis->max()){
 		// xAxis->setMax(binned.last().x() - uint(binned.last().x())%xStep + 2*xStep);
 	if(!zoomed){
-		emit newEdge(uint(maxValueX)- uint(maxValueX)%xStep +xStep);
 		// xAxis->setMax(uint(maxValueX)- uint(maxValueX)%xStep +2*xStep);
 		// xAxis->setRange(uint(minValueX)-uint(minValueX)%xStep-xStep, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
 		xAxis->setRange(0, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
@@ -457,8 +442,8 @@ void GenericGraph::changeXAxis(int newIndex)
 		xAxis->setTitleText("Time / s");
 		binWidthLabel->setText("Bin Width / s");
 		changeBinWidth();
-		if(pdlUpdateTimer->isActive())
-			pdlUpdateTimer->stop();
+		// if(pdlUpdateTimer->isActive())
+			// pdlUpdateTimer->stop();
 	//pdl wavenumber
 	}else if(newIndex == 1){
 		if(pdl_started){
@@ -466,7 +451,7 @@ void GenericGraph::changeXAxis(int newIndex)
 			xAxis->setTitleText("PDL Wavenumber / cm^-1");
 			binWidthLabel->setText("Bin Width / cm^-1");
 			changeBinWidth();
-			pdlUpdateTimer->start(pdlUpdateTime);
+			// pdlUpdateTimer->start(pdlUpdateTime);
 		}else{
 			xAxisCombo->setCurrentIndex(0);
 		}
@@ -498,16 +483,16 @@ void GenericGraph::newTagger()
 //when the pdl device is started
 void GenericGraph::newPdl()
 {
-	// pdlUpdateTimer->start(pdlUpdateTime);
+	pdlUpdateTimer->start(pdlUpdateTime);
 	pdl_started = true;
 	changeBinWidth();
 }
 
-void GenericGraph::closedPdl()
-{
-	xAxisCombo->setCurrentIndex(0);
-	pdl_started = false;
-}
+// void GenericGraph::closedPdl()
+// {
+// 	xAxisCombo->setCurrentIndex(0);
+// 	pdl_started = false;
+// }
 
 //when the reset axes push button is pressed
 void GenericGraph::resetAxes()
