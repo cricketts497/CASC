@@ -31,7 +31,7 @@ min_tof(0.0)
 	//main chart
 	chartView = new ZoomChartView(this);
 	chartView->chart()->legend()->setVisible(false);
-	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed(bool)));
+	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed()));
 	layout->addWidget(chartView,0,0);
 
 	//graph formatting	
@@ -138,6 +138,7 @@ void GenericGraph::updateTag()
 	quint32 hit;
 	qreal time;
 
+	int hits;
 	int offset;
 	int max_tof_int = int(max_tof*2000);
 	int min_tof_int = int(min_tof*2000);
@@ -155,12 +156,18 @@ void GenericGraph::updateTag()
 		//get the packet header
 		in >> timestamp >> packet_hits >> flag;
 
+		hits = int(packet_hits);
+
 		//get the hits
-		for(uint i=0; i<packet_hits; i++){
+		for(quint64 i=0; i<packet_hits; i++){
 			in >> hit;
 			offset = hit>>8&0xffffff;
 			if(offset<min_tof_int || offset>max_tof_int)
-				packet_hits--;
+				hits--;
+		}
+
+		if(hits <= 0){
+			continue;
 		}
 
 		//since Epoch? in units of 500ps
@@ -169,9 +176,9 @@ void GenericGraph::updateTag()
 		time -= start_time;
 
 		if(xAxisIndex == 0)
-			binTagger_byTime(time, packet_hits);
+			binTagger_byTime(time, hits);
 		else if(xAxisIndex == 1)
-			binTagger_byPdl(time, packet_hits);
+			binTagger_byPdl(time, hits);
 		
 		lastPacketTime = time;
 		// tag_pos = tag_file->pos();
@@ -284,7 +291,6 @@ void GenericGraph::updatePdl()
 void GenericGraph::binPdl_byPdl(qreal time, quint64 pdl_wavenumber)
 {
 	if(binEdges.isEmpty() || pdl_wavenumber >= binEdges_pdl[bindex]+binWidth || pdl_wavenumber < binEdges_pdl[bindex]){
-		emit newEdge(qreal(pdl_wavenumber));
 		//stop time
 		if(!binEdges.isEmpty()){
 			binEdges[bindex].append(time);
@@ -413,9 +419,9 @@ void GenericGraph::updateGraph()
 	binned_changed = false;
 }
 
-void GenericGraph::chartZoomed(bool zoom)
+void GenericGraph::chartZoomed()
 {
-	zoomed = zoom;
+	zoomed = true;
 }
 
 void GenericGraph::changeBinWidth()
@@ -513,5 +519,12 @@ void GenericGraph::resetAxes()
 	zoomed = false;
 	binned_changed = true;
 	updateGraph();
+}
+
+void GenericGraph::newSelectionWindow(qreal left, qreal right)
+{
+	max_tof = right;
+	min_tof = left;
+	changeBinWidth();
 }
 

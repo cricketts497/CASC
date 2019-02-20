@@ -3,7 +3,7 @@
 
 #include <QDockWidget>
 #include <QtCharts>
-#include "include/ZoomChartView.h"
+#include "include/TofChartView.h"
 
 class TofHistogram : public QDockWidget
 {
@@ -20,10 +20,17 @@ protected:
 private slots:
 	void updateTag();
 	void updateHist();
+	void chartZoomed();
+	void resetAxes();
+	void changeBinWidth();
+
+	void newSelectionWindow(qreal left, qreal right);
 
 signals:
 	void value(qreal x);
 	void closing(bool x);
+
+	void selectionWindow(qreal left, qreal right);
 
 private:
 	// const QString name = QString("TOF histogram");
@@ -32,6 +39,13 @@ private:
 	QValueAxis * xAxis;
 	QValueAxis * yAxis;
 	int yStep;
+	qreal maxValueY;
+
+	QLineSeries * window;
+
+	QSpinBox * binWidthEdit;
+
+	bool zoomed;
 
 	QFile * tag_file;
 	qint64 tag_pos;

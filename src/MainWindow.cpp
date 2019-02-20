@@ -140,6 +140,7 @@ void MainWindow::toggleTof()
 
 		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
 		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
+		connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
 
 		addDockWidget(Qt::RightDockWidgetArea, tofHist);
 

@@ -9,7 +9,7 @@ class ZoomChartView : public QChartView
 {
 	Q_OBJECT
 public:
-	ZoomChartView(QWidget *parent=0);
+	ZoomChartView(QWidget *parent=nullptr);
 
 signals:
 	void new_zoom(bool zoom);

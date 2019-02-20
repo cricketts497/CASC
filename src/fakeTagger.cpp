@@ -85,9 +85,9 @@ void FakeTagger::newPacket()
 	out << packet_hits;
 	out << flag;
 	
-	for(uint i=0; i<packet_hits; i++){
+	for(uint i=0; i<packet_hits/2; i++){
 		out << hit_data;
-		// out << hit_data2;
+		out << hit_data2;
 	}
 	
 	fake_tag_temp_file->close();

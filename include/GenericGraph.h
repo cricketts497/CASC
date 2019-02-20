@@ -24,8 +24,9 @@ private slots:
 	void changeBinWidth();
 	void changeXAxis(int newIndex);
 	void changeYAxis(int newIndex);
-	void chartZoomed(bool zoom);
+	void chartZoomed();
 	void resetAxes();
+	void newSelectionWindow(qreal left, qreal right);
 
 private:
 	//widget layout
