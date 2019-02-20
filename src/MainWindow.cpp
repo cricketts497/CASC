@@ -6,7 +6,9 @@
 
 MainWindow::MainWindow() :
 tofHist_open(false),
-PDL_open(false),
+// PDL_open(false),
+messageWindow_open(false),
+fake_tagger_started(false),
 tagger_started(false)
 {
 	createActions();
@@ -43,6 +45,13 @@ void MainWindow::createActions()
 	tofAct->setStatusTip("Open the tagger time of flight histogram");
 	connect(tofAct, &QAction::triggered, this, &MainWindow::toggleTof);
 	taskBar->addAction(tofAct);
+
+	//Error message display window
+	const QIcon messageIcon = QIcon("./resources/message.png");
+	messageAct = new QAction(messageIcon, "&MESSAGE", this);
+	messageAct->setStatusTip("Open the error message display window");
+	connect(messageAct, &QAction::triggered, this, &MainWindow::toggleMessage);
+	taskBar->addAction(messageAct);
 }
 
 void MainWindow::createStatusBar()
@@ -58,10 +67,14 @@ void MainWindow::createDevicesBar()
 	pdlDeviceButton = new DeviceButton("PDL", devicesBar, "Start the PDL scanner device", "Stop the PDL scanner device");
 	connect(pdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(togglePdlDevice(bool)));
 
+	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device");
+	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
+
 	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device");
 	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
 
 	devicesBar->addWidget(pdlDeviceButton);
+	devicesBar->addWidget(fakeTaggerDeviceButton);
 	devicesBar->addWidget(taggerDeviceButton);
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -69,6 +82,126 @@ void MainWindow::createDevicesBar()
 
 
 //widgets
+void MainWindow::toggleTof()
+{
+	if(tofHist_open){
+		delete tofHist;
+
+		tofAct->setStatusTip("Open the tagger time of flight histogram");
+		status->setText(ready_message);
+		tofHist_open = false;
+	}else{
+		tofHist = new TofHistogram(tagger_temp_path, this);
+
+		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
+		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
+		connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
+
+		addDockWidget(Qt::RightDockWidgetArea, tofHist);
+
+		//tell the histogram the tagger is running
+		if(fake_tagger_started){
+			tofHist->newTagger();
+		}
+		tofAct->setStatusTip("Close the tagger time of flight histogram");
+		tofHist_open = true;
+	}
+}
+
+void MainWindow::toggleMessage()
+{
+	if(messageWindow_open){
+		delete messageWindow;
+
+		messageAct->setStatusTip("Open the error message display window");
+		status->setText(ready_message);
+		messageWindow_open = false;
+	}else{
+		messageWindow = new MessageWindow(this);
+
+		connect(messageWindow, SIGNAL(closing()), this, SLOT(toggleMessage()));
+
+		if(tagger_started){
+			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
+			taggerDevice->emitTaggerError();
+		}
+
+		addDockWidget(Qt::LeftDockWidgetArea, messageWindow);
+
+		messageAct->setStatusTip("Close the error message display window");
+		messageWindow_open = true;
+	}
+}
+
+
+
+
+//devices
+//only local devices atm
+void MainWindow::togglePdlDevice(bool start)
+{
+	if(start){
+		pdlDevice = new PdlDevice(500, pdl_temp_path, this);
+		// connect(pdlDevice, SIGNAL(newValue(int)), this, SLOT(setStatusTagger(int)));
+		centralGraph->newPdl();
+	}else{
+		delete pdlDevice;
+		// centralGraph->closedPdl();
+		// status->setText(ready_message);
+	}
+}
+
+void MainWindow::toggleFakeTaggerDevice(bool start)
+{
+	if(start){
+		//100 events per second
+		fakeTaggerDevice = new FakeTagger(10, tagger_temp_path, this);
+		// connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusValue(int)));
+		// connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
+		centralGraph->newTagger();
+		if(tofHist_open)
+			tofHist->newTagger();
+		fake_tagger_started = true;
+	}else{
+		delete fakeTaggerDevice;
+		// status->setText(ready_message);
+		fake_tagger_started = false;
+	}
+}
+
+void MainWindow::toggleTaggerDevice(bool start)
+{
+	if(start){
+		taggerDevice = new TaggerDevice(this);
+
+		if(messageWindow_open)
+			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		taggerDevice->emitTaggerError();
+		tagger_started = true;
+	}else{
+		delete taggerDevice;
+		tagger_started = false;
+	}
+}
+
+void MainWindow::setStatusValue(qreal value)
+{
+	QString message_str;
+	QTextStream message(&message_str);
+
+	// message << "Packet hits: " << hits;
+	message << "Value: " << value;
+
+	message_str = message.readAll();
+	status->setText(message_str);
+
+	QFontMetrics fm(font());
+	setMinimumWidth(fm.width(message_str)+30);
+}
+
+
+//////////////////////////////////////////////////////////////
+//////////////////////old fake pdl scanner////////////////////
 // void MainWindow::togglePdl()
 // {
 // 	if (PDL_open){
@@ -126,77 +259,3 @@ void MainWindow::createDevicesBar()
 // 	QFontMetrics fm(font());
 // 	setMinimumWidth(fm.width(message_str)+30);
 // }
-
-void MainWindow::toggleTof()
-{
-	if(tofHist_open){
-		delete tofHist;
-
-		tofAct->setStatusTip("Open the tagger time of flight histogram");
-		status->setText(ready_message);
-		tofHist_open = false;
-	}else{
-		tofHist = new TofHistogram(tagger_temp_path, this);
-
-		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
-		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
-		connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
-
-		addDockWidget(Qt::RightDockWidgetArea, tofHist);
-
-		//tell the histogram the tagger is running
-		if(tagger_started){
-			tofHist->newTagger();
-		}
-		tofAct->setStatusTip("Close the tagger time of flight histogram");
-		tofHist_open = true;
-	}
-}
-
-
-//devices
-//only local devices atm
-void MainWindow::togglePdlDevice(bool start)
-{
-	if(start){
-		pdlDevice = new PdlDevice(500, pdl_temp_path, this);
-		// connect(pdlDevice, SIGNAL(newValue(int)), this, SLOT(setStatusTagger(int)));
-		centralGraph->newPdl();
-	}else{
-		delete pdlDevice;
-		// centralGraph->closedPdl();
-		// status->setText(ready_message);
-	}
-}
-
-void MainWindow::toggleTaggerDevice(bool start)
-{
-	if(start){
-		//100 events per second
-		taggerDevice = new FakeTagger(10, tagger_temp_path, this);
-		// connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusValue(int)));
-		// connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
-		centralGraph->newTagger();
-		if(tofHist_open)
-			tofHist->newTagger();
-		tagger_started = true;
-	}else{
-		delete taggerDevice;
-		// status->setText(ready_message);
-	}
-}
-
-void MainWindow::setStatusValue(qreal value)
-{
-	QString message_str;
-	QTextStream message(&message_str);
-
-	// message << "Packet hits: " << hits;
-	message << "Value: " << value;
-
-	message_str = message.readAll();
-	status->setText(message_str);
-
-	QFontMetrics fm(font());
-	setMinimumWidth(fm.width(message_str)+30);
-}
