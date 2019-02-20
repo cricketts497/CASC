@@ -29,6 +29,13 @@ void TofChartView::mouseReleaseEvent(QMouseEvent * event)
 		zoom = true;
 
 		window_right = event->x();
+
+		if(window_left>window_right){
+			int w = window_left;
+			window_left = window_right;
+			window_right = w;
+		}
+
 		QPointF scene_left = mapToScene(QPoint(window_left, 0));
 		QPointF scene_right = mapToScene(QPoint(window_right, 0));
 		qreal left = chart()->mapToValue(scene_left).x();

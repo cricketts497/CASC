@@ -30,8 +30,8 @@ public:
 	
 private slots:
 	//widgets
-	void togglePdl();
-	void setStatusPDL(bool changed);
+	// void togglePdl();
+	// void setStatusPDL(bool changed);
 
 	void toggleTof();
 
@@ -55,7 +55,7 @@ private:
 	QLabel *status;
 
 	//open close actions
-	QAction *pdlAct;
+	// QAction *pdlAct;
 	QAction *tofAct;
 
 	//graph widget as central of main window

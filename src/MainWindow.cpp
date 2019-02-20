@@ -30,12 +30,12 @@ void MainWindow::createActions()
 	//The main icon task bar to open tasks
 	taskBar = addToolBar("&Tasks");
 
-	//PDL scanner
-	const QIcon pdlIcon = QIcon("./resources/pdl.png");
-	pdlAct = new QAction(pdlIcon, "&PDL", this);
-	pdlAct->setStatusTip("Open the PDL scanner");
-	connect(pdlAct, &QAction::triggered, this, &MainWindow::togglePdl);
-	taskBar->addAction(pdlAct);
+	// //PDL scanner
+	// const QIcon pdlIcon = QIcon("./resources/pdl.png");
+	// pdlAct = new QAction(pdlIcon, "&PDL", this);
+	// pdlAct->setStatusTip("Open the PDL scanner");
+	// connect(pdlAct, &QAction::triggered, this, &MainWindow::togglePdl);
+	// taskBar->addAction(pdlAct);
 
 	//TOF spectrum
 	const QIcon tofIcon = QIcon("./resources/tof.png");
@@ -69,63 +69,63 @@ void MainWindow::createDevicesBar()
 
 
 //widgets
-void MainWindow::togglePdl()
-{
-	if (PDL_open){
-		delete pdlScanner;
+// void MainWindow::togglePdl()
+// {
+// 	if (PDL_open){
+// 		delete pdlScanner;
 
-		pdlAct->setStatusTip("Open the PDL scanner");
-		PDL_open = false;
-		status->setText(ready_message);
-	}else{
-		if (!pdlDeviceButton->started){
-			pdlDeviceButton->toggle();
-		}
+// 		pdlAct->setStatusTip("Open the PDL scanner");
+// 		PDL_open = false;
+// 		status->setText(ready_message);
+// 	}else{
+// 		if (!pdlDeviceButton->started){
+// 			pdlDeviceButton->toggle();
+// 		}
 
-		pdlScanner = new PdlScanner("PDL Scanner", this);
+// 		pdlScanner = new PdlScanner("PDL Scanner", this);
 		
-		connect(pdlScanner, SIGNAL(closing(bool)), this, SLOT(togglePdl()));
-		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
-		connect(pdlDevice, SIGNAL(newValue(double)), pdlScanner, SLOT(updateValue(double)));
+// 		connect(pdlScanner, SIGNAL(closing(bool)), this, SLOT(togglePdl()));
+// 		connect(pdlScanner, SIGNAL(valueChanged(bool)), this, SLOT(setStatusPDL(bool)));
+// 		connect(pdlDevice, SIGNAL(newValue(double)), pdlScanner, SLOT(updateValue(double)));
 
-		addDockWidget(Qt::LeftDockWidgetArea, pdlScanner);
+// 		addDockWidget(Qt::LeftDockWidgetArea, pdlScanner);
 
-		pdlAct->setStatusTip("Close the PDL scanner");
-		PDL_open = true;
-		setStatusPDL(false);
-	}
-}
+// 		pdlAct->setStatusTip("Close the PDL scanner");
+// 		PDL_open = true;
+// 		setStatusPDL(false);
+// 	}
+// }
 
-void MainWindow::setStatusPDL(bool changed)
-{
-	QString message_str;
-	QTextStream message(&message_str);
+// void MainWindow::setStatusPDL(bool changed)
+// {
+// 	QString message_str;
+// 	QTextStream message(&message_str);
 
-	//PDL
-	if (PDL_open){
-		if (pdlScanner->stopped){
-			message << ready_message; 
-		} else {
-			message << "Scanning PDL";
-		}
+// 	//PDL
+// 	if (PDL_open){
+// 		if (pdlScanner->stopped){
+// 			message << ready_message; 
+// 		} else {
+// 			message << "Scanning PDL";
+// 		}
 
-		// if (pdlScanner->up_direction){
-		if (pdlScanner->currentDirection == 0){
-			message << " for higher wavelengths";
-		} else{
-			message << " for lower wavelengths";
-		}
+// 		// if (pdlScanner->up_direction){
+// 		if (pdlScanner->currentDirection == 0){
+// 			message << " for higher wavelengths";
+// 		} else{
+// 			message << " for lower wavelengths";
+// 		}
 
-		message << ", Speed: "<< pdlScanner->speed_values[pdlScanner->currentSpeed]*pdlScanner->multiplier_values[pdlScanner->currentMultiplier]
-		<< " nm/s";
-	}
+// 		message << ", Speed: "<< pdlScanner->speed_values[pdlScanner->currentSpeed]*pdlScanner->multiplier_values[pdlScanner->currentMultiplier]
+// 		<< " nm/s";
+// 	}
 	
-	message_str = message.readAll();
-	status->setText(message_str);
+// 	message_str = message.readAll();
+// 	status->setText(message_str);
 
-	QFontMetrics fm(font());
-	setMinimumWidth(fm.width(message_str)+30);
-}
+// 	QFontMetrics fm(font());
+// 	setMinimumWidth(fm.width(message_str)+30);
+// }
 
 void MainWindow::toggleTof()
 {
