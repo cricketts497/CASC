@@ -27,7 +27,7 @@ void TaggerDevice::stop()
 
 void TaggerDevice::emitTaggerError()
 {
-	emit tagger_message(QString("TAGGER ERROR: This is some error message you may get from the tagger card: %1").arg("string"));
+	emit tagger_message(QString("TAGGER ERROR: This is some error message you may get from the tagger card: %1").arg("some string"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ void TaggerDevice::initCard()
 	// const char * err_message;
 	// device = timetagger4_init(params, &error_code, &err_message);
 	// if(error_code != CRONO_OK){
-	// 	emit tagger_message(QString("TAGGER ERROR: timetagger4_init: %s").arg(err_message));
+	// 	emit tagger_message(QString("TAGGER ERROR: timetagger4_init: %1").arg(err_message));
 	// 	return;
 	// }
 	// card_running = true;
@@ -73,7 +73,7 @@ void TaggerDevice::initCard()
 	// //write this config to the board
 	// int status = timetagger4_configure(device, &config);
 	// if(status != CRONO_OK){
-	// 	emit tagger_message(QString("TAGGER ERROR: timetagger4_configure: %s").arg(err_message));
+	// 	emit tagger_message(QString("TAGGER ERROR: timetagger4_configure: %1").arg(err_message));
 	// 	return;
 	// }
 }
@@ -83,7 +83,7 @@ void TaggerDevice::sendBoardInfo()
 	// //send some board info
 	// timetagger4_static_info staticinfo;
 	// status = timetagger4_get_static_info(device, staticinfo);
-	// emit tagger_message(QString("Tagger: Board Serial: %d.%d").arg(staticinfo.board_serial>>24, staticinfo.board_serial&0xffffff));
+	// emit tagger_message(QString("Tagger: Board Serial: %1.%2").arg(staticinfo.board_serial>>24, staticinfo.board_serial&0xffffff));
 
 	// QString message_str;
 	// QTextStream message(&message_str);
@@ -99,13 +99,13 @@ void TaggerDevice::sendBoardInfo()
 	// }
 	// emit tagger_message(message.read_all());
 
-	// emit tagger_message(QString("Tagger: Board Revision: %d").arg(staticinfo.board_revision));
-	// emit tagger_message(QString("Tagger: Firmware Revision: %d.%d").arg(staticinfo.firmware_revision, staticinfo.subversion_revision));
-	// emit tagger_message(QString("Tagger: Driver Revision: %d.%d.%d.%d").arg(((staticinfo.driver_revision>>24)&255), ((staticinfo.driver_revision>>16)&255), ((staticinfo.driver_revision>>8)&255), (staticinfo.driver_revision&255)));
+	// emit tagger_message(QString("Tagger: Board Revision: %1").arg(staticinfo.board_revision));
+	// emit tagger_message(QString("Tagger: Firmware Revision: %1.%2").arg(staticinfo.firmware_revision, staticinfo.subversion_revision));
+	// emit tagger_message(QString("Tagger: Driver Revision: %1.%2.%3.%4").arg(((staticinfo.driver_revision>>24)&255), ((staticinfo.driver_revision>>16)&255), ((staticinfo.driver_revision>>8)&255), (staticinfo.driver_revision&255)));
 
 	// timetagger4_param_info parinfo;
 	// timetagger4_get_param_info(device, &parinfo);
-	// emit tagger_message(QString("Tagger: TDC binsize: %0.2f ps").arg(parinfo.binsize));
+	// emit tagger_message(QString("Tagger: TDC binsize: %1 ps").arg(parinfo.binsize));
 
 }
 

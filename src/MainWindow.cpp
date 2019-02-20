@@ -177,8 +177,10 @@ void MainWindow::toggleTaggerDevice(bool start)
 		if(messageWindow_open)
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
 		taggerDevice->emitTaggerError();
+		taggerDevice->start();
 		tagger_started = true;
 	}else{
+		taggerDevice->stop();
 		delete taggerDevice;
 		tagger_started = false;
 	}
