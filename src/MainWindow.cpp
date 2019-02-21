@@ -120,7 +120,7 @@ void MainWindow::toggleMessage()
 		messageWindow = new MessageWindow(this);
 
 		connect(messageWindow, SIGNAL(closing()), this, SLOT(toggleMessage()));
-
+		connect(centralGraph, SIGNAL(graph_message(QString)), messageWindow, SLOT(addMessage(QString)));
 		if(tagger_started){
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
 			taggerDevice->emitTaggerError();

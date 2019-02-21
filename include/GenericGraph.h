@@ -16,6 +16,7 @@ public:
 
 signals:
 	void newEdge(qreal edge);
+	void graph_message(QString message);
 
 private slots:
 	void updateTag();
@@ -75,8 +76,8 @@ private:
 	qreal minValueY;
 	
 	//tagger data
-	void binTagger_byTime(qreal time, quint64 packet_hits);
-	void binTagger_byPdl(qreal time, quint64 packet_hits);
+	void binTagger_byTime(qreal time, int packet_hits);
+	void binTagger_byPdl(qreal time, int packet_hits);
 	QFile *tag_file;
 	qint64 tag_pos;
 	bool tagger_started;

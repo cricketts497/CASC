@@ -1,6 +1,9 @@
 Makefile
 *.pro
 
+Makefile.*
+object_script.*
+
 # In repository we don't need to have:
 # Compiled object files
 *.o
@@ -17,6 +20,8 @@ ui_*.h
 # Built windows .exe and linux binaries
 *.dll
 casc
+
+debug
 
 # Editors temporary files 
 *~

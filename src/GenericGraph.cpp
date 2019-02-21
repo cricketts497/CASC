@@ -21,6 +21,7 @@ zoomed(false),
 graphUpdateTime(45),
 start_time(0),
 bindex(-1),
+// time_index(-1),
 max_tof(50.0),
 min_tof(0.0)
 {
@@ -125,10 +126,11 @@ void GenericGraph::clearAll()
 // change so not linked to the tagger device? read a set of packets at a set rate?
 void GenericGraph::updateTag()
 {
-	uint cur_tag_pos = tag_pos;
+	
+	qint64 cur_tag_pos = tag_pos;
 
 	if(!tag_file->open(QIODevice::ReadOnly)){
-		qDebug() << "Couldn't open tagger file for reading";
+		emit graph_message(QString("GRAPH ERROR: tag_file->open()"));
 		return;
 	}
 	
@@ -186,11 +188,13 @@ void GenericGraph::updateTag()
 	tag_pos = tag_file->pos();
 	tag_file->close();
 
-	if(tag_pos > cur_tag_pos)
+	if(tag_pos > cur_tag_pos){
+		emit graph_message(QString("Graph: updateTag: position: %1").arg(tag_pos));
 		binned_changed = true;
+	}
 }
 
-void GenericGraph::binTagger_byTime(qreal time, quint64 packet_hits)
+void GenericGraph::binTagger_byTime(qreal time, int packet_hits)
 {
 	//new bin
 	if(binEdges.isEmpty() || time >=binEdges[bindex].last() || time <binEdges[bindex].first()){
@@ -212,31 +216,48 @@ void GenericGraph::binTagger_byTime(qreal time, quint64 packet_hits)
 }
 
 
-void GenericGraph::binTagger_byPdl(qreal time, quint64 packet_hits)
+void GenericGraph::binTagger_byPdl(qreal time, int packet_hits)
 {
+	// emit graph_message(QString("graph: tagger binning by pdl"));
 	if(binEdges.isEmpty()){
 		//need pdl numbers to bin, do that first
 		updatePdl();
-	}else if(!time_index || time < binEdges[bindex].at(time_index) || time >= binEdges[bindex].at(time_index+1)){
+	}else if(!time_index || time_index+1>=binEdges[bindex].size() || time < binEdges[bindex].at(time_index) || time >= binEdges[bindex].at(time_index+1)){
 		bool found_bin = false;
+		int j;
 		for(int i=0; i<binEdges.size(); i++){
-			for(int j=0; j<binEdges[i].size(); j+=2){
-				if(time>=binEdges[i].at(j) && (time<binEdges[i].at(j+1) || j+1>=binEdges[i].size())){
+			j=0;
+			while(j<binEdges[i].size()){
+				// emit graph_message(QString("graph: tagger: %1 %2").arg(binEdges[i][j]).arg(time));
+				if(j+1>=binEdges[i].size()){
+					if(time >= binEdges[i].at(j)){
+						bindex = i;
+						time_index = j;
+						found_bin = true;
+						break;
+					}else
+						break;
+				}else if(time>=binEdges[i].at(j) && time<binEdges[i].at(j+1)){
 					bindex = i;
 					time_index = j;
 					found_bin = true;
 					break;
 				}
+				j+=2;
 			}
 
 			if(found_bin){
+				emit graph_message(QString("Graph: tagger: bin %1, %2").arg(bindex).arg(time));
 				tag_times[bindex] += time*packet_hits;
 				counts[bindex] += packet_hits;
 				delts[bindex] += (time-lastPacketTime);
 				break;
+			}else if(i>=binEdges.size()-1){
+				emit graph_message(QString("Graph: tagger: no bin found"));
 			}
 		}
 	}else{
+		emit graph_message(QString("Graph: tagger: bin %1, %2").arg(bindex).arg(time));
 		tag_times[bindex] += time*packet_hits;
 		counts[bindex] += packet_hits;
 		delts[bindex] += (time-lastPacketTime);
@@ -246,13 +267,14 @@ void GenericGraph::binTagger_byPdl(qreal time, quint64 packet_hits)
 
 void GenericGraph::updatePdl()
 {
+	// emit graph_message(QString("Graph: updatePdl: position: %1").arg(pdl_pos));
 	if(xAxisIndex != 1)
 		return;
 
-	uint cur_pdl_pos = pdl_pos;
+	qint64 cur_pdl_pos = pdl_pos;
 
 	if(!pdl_file->open(QIODevice::ReadOnly)){
-		qDebug() << "Couldn't open pdl file for reading";
+		emit graph_message(QString("GRAPH ERROR: pdl_file->open()"));
 		return;
 	}
 
@@ -280,11 +302,15 @@ void GenericGraph::updatePdl()
 		else if(xAxisIndex == 1)
 			binPdl_byPdl(time, pdl_wavenumber);
 	}
-	pdl_file->close();
 
 	pdl_pos = pdl_file->pos();
-	if(pdl_pos > cur_pdl_pos)
+	pdl_file->close();
+	
+
+	if(pdl_pos > cur_pdl_pos){
+		emit graph_message(QString("Graph: updatePdl: position: %1").arg(pdl_pos));
 		binned_changed = true;
+	}
 }
 
 
@@ -299,8 +325,10 @@ void GenericGraph::binPdl_byPdl(qreal time, quint64 pdl_wavenumber)
 		uint pdl_wavenumber_edge = pdl_wavenumber - pdl_wavenumber%binWidth;
 		if(binEdges_pdl.contains(pdl_wavenumber_edge)){
 			bindex = binEdges_pdl.indexOf(pdl_wavenumber_edge);
+			emit graph_message(QString("Graph: PDL: change bin %1 %2").arg(bindex).arg(time));
 			binEdges[bindex].append(time);
 		}else{
+			emit graph_message(QString("Graph: PDL: new bin %1 %2").arg(bindex).arg(time));
 			binEdges_pdl.append(pdl_wavenumber_edge);
 			appendZeros();
 			QVector<qreal> edge(1, time);
@@ -367,6 +395,7 @@ void GenericGraph::updateGraph()
 	}else if(xAxisIndex == 1){
 		//counts
 		if(yAxisIndex == 0){
+			// emit graph_message(QString("Graph: Switched to PDL binning"));
 			for(int i=0; i<binEdges.size(); i++){
 				if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0)
 					continue;
@@ -426,6 +455,7 @@ void GenericGraph::chartZoomed()
 
 void GenericGraph::changeBinWidth()
 {
+	emit graph_message(QString("Graph: changeBinWidth"));
 	binWidth = binWidthEdit->value();
 	//clear the current binned data
 	bindex = -1;
