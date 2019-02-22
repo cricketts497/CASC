@@ -70,7 +70,7 @@ void MainWindow::createDevicesBar()
 	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device");
 	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
 
-	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device");
+	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
 	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
 
 	devicesBar->addWidget(pdlDeviceButton);
@@ -121,6 +121,9 @@ void MainWindow::toggleMessage()
 
 		connect(messageWindow, SIGNAL(closing()), this, SLOT(toggleMessage()));
 		connect(centralGraph, SIGNAL(graph_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		
+		connect(taggerDeviceButton, SIGNAL(button_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		
 		if(tagger_started){
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
 		}
@@ -154,7 +157,7 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 {
 	if(start){
 		//100 events per second
-		fakeTaggerDevice = new FakeTagger(10, tagger_temp_path, this);
+		fakeTaggerDevice = new FakeTagger(10, fake_tagger_temp_path, this);
 		// connect(taggerDevice, SIGNAL(updateHits(int)), this, SLOT(setStatusValue(int)));
 		// connect(taggerDevice, SIGNAL(update(bool)), centralGraph, SLOT(updateTag(bool)));
 		centralGraph->newTagger();
@@ -171,13 +174,15 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 void MainWindow::toggleTaggerDevice(bool start)
 {
 	if(start){
-		taggerDevice = new TaggerDevice(this);
+		taggerDevice = new TaggerDevice(100, tagger_temp_path, this);
 
+		connect(taggerDevice, SIGNAL(tagger_fail()), taggerDeviceButton, SLOT(setFail()));
 		if(messageWindow_open)
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
-		tagger_started = taggerDevice->start();
+		
+		tagger_started = taggerDevice->start_card();
 	}else{
-		taggerDevice->stop();
+		taggerDevice->stop_card();
 		delete taggerDevice;
 		tagger_started = false;
 	}

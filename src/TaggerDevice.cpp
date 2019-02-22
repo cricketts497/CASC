@@ -1,29 +1,58 @@
 #include "include/TaggerDevice.h"
 
-TaggerDevice::TaggerDevice(QObject * parent) :
-QObject(parent),
-card_running(false)
+TaggerDevice::TaggerDevice(const int read_interval, const QString file_path, QMainWindow *parent) :
+QTimer(parent),
+// packet_count(0),
+// empty_packets(0),
+// packets_with_errors(0),
+// last_read_no_data(false),
+card_running(false),
+capture_running(false)
 {
-
+	QDateTime * start_time = new QDateTime();
+	
+	//file to write the tagger data to
+	tag_temp_file = new QFile(file_path);
+	if(!tag_temp_file->open(QIODevice::WriteOnly)){
+		emit tagger_message(QString("TAGGER ERROR: Couldn't open tagger file to write header"));
+		return;
+	}
+	QDataStream out(tag_temp_file);
+	qint64 header = start_time->currentMSecsSinceEpoch();
+	out << header;
+	tag_temp_file->close();
+	
+	//timer to set interval between card reads
+	connect(this, SIGNAL(timeout()), this, SLOT(readPackets()));
+	setInterval(read_interval);
 }
 
 TaggerDevice::~TaggerDevice()
 {
-	if(card_running)
-		stop();
+	stop_card();
 }
 
-bool TaggerDevice::start()
+bool TaggerDevice::start_card()
 {
 	if(initCard())
 		return false;
-	if(sendBoardInfo())
+	
+	if(sendBoardInfo()){
+		closeCard();
 		return false;
+	}
+	
+	if(startCapture()){
+		closeCard();
+		return false;
+	}
+	
 	return true;
 }
 
-void TaggerDevice::stop()
+void TaggerDevice::stop_card()
 {
+	stopCapture();
 	closeCard();
 }
 
@@ -41,6 +70,7 @@ int TaggerDevice::initCard()
 	status = timetagger4_get_default_init_parameters(&params);
 	if(status != CRONO_OK){
 		emit tagger_message(QString("TAGGER ERROR: timetagger4_get_default_init_parameters"));
+		emit tagger_fail();
 		return 1;
 	}
 
@@ -51,7 +81,9 @@ int TaggerDevice::initCard()
 	//initialise the card
 	device = timetagger4_init(&params, &error_code, &err_message);
 	if(error_code != CRONO_OK){
+		emit tagger_fail();
 		emit tagger_message(QString("TAGGER ERROR: timetagger4_init: %1").arg(err_message));
+		
 		return 1;
 	}
 	card_running = true;
@@ -79,6 +111,7 @@ int TaggerDevice::initCard()
 	status = timetagger4_configure(device, &config);
 	if(status != CRONO_OK){
 		emit tagger_message(QString("TAGGER ERROR: timetagger4_configure: %1").arg(err_message));
+		emit tagger_fail();
 		return error_code;
 	}
 	
@@ -127,9 +160,107 @@ int TaggerDevice::sendBoardInfo()
 	return 0;
 }
 
-int TaggerDevice::closeCard()
+int TaggerDevice::startCapture()
 {
-	timetagger4_close(device);
-	card_running = false;
+	//auto acknowledge data as processed: on read old packet pointers are no longer valid
+	read_config.acknowledge_last_read = 1;
+	
+	int status = timetagger4_start_capture(device);
+	if(status != CRONO_OK){
+		emit tagger_message(QString("TAGGER ERROR: timetagger4_start_capture: %1").arg(timetagger4_get_last_error_message(device)));
+		emit tagger_fail();
+		return status;
+	}
+	capture_running = true;
+	
+	//start the packet reading timer
+	start();
+	
 	return 0;
 }
+
+void TaggerDevice::readPackets()
+{
+	int status = timetagger4_read(device, &read_config, &read_data);
+	if(status != CRONO_OK){
+		emit tagger_message(QString("Tagger: No data on read"));
+		return;
+	}
+	
+	quint64 timestamp;
+	uchar flags;
+	int packet_hits;
+	
+	if(!tag_temp_file->open(QIODevice::Append)){
+		emit tagger_message(QString("TAGGER ERROR: Couldn't open tagger file to append data"));
+		emit tagger_fail();
+		return;
+	}
+	QDataStream out(tag_temp_file);
+	
+	//iterate over all the packets in the read and write them to a temporary file
+	crono_packet * p = read_data.first_packet;
+	while(p <= read_data.last_packet){
+		if(p->channel != uchar(0) || p->type != uchar(6)){
+			emit tagger_message(QString("Tagger: Bad Packet"));
+			p = crono_next_packet(p);
+			continue;
+		}
+		
+		timestamp = p->timestamp;
+		out << timestamp;
+		
+		flags = p->flags;
+		out << flags;
+		
+		packet_hits = 2 * (p->length);
+		//check for odd number of hits in the packet, given by flags=1
+		if((flags & 0x1) == 1)
+			packet_hits -= 1;
+		
+		quint32 * packet_data = (quint32*)(p->data);
+		for(int i=0; i<packet_hits; i++){
+			quint32 * hit = (packet_data + i);
+			out << *hit;
+		}
+		
+		//go to the next packet in the read
+		p = crono_next_packet(p);
+	}
+	
+	tag_temp_file->close();
+}
+
+int TaggerDevice::stopCapture()
+{
+	//stop the packet reading timer
+	if(isActive())
+		stop();
+	
+	if(capture_running){
+		timetagger4_stop_capture(device);
+		capture_running = false;
+	}
+	
+	return 0;
+}
+
+int TaggerDevice::closeCard()
+{
+	if(card_running){
+		timetagger4_close(device);
+		card_running = false;
+	}
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+

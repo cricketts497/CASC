@@ -26,7 +26,8 @@ public:
 	MainWindow();
 	const QString ready_message = "Ready";
 
-	const QString tagger_temp_path = "./temp/fake_tag_temp.dat";
+	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
+	const QString tagger_temp_path = "./temp/tag_temp.dat";
 	const QString pdl_temp_path = "./temp/fake_pdl_temp.dat";
 	
 private slots:
