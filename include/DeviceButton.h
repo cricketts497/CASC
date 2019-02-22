@@ -24,12 +24,12 @@ private slots:
 	void setFail();
 
 private:
-	void setButtonColour(QColor colour);
+	// void setButtonColour(QColor colour);
 
 	//button colours
-	QColor closed_colour = QColor(Qt::white);
-	QColor ok_colour = QColor(Qt::green);
-	QColor fail_colour = QColor(Qt::red);
+	const QColor closed_colour = QColor(Qt::white);
+	const QColor ok_colour = QColor(Qt::green);
+	const QColor fail_colour = QColor(Qt::red);
 
 	const char *startTip;
 	const char *stopTip;

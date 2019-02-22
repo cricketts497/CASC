@@ -81,9 +81,8 @@ int TaggerDevice::initCard()
 	//initialise the card
 	device = timetagger4_init(&params, &error_code, &err_message);
 	if(error_code != CRONO_OK){
-		emit tagger_fail();
 		emit tagger_message(QString("TAGGER ERROR: timetagger4_init: %1").arg(err_message));
-		
+		emit tagger_fail();
 		return 1;
 	}
 	card_running = true;
@@ -182,8 +181,15 @@ int TaggerDevice::startCapture()
 void TaggerDevice::readPackets()
 {
 	int status = timetagger4_read(device, &read_config, &read_data);
-	if(status != CRONO_OK){
-		emit tagger_message(QString("Tagger: No data on read"));
+	if(status == CRONO_READ_NO_DATA){
+		emit tagger_message(QString("Tagger: readPackets: No data"));
+		return;
+	}else if(status == CRONO_READ_TIMEOUT){
+		emit tagger_message(QString("Tagger: readPackets: Timeout"));
+		return;
+	}else if(status != CRONO_READ_OK){
+		emit tagger_message(QString("TAGGER ERROR: readPackets: %2").arg(read_data.error_message));
+		emit tagger_fail();
 		return;
 	}
 	
@@ -210,13 +216,14 @@ void TaggerDevice::readPackets()
 		timestamp = p->timestamp;
 		out << timestamp;
 		
-		flags = p->flags;
-		out << flags;
-		
 		packet_hits = 2 * (p->length);
 		//check for odd number of hits in the packet, given by flags=1
 		if((flags & 0x1) == 1)
 			packet_hits -= 1;
+		out << packet_hits;
+		
+		flags = p->flags;
+		out << flags;
 		
 		quint32 * packet_data = (quint32*)(p->data);
 		for(int i=0; i<packet_hits; i++){

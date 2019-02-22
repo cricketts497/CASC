@@ -19,6 +19,7 @@ private slots:
 signals:
 	void updateHits(int packetHits);
 	// void update(bool newPackets);
+	void tagger_fail();
 	
 private:
 	void newPacket();

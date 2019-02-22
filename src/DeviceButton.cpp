@@ -9,7 +9,14 @@ stopTip(stopTip),
 failTip(failTip)
 // local(local)
 {
-	setButtonColour(closed_colour);
+	emit button_message(QString("Button: init"));
+	
+	// setButtonColour(closed_colour);
+	QPalette pal = palette();
+	pal.setColor(QPalette::Button, closed_colour);
+	setPalette(pal);
+	update();
+	
 	setAutoFillBackground(true);
 	setStatusTip(startTip);
 
@@ -17,39 +24,57 @@ failTip(failTip)
 
 }
 
-void DeviceButton::setButtonColour(QColor colour)
-{
-	QPalette pal = palette();
-	pal.setColor(QPalette::Button, colour);
-	setPalette(pal);
-	update();
-}
+// void DeviceButton::setButtonColour(QColor colour)
+// {
+	// emit button_message(QString("Button: setButtonColour"));
+	// QPalette pal = palette();
+	// pal.setColor(QPalette::Button, colour);
+	// setPalette(pal);
+	// update();
+// }
 
 void DeviceButton::toggle()
 {
 	emit button_message(QString("Button: toggle"));
 	if(started){
-		emit toggle_device(false);
-
 		setFlat(false);
-		setButtonColour(closed_colour);
+		
+		// setButtonColour(closed_colour);
+		QPalette pal = palette();
+		pal.setColor(QPalette::Button, closed_colour);
+		setPalette(pal);
+		update();
+		
 		started = false;
 		setStatusTip(startTip);
+		
+		emit toggle_device(false);
 	} else{
-		emit toggle_device(true);
-
 		setFlat(true);
-		setButtonColour(ok_colour);
+		
+		// setButtonColour(ok_colour);
+		QPalette pal = palette();
+		pal.setColor(QPalette::Button, ok_colour);
+		setPalette(pal);
+		update();
+		
 		started = true;
 		setStatusTip(stopTip);
+		
+		emit toggle_device(true);
 	}
 }
 
 void DeviceButton::setFail()
 {
 	emit button_message(QString("Button: setFail"));
-	
 	setFlat(true);
-	setButtonColour(fail_colour);
+	
+	// setButtonColour(fail_colour);
+	QPalette pal = palette();
+	pal.setColor(QPalette::Button, fail_colour);
+	setPalette(pal);
+	update();
+	
 	setStatusTip(failTip);
 }

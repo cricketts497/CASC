@@ -134,12 +134,14 @@ void GenericGraph::updateTag()
 		return;
 	}
 	
-	qint64 timestamp;
-	quint64 packet_hits;
+	// qint64 timestamp;
+	quint64 timestamp;
 	uchar flag;
+	// quint64 packet_hits;
+	int packet_hits;
 	quint32 hit;
+	
 	qreal time;
-
 	int hits;
 	int offset;
 	int max_tof_int = int(max_tof*2000);
@@ -148,9 +150,9 @@ void GenericGraph::updateTag()
 	tag_file->seek(tag_pos);
 	QDataStream in(tag_file);
 	if(tag_pos == 0){
+		//start time in ms, from QDateTime::currentMSecsSinceEpoch()
 		qint64 header;
 		in >> header;
-		// start_time = header / 2e9;
 		if(start_time < 1)
 			start_time = qreal(header) / 1000;
 	}
@@ -158,10 +160,12 @@ void GenericGraph::updateTag()
 		//get the packet header
 		in >> timestamp >> packet_hits >> flag;
 
-		hits = int(packet_hits);
+		// hits = int(packet_hits);
+		hits = packet_hits;
 
 		//get the hits
-		for(quint64 i=0; i<packet_hits; i++){
+		// for(quint64 i=0; i<packet_hits; i++){
+		for(int i=0; i<packet_hits; i++){
 			in >> hit;
 			offset = hit>>8&0xffffff;
 			if(offset<min_tof_int || offset>max_tof_int)
@@ -172,9 +176,9 @@ void GenericGraph::updateTag()
 			continue;
 		}
 
-		//since Epoch? in units of 500ps
-		// time = timestamp / 2e9;
-		time = qreal(timestamp) / 1000;
+		//since Epoch? in units of 500ps from tagger card
+		// time = qreal(timestamp) / 1000;
+		time = qreal(timestamp) / 2e9;
 		time -= start_time;
 
 		if(xAxisIndex == 0)
