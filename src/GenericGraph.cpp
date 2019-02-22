@@ -189,7 +189,7 @@ void GenericGraph::updateTag()
 	tag_file->close();
 
 	if(tag_pos > cur_tag_pos){
-		emit graph_message(QString("Graph: updateTag: position: %1").arg(tag_pos));
+		// emit graph_message(QString("Graph: updateTag: position: %1").arg(tag_pos));
 		binned_changed = true;
 	}
 }
@@ -247,7 +247,7 @@ void GenericGraph::binTagger_byPdl(qreal time, int packet_hits)
 			}
 
 			if(found_bin){
-				emit graph_message(QString("Graph: tagger: bin %1, %2").arg(bindex).arg(time));
+				// emit graph_message(QString("Graph: tagger: bin %1, %2").arg(bindex).arg(time));
 				tag_times[bindex] += time*packet_hits;
 				counts[bindex] += packet_hits;
 				delts[bindex] += (time-lastPacketTime);
@@ -257,7 +257,7 @@ void GenericGraph::binTagger_byPdl(qreal time, int packet_hits)
 			}
 		}
 	}else{
-		emit graph_message(QString("Graph: tagger: bin %1, %2").arg(bindex).arg(time));
+		// emit graph_message(QString("Graph: tagger: bin %1, %2").arg(bindex).arg(time));
 		tag_times[bindex] += time*packet_hits;
 		counts[bindex] += packet_hits;
 		delts[bindex] += (time-lastPacketTime);
@@ -308,7 +308,7 @@ void GenericGraph::updatePdl()
 	
 
 	if(pdl_pos > cur_pdl_pos){
-		emit graph_message(QString("Graph: updatePdl: position: %1").arg(pdl_pos));
+		// emit graph_message(QString("Graph: updatePdl: position: %1").arg(pdl_pos));
 		binned_changed = true;
 	}
 }
@@ -325,10 +325,10 @@ void GenericGraph::binPdl_byPdl(qreal time, quint64 pdl_wavenumber)
 		uint pdl_wavenumber_edge = pdl_wavenumber - pdl_wavenumber%binWidth;
 		if(binEdges_pdl.contains(pdl_wavenumber_edge)){
 			bindex = binEdges_pdl.indexOf(pdl_wavenumber_edge);
-			emit graph_message(QString("Graph: PDL: change bin %1 %2").arg(bindex).arg(time));
+			// emit graph_message(QString("Graph: PDL: change bin %1 %2").arg(bindex).arg(time));
 			binEdges[bindex].append(time);
 		}else{
-			emit graph_message(QString("Graph: PDL: new bin %1 %2").arg(bindex).arg(time));
+			// emit graph_message(QString("Graph: PDL: new bin %1 %2").arg(bindex).arg(time));
 			binEdges_pdl.append(pdl_wavenumber_edge);
 			appendZeros();
 			QVector<qreal> edge(1, time);
@@ -455,7 +455,7 @@ void GenericGraph::chartZoomed()
 
 void GenericGraph::changeBinWidth()
 {
-	emit graph_message(QString("Graph: changeBinWidth"));
+	// emit graph_message(QString("Graph: changeBinWidth"));
 	binWidth = binWidthEdit->value();
 	//clear the current binned data
 	bindex = -1;

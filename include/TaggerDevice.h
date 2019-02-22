@@ -2,7 +2,8 @@
 #define TAGGER_DEVICE
 
 #include <QObject>
-// #include "include/timetagger4_interface.h"
+#include <QTextStream>
+#include "include/timetagger4_interface.h"
 
 class TaggerDevice : public QObject
 {
@@ -11,18 +12,20 @@ public:
 	TaggerDevice(QObject * parent = nullptr);
 	~TaggerDevice();
 	void emitTaggerError();
-	void start();
+	bool start();
 	void stop();
 
 signals:
 	void tagger_message(QString error);
 
 private:
-	void initCard();
-	void sendBoardInfo();
-	void closeCard();
+	int initCard();
+	int sendBoardInfo();
+	int closeCard();
 
-	// timetagger4_device * device
+	timetagger4_device * device;
+	int error_code;
+	const char * err_message;
 
 	bool card_running;
 

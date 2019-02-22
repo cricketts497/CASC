@@ -120,10 +120,9 @@ void MainWindow::toggleMessage()
 		messageWindow = new MessageWindow(this);
 
 		connect(messageWindow, SIGNAL(closing()), this, SLOT(toggleMessage()));
-		// connect(centralGraph, SIGNAL(graph_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		connect(centralGraph, SIGNAL(graph_message(QString)), messageWindow, SLOT(addMessage(QString)));
 		if(tagger_started){
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
-			taggerDevice->emitTaggerError();
 		}
 
 		addDockWidget(Qt::LeftDockWidgetArea, messageWindow);
@@ -176,9 +175,7 @@ void MainWindow::toggleTaggerDevice(bool start)
 
 		if(messageWindow_open)
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
-		taggerDevice->emitTaggerError();
-		taggerDevice->start();
-		tagger_started = true;
+		tagger_started = taggerDevice->start();
 	}else{
 		taggerDevice->stop();
 		delete taggerDevice;
