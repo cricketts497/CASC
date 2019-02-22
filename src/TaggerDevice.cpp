@@ -96,23 +96,21 @@ int TaggerDevice::sendBoardInfo()
 	}
 	emit tagger_message(QString("Tagger: Board Serial: %1.%2").arg(staticinfo.board_serial>>24).arg(staticinfo.board_serial&0xffffff));
 
-	QString message_str;
-	QTextStream message(&message_str);
-	message << "Tagger: Board configuration: TimeTagger4-";
-	switch(staticinfo.board_configuration)
-	{
+	// QString message_str;
+	// QTextStream message(&message_str);
+	// message << "Tagger: Board configuration: TimeTagger4-";
+	// switch(staticinfo.board_configuration)
+	// {
 		// case TIMETAGGER4_1G_BOARDCONF:
-		case 0:
-			message << "1G";
-			break;
+			// message << "1G";
+			// break;
 		// case TIMETAGGER4_2G_BOARDCONF:
-		case 1:
-			message << "2G";
-			break;
-		default:
-			message << "unknown";
-	}
-	emit tagger_message(message.readAll());
+			// message << "2G";
+			// break;
+		// default:
+			// message << "unknown";
+	// }
+	// emit tagger_message(message.readAll());
 
 	emit tagger_message(QString("Tagger: Board Revision: %1").arg(staticinfo.board_revision));
 	emit tagger_message(QString("Tagger: Firmware Revision: %1.%2").arg(staticinfo.firmware_revision).arg(staticinfo.subversion_revision));

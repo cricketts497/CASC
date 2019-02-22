@@ -19,6 +19,7 @@ ui_*.h
 
 # Built windows .exe and linux binaries
 *.dll
+*.zip
 casc
 
 debug
