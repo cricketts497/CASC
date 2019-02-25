@@ -20,7 +20,7 @@ tagger_started(false)
 	// mainWindow->setLayout(mainLayout);
 	// setCentralWidget(mainWindow);
 
-	centralGraph = new GenericGraph(fake_tagger_temp_path, pdl_temp_path, this);
+	centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, this);
 	// centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	
 	connect(centralGraph, SIGNAL(newEdge(qreal)), this, SLOT(setStatusValue(qreal)));
@@ -67,8 +67,8 @@ void MainWindow::createDevicesBar()
 {
 	devicesBar = new QToolBar("&Devices", this);
 
-	pdlDeviceButton = new DeviceButton("PDL", devicesBar, "Start the PDL scanner device", "Stop the PDL scanner device");
-	connect(pdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(togglePdlDevice(bool)));
+	fakePdlDeviceButton = new DeviceButton("Fake PDL", devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
+	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(togglePdlDevice(bool)));
 
 	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
 	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
@@ -76,7 +76,7 @@ void MainWindow::createDevicesBar()
 	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
 	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
 
-	devicesBar->addWidget(pdlDeviceButton);
+	devicesBar->addWidget(fakePdlDeviceButton);
 	devicesBar->addWidget(fakeTaggerDeviceButton);
 	devicesBar->addWidget(taggerDeviceButton);
 
@@ -94,11 +94,14 @@ void MainWindow::toggleTof()
 		status->setText(ready_message);
 		tofHist_open = false;
 	}else{
-		tofHist = new TofHistogram(fake_tagger_temp_path, this);
+		tofHist = new TofHistogram(fake_tagger_temp_path, &fakeTaggerFileMutex, this);
 
 		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
 		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
 		connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
+
+		if(messageWindow_open)
+			connect(tofHist, SIGNAL(tof_message(QString)), messageWindow, SLOT(addMessage(QString)));
 
 		addDockWidget(Qt::RightDockWidgetArea, tofHist);
 
@@ -125,7 +128,7 @@ void MainWindow::toggleMessage()
 		connect(messageWindow, SIGNAL(closing()), this, SLOT(toggleMessage()));
 		connect(centralGraph, SIGNAL(graph_message(QString)), messageWindow, SLOT(addMessage(QString)));
 		
-		connect(taggerDeviceButton, SIGNAL(button_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		// connect(taggerDeviceButton, SIGNAL(button_message(QString)), messageWindow, SLOT(addMessage(QString)));
 		
 		if(tagger_started){
 			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
@@ -146,10 +149,20 @@ void MainWindow::toggleMessage()
 void MainWindow::togglePdlDevice(bool start)
 {
 	if(start){
-		pdlDevice = new PdlDevice(500, pdl_temp_path, this);
+		fakePdlDevice = new PdlDevice(500, fake_pdl_temp_path, &fakePdlFileMutex);
+
+		connect(fakePdlDevice, SIGNAL(pdl_fail()), fakePdlDeviceButton, SLOT(setFail()));
+		if(messageWindow_open)
+			connect(fakePdlDevice, SIGNAL(pdl_message(QString)), messageWindow, SLOT(addMessage(QString)));
+
+		fakePdlDevice->moveToThread(&fakePdlDeviceThread);
+		connect(&fakeTaggerDeviceThread, SIGNAL(finished()), fakePdlDevice, SLOT(deleteLater()));
+		fakePdlDeviceThread.start();
+
 		centralGraph->newPdl();
 	}else{
-		delete pdlDevice;
+		fakePdlDeviceThread.quit();
+		// delete fakePdlDevice;
 		// centralGraph->closedPdl();
 	}
 }
@@ -158,7 +171,11 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 {
 	if(start){
 		//100 events per second
-		fakeTaggerDevice = new FakeTagger(10, fake_tagger_temp_path, this);
+		fakeTaggerDevice = new FakeTagger(10, fake_tagger_temp_path, &fakeTaggerFileMutex);
+
+		fakeTaggerDevice->moveToThread(&fakeTaggerDeviceThread);
+		connect(&fakeTaggerDeviceThread, SIGNAL(finished()), fakeTaggerDevice, SLOT(deleteLater()));
+		fakeTaggerDeviceThread.start();
 		
 		centralGraph->newTagger();
 		if(tofHist_open)
@@ -166,7 +183,7 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 		
 		fake_tagger_started = true;
 	}else{
-		delete fakeTaggerDevice;
+		fakeTaggerDeviceThread.quit();
 		
 		fake_tagger_started = false;
 	}

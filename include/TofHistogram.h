@@ -10,7 +10,7 @@ class TofHistogram : public QDockWidget
 	Q_OBJECT
 
 public:
-	TofHistogram(const QString tag_path, QWidget *parent = nullptr);
+	TofHistogram(const QString tag_path, QMutex * tag_mutex, QWidget *parent = nullptr);
 
 	void newTagger();
 
@@ -20,14 +20,17 @@ protected:
 private slots:
 	void updateTag();
 	void updateHist();
-	void chartZoomed();
+	void chartZoomed(bool zoom);
 	void resetAxes();
 	void changeBinWidth();
 
 	void newSelectionWindow(qreal left, qreal right);
 	void removeSelectionWindow();
 
+	void emitTofMessage(QString message);
+
 signals:
+	void tof_message(QString message);
 	void value(qreal x);
 	void closing(bool x);
 
@@ -50,6 +53,7 @@ private:
 	bool zoomed;
 
 	QFile * tag_file;
+	QMutex * tag_mutex;	
 	qint64 tag_pos;
 	QTimer * taggerUpdateTimer;
 	int taggerUpdateTime;

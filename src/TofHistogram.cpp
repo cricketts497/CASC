@@ -2,11 +2,12 @@
 #include <QtWidgets>
 
 
-TofHistogram::TofHistogram(const QString tag_path, QWidget * parent) :
+TofHistogram::TofHistogram(const QString tag_path, QMutex * tag_mutex, QWidget * parent) :
 QDockWidget("TOF Histogram", parent),
 yStep(4),
 maxValueY(10.0),
 zoomed(false),
+tag_mutex(tag_mutex),
 tag_pos(0),
 taggerUpdateTime(20),
 binWidth(1),//us
@@ -25,6 +26,7 @@ graphUpdateTime(45)
 	widget->setLayout(layout);
 
 	TofChartView * chartView = new TofChartView(this);
+	connect(chartView, SIGNAL(chart_message(QString)), this, SLOT(emitTofMessage(QString)));
 
 	line = new QLineSeries(this);
 	line->setPen(QPen(Qt::black));
@@ -39,7 +41,7 @@ graphUpdateTime(45)
 	connect(window, SIGNAL(doubleClicked(const QPointF&)), this, SLOT(removeSelectionWindow()));
 
 	chartView->chart()->legend()->setVisible(false);
-	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed()));
+	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed(bool)));
 	connect(chartView, SIGNAL(selectionWindow(qreal,qreal)), this, SLOT(newSelectionWindow(qreal,qreal)));
 	layout->addWidget(chartView);
 
@@ -98,8 +100,13 @@ void TofHistogram::updateTag()
 {
 	uint cur_tag_pos = tag_pos;
 
+	bool locked = tag_mutex->tryLock();
+	if(!locked)
+		return;
+
 	if(!tag_file->open(QIODevice::ReadOnly)){
-		qDebug() << "Couldn't open tagger file for reading";
+		emit tof_message(QString("TOF ERROR: tag_file->open"));
+		tag_mutex->unlock();
 		return;
 	}
 	
@@ -141,6 +148,8 @@ void TofHistogram::updateTag()
 	}
 	tag_pos = tag_file->pos();
 	tag_file->close();
+
+	tag_mutex->unlock();
 
 	if(tag_pos > cur_tag_pos)
 		binned_changed = true;
@@ -198,9 +207,9 @@ void TofHistogram::changeBinWidth()
 	resetAxes();
 }
 
-void TofHistogram::chartZoomed()
+void TofHistogram::chartZoomed(bool zoom)
 {
-	zoomed = true;
+	zoomed = zoom;
 }
 
 void TofHistogram::resetAxes()
@@ -243,6 +252,12 @@ void TofHistogram::removeSelectionWindow()
 	qreal right = 50.0;
 
 	window_line->clear();
+	// resetAxes();
 
 	emit selectionWindow(left, right);
+}
+
+void TofHistogram::emitTofMessage(QString message)
+{
+	emit tof_message(message);
 }

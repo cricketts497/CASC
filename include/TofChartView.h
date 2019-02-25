@@ -11,13 +11,15 @@ public:
 
 protected:
 	void mousePressEvent(QMouseEvent * event);
+	void mouseDoubleClickEvent(QMouseEvent * event);
 	void mouseReleaseEvent(QMouseEvent * event);
 
 signals:
 	void selectionWindow(qreal left, qreal right);
+	void chart_message(QString message);
 
 private:
-	bool zoom;
+	int zoom;
 	int window_left;
 	int window_right;
 };

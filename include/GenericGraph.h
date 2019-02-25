@@ -9,7 +9,7 @@ class GenericGraph : public QWidget
 	Q_OBJECT
 
 public:
-	GenericGraph(const QString tag_path, const QString pdl_path, QMainWindow *parent);
+	GenericGraph(const QString tag_path, const QString pdl_path, QMutex * tag_mutex, QMutex * pdl_mutex, QMainWindow *parent);
 	void newTagger();
 	void newPdl();
 	void closedPdl();
@@ -28,6 +28,7 @@ private slots:
 	void chartZoomed();
 	void resetAxes();
 	void newSelectionWindow(qreal left, qreal right);
+	void emitGraphMessage(QString message);
 
 private:
 	//widget layout
@@ -79,6 +80,7 @@ private:
 	void binTagger_byTime(qreal time, int packet_hits);
 	void binTagger_byPdl(qreal time, int packet_hits);
 	QFile *tag_file;
+	QMutex *tag_mutex;
 	qint64 tag_pos;
 	bool tagger_started;
 	const uint taggerUpdateTime;
@@ -97,6 +99,7 @@ private:
 	// void binPdl_byTime(qreal time, quint64 pdl_wavenumber);
 	void binPdl_byPdl(qreal time, quint64 pdl_wavenumber);
 	QFile *pdl_file;
+	QMutex * pdl_mutex;
 	qint64 pdl_pos;
 	bool pdl_started;
 	const uint pdlUpdateTime;

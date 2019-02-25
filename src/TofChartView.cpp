@@ -2,31 +2,40 @@
 
 TofChartView::TofChartView(QWidget * parent) :
 ZoomChartView(parent),
-zoom(true)
+zoom(0)
 {
 
 }
 
 void TofChartView::mousePressEvent(QMouseEvent * event)
 {
+	// emit chart_message(QString("TOFView: mousePressEvent"));
 	if(event->modifiers().testFlag(Qt::ControlModifier)){
 		setRubberBand(QChartView::HorizontalRubberBand);
-		zoom = false;
+		zoom = 1;
 
 		window_left = event->x();
 	}
 	QChartView::mousePressEvent(event);
 }
 
+void TofChartView::mouseDoubleClickEvent(QMouseEvent * event)
+{
+	// emit chart_message(QString("TOFView: mouseDoubleClickEvent"));
+	zoom = 2;
+	QChartView::mouseDoubleClickEvent(event);
+}
+
 void TofChartView::mouseReleaseEvent(QMouseEvent * event)
 {
-	if(zoom){
+	// emit chart_message(QString("TOFView: mouseReleaseEvent"));
+	if(zoom == 0){
 		ZoomChartView::mouseReleaseEvent(event);
-	}else{
+	}else if(zoom == 1){
 		setRubberBand(QChartView::NoRubberBand);
 		QChartView::mouseReleaseEvent(event);
 		setRubberBand(QChartView::RectangleRubberBand);
-		zoom = true;
+		zoom = 0;
 
 		window_right = event->x();
 
@@ -41,5 +50,11 @@ void TofChartView::mouseReleaseEvent(QMouseEvent * event)
 		qreal left = chart()->mapToValue(scene_left).x();
 		qreal right = chart()->mapToValue(scene_right).x();
 		emit selectionWindow(left, right);
+	}else if(zoom == 2){
+		setRubberBand(QChartView::NoRubberBand);
+		QChartView::mouseReleaseEvent(event);
+		emit new_zoom(false);
+		setRubberBand(QChartView::RectangleRubberBand);
+		zoom = 0;
 	}
 }

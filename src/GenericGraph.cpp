@@ -1,14 +1,16 @@
 #include "include/GenericGraph.h"
 #include <QtWidgets>
 
-GenericGraph::GenericGraph(const QString tag_path, const QString pdl_path, QMainWindow *parent) :
+GenericGraph::GenericGraph(const QString tag_path, const QString pdl_path, QMutex * tag_mutex, QMutex * pdl_mutex, QMainWindow *parent) :
 QWidget(parent),
 binWidth(2),
 maxBinWidth(10000),
+tag_mutex(tag_mutex),
 tag_pos(0),
 tagger_started(false),
 taggerUpdateTime(20),
 lastPacketTime(0),
+pdl_mutex(pdl_mutex),
 pdl_pos(0),
 pdl_started(false),
 pdlUpdateTime(100),
@@ -32,6 +34,7 @@ min_tof(0.0)
 	//main chart
 	chartView = new ZoomChartView(this);
 	chartView->chart()->legend()->setVisible(false);
+	connect(chartView, SIGNAL(zoom_message(QString)), this, SLOT(emitGraphMessage(QString)));
 	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed()));
 	layout->addWidget(chartView,0,0);
 
@@ -126,11 +129,15 @@ void GenericGraph::clearAll()
 // change so not linked to the tagger device? read a set of packets at a set rate?
 void GenericGraph::updateTag()
 {
-	
 	qint64 cur_tag_pos = tag_pos;
+
+	bool locked = tag_mutex->tryLock();
+	if(!locked)
+		return;
 
 	if(!tag_file->open(QIODevice::ReadOnly)){
 		emit graph_message(QString("GRAPH ERROR: tag_file->open()"));
+		tag_mutex->unlock();
 		return;
 	}
 	
@@ -191,6 +198,8 @@ void GenericGraph::updateTag()
 	}
 	tag_pos = tag_file->pos();
 	tag_file->close();
+
+	tag_mutex->unlock();
 
 	if(tag_pos > cur_tag_pos){
 		// emit graph_message(QString("Graph: updateTag: position: %1").arg(tag_pos));
@@ -277,8 +286,13 @@ void GenericGraph::updatePdl()
 
 	qint64 cur_pdl_pos = pdl_pos;
 
+	bool locked = pdl_mutex->tryLock();
+	if(!locked)
+		return;
+
 	if(!pdl_file->open(QIODevice::ReadOnly)){
 		emit graph_message(QString("GRAPH ERROR: pdl_file->open()"));
+		pdl_mutex->unlock();
 		return;
 	}
 
@@ -309,7 +323,8 @@ void GenericGraph::updatePdl()
 
 	pdl_pos = pdl_file->pos();
 	pdl_file->close();
-	
+
+	pdl_mutex->unlock();
 
 	if(pdl_pos > cur_pdl_pos){
 		// emit graph_message(QString("Graph: updatePdl: position: %1").arg(pdl_pos));
@@ -373,8 +388,8 @@ void GenericGraph::updateGraph()
 		//counts
 		if(yAxisIndex == 0){
 			for(int i=0; i<binEdges.size(); i++){
-				// if(counts.at(i) <= 0)
-				// 	continue;
+				if(counts.at(i) <= 0)
+					continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i);
 
@@ -385,8 +400,7 @@ void GenericGraph::updateGraph()
 		//rate
 		}else if(yAxisIndex == 1){
 			for(int i=0; i<binEdges.size(); i++){
-				// if(counts.at(i) <= 0 || delts.at(i) <= 0)
-				if(delts.at(i) <= 0)
+				if(counts.at(i) <= 0 || delts.at(i) <= 0)
 					continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i)/delts.at(i);
@@ -402,7 +416,6 @@ void GenericGraph::updateGraph()
 		if(yAxisIndex == 0){
 			// emit graph_message(QString("Graph: Switched to PDL binning"));
 			for(int i=0; i<binEdges.size(); i++){
-				// if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0)
 				if(pdl_counts.at(i) <= 0)
 					continue;
 				qreal x = pdl_wavenumbers.at(i)/pdl_counts.at(i);
@@ -415,7 +428,6 @@ void GenericGraph::updateGraph()
 		//rate
 		}else if(yAxisIndex == 1){
 			for(int i=0; i<binEdges.size(); i++){
-				// if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0 || delts.at(i) <=0)
 				if(pdl_counts.at(i) <= 0 || delts.at(i) <=0)
 					continue;
 				qreal x = pdl_wavenumbers.at(i)/pdl_counts.at(i);
@@ -433,8 +445,7 @@ void GenericGraph::updateGraph()
 	// holder++;
 	// series->replace(binned);
 
-	// if(maxValueX >= xAxis->max()){
-		// xAxis->setMax(binned.last().x() - uint(binned.last().x())%xStep + 2*xStep);
+
 	if(!zoomed){
 		// xAxis->setMax(uint(maxValueX)- uint(maxValueX)%xStep +2*xStep);
 		// xAxis->setRange(uint(minValueX)-uint(minValueX)%xStep-xStep, uint(maxValueX)- uint(maxValueX)%xStep +xStep);
@@ -442,8 +453,7 @@ void GenericGraph::updateGraph()
 		// xAxis->setMax(xAxis->max()+xStep);
 		// axisX->setTickCount(axisX->max()+1/5+1);
 		xAxis->setRange(floor(minValueX/binWidth)*binWidth-binWidth, ceil(maxValueX/binWidth)*binWidth+binWidth);
-	// }
-	// if(maxValueY >= yAxis->max()){
+
 		// yAxis->setMax(uint(maxValueY*8/7) - uint(maxValueY*8/7)%yStep +2*yStep);
 		// yAxis->setRange(uint(minValueY)-uint(minValueY)%yStep, uint(maxValueY) - uint(maxValueY)%yStep +yStep);
 		yAxis->setRange(0, uint(maxValueY*8/7) - uint(maxValueY*8/7)%yStep +yStep);
@@ -565,3 +575,7 @@ void GenericGraph::newSelectionWindow(qreal left, qreal right)
 	changeBinWidth();
 }
 
+void GenericGraph::emitGraphMessage(QString message)
+{
+	emit graph_message(message);
+}

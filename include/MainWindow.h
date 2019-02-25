@@ -54,7 +54,10 @@ private:
 	//file paths
 	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
 	const QString tagger_temp_path = "./temp/tag_temp.dat";
-	const QString pdl_temp_path = "./temp/fake_pdl_temp.dat";
+	const QString fake_pdl_temp_path = "./temp/fake_pdl_temp.dat";
+
+	QMutex fakeTaggerFileMutex;
+	QMutex fakePdlFileMutex;
 
 	//graph widget as central of main window
 	GenericGraph *centralGraph;
@@ -75,12 +78,14 @@ private:
 
 
 	//devices
-	DeviceButton *pdlDeviceButton;
-	PdlDevice *pdlDevice;
+	DeviceButton *fakePdlDeviceButton;
+	PdlDevice *fakePdlDevice;
+	QThread fakePdlDeviceThread;
 
 	DeviceButton *fakeTaggerDeviceButton;
 	FakeTagger *fakeTaggerDevice;
 	bool fake_tagger_started;
+	QThread fakeTaggerDeviceThread;
 
 	DeviceButton *taggerDeviceButton;
 	TaggerDevice * taggerDevice;

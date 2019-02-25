@@ -1,8 +1,10 @@
 #include "include/fakeTagger.h"
 #include <QtWidgets>
 #include <QFile>
+#include <QMutex>
+#include <QMutexLocker>
 
-FakeTagger::FakeTagger(int rate, const QString file_path, QMainWindow *parent) :
+FakeTagger::FakeTagger(int rate, const QString file_path, QMutex * file_mutex, QMainWindow *parent) :
 QTimer(parent),
 hits_per_packet(2),
 timestamp(0),
@@ -11,6 +13,7 @@ hit_data(0b00000000001001110001000000000000),
 hit_data2(0b00000000110000110101000000000000),
 packet_hits(0),
 // packets_to_read(3),
+file_mutex(file_mutex),
 packets(0)
 {
 	int interval = 999/rate;
@@ -25,6 +28,7 @@ packets(0)
 	// int ts = hit>>8 & 0xffffff;
 	// std::cout << chan << flag << ts << std::endl;
 	
+	QMutexLocker file_locker(file_mutex);
 	fake_tag_temp_file = new QFile(file_path);
 	if(!fake_tag_temp_file->open(QIODevice::WriteOnly)){
 		qDebug() << "Couldn't open new tagger file";
@@ -63,6 +67,7 @@ void FakeTagger::newPacket()
 	timestamp += timestamp_interval*packet_hits;
 	timestamp = time->currentMSecsSinceEpoch();//*2e6;
 
+	QMutexLocker file_locker(file_mutex);
 	if(!fake_tag_temp_file->open(QIODevice::Append)){
 		qDebug() << "Couldn't open file to append data";
 		return;

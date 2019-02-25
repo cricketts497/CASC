@@ -13,6 +13,7 @@ public:
 
 signals:
 	void new_zoom(bool zoom);
+	void zoom_message(QString message);
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event);

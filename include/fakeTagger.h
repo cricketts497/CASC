@@ -5,19 +5,20 @@
 
 class QMainWindow;
 class QFile;
+class QMutex;
 
 class FakeTagger: public QTimer
 {
 	Q_OBJECT
 	
 public:
-	FakeTagger(int rate, const QString file_path, QMainWindow *parent);
+	FakeTagger(int rate, const QString file_path, QMutex * file_mutex, QMainWindow *parent=nullptr);
 	
 private slots:
 	void hit();
 
 signals:
-	void updateHits(int packetHits);
+	// void updateHits(int packetHits);
 	// void update(bool newPackets);
 	void tagger_fail();
 	
@@ -40,6 +41,7 @@ private:
 	const quint32 hit_data;
 	const quint32 hit_data2;
 
+	QMutex * file_mutex;
 	QFile *fake_tag_temp_file;
 
 	// const uint packets_to_read;
