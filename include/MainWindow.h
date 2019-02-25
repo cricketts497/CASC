@@ -2,7 +2,7 @@
 #define MAIN_WINDOW_H
 
 #include <QMainWindow>
-#include "include/PdlScanner.h"
+// #include "include/PdlScanner.h"
 #include "include/DeviceButton.h"
 #include "include/PdlDevice.h"
 #include "include/GenericGraph.h"
@@ -24,12 +24,7 @@ class MainWindow: public QMainWindow
 
 public:
 	MainWindow();
-	const QString ready_message = "Ready";
 
-	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
-	const QString tagger_temp_path = "./temp/tag_temp.dat";
-	const QString pdl_temp_path = "./temp/fake_pdl_temp.dat";
-	
 private slots:
 	//widgets
 	// void togglePdl();
@@ -51,31 +46,32 @@ private:
 
 	QToolBar *taskBar;
 	QToolBar *devicesBar;
-	// QWidget *mainWindow;
-	// QHBoxLayout *mainLayout;
 
 	//main status text
 	QLabel *status;
+	const QString ready_message = "Ready";
 
-	//open close actions
-	// QAction *pdlAct;
-	QAction *tofAct;
-	QAction *messageAct;
-
+	//file paths
+	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
+	const QString tagger_temp_path = "./temp/tag_temp.dat";
+	const QString pdl_temp_path = "./temp/fake_pdl_temp.dat";
 
 	//graph widget as central of main window
 	GenericGraph *centralGraph;
 
-
 	//task widgets
-	PdlScanner *pdlScanner;
-	TofHistogram *tofHist;
-	MessageWindow * messageWindow;
-
-	//open close flags
+	// QAction *pdlAct;
+	// PdlScanner *pdlScanner;
 	// bool PDL_open;
+
+	QAction *tofAct;
+	TofHistogram *tofHist;
 	bool tofHist_open;
+
+	QAction *messageAct;
+	MessageWindow * messageWindow;
 	bool messageWindow_open;
+
 
 
 	//devices

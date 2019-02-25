@@ -373,8 +373,8 @@ void GenericGraph::updateGraph()
 		//counts
 		if(yAxisIndex == 0){
 			for(int i=0; i<binEdges.size(); i++){
-				if(counts.at(i) <= 0)
-					continue;
+				// if(counts.at(i) <= 0)
+				// 	continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i);
 
@@ -385,7 +385,8 @@ void GenericGraph::updateGraph()
 		//rate
 		}else if(yAxisIndex == 1){
 			for(int i=0; i<binEdges.size(); i++){
-				if(counts.at(i) <= 0 || delts.at(i) <= 0)
+				// if(counts.at(i) <= 0 || delts.at(i) <= 0)
+				if(delts.at(i) <= 0)
 					continue;
 				qreal x = tag_times.at(i)/counts.at(i);
 				qreal y = counts.at(i)/delts.at(i);
@@ -401,7 +402,8 @@ void GenericGraph::updateGraph()
 		if(yAxisIndex == 0){
 			// emit graph_message(QString("Graph: Switched to PDL binning"));
 			for(int i=0; i<binEdges.size(); i++){
-				if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0)
+				// if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0)
+				if(pdl_counts.at(i) <= 0)
 					continue;
 				qreal x = pdl_wavenumbers.at(i)/pdl_counts.at(i);
 				qreal y = counts.at(i);
@@ -413,7 +415,8 @@ void GenericGraph::updateGraph()
 		//rate
 		}else if(yAxisIndex == 1){
 			for(int i=0; i<binEdges.size(); i++){
-				if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0 || delts.at(i) <=0)
+				// if(pdl_counts.at(i) <= 0 || counts.at(i) <= 0 || delts.at(i) <=0)
+				if(pdl_counts.at(i) <= 0 || delts.at(i) <=0)
 					continue;
 				qreal x = pdl_wavenumbers.at(i)/pdl_counts.at(i);
 				qreal y = counts.at(i)/delts.at(i);
