@@ -25,6 +25,7 @@ private slots:
 	void changeBinWidth();
 
 	void newSelectionWindow(qreal left, qreal right);
+	void removeSelectionWindow();
 
 signals:
 	void value(qreal x);
@@ -41,7 +42,8 @@ private:
 	int yStep;
 	qreal maxValueY;
 
-	QLineSeries * window;
+	QAreaSeries * window;
+	QLineSeries * window_line;
 
 	QSpinBox * binWidthEdit;
 

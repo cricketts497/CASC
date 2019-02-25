@@ -25,16 +25,22 @@ graphUpdateTime(45)
 	widget->setLayout(layout);
 
 	TofChartView * chartView = new TofChartView(this);
+
 	line = new QLineSeries(this);
-	window = new QLineSeries(this);
 	line->setPen(QPen(Qt::black));
-	window->setPen(QPen(Qt::blue));
 	chartView->chart()->addSeries(line);
+
+	window_line = new QLineSeries(this);
+	window = new QAreaSeries(this);
+	window->setBorderColor(Qt::blue);
+	window->setColor(QColor(0,0,255,70));//rgba colour, alpha=70/255
+	window->setUpperSeries(window_line);
 	chartView->chart()->addSeries(window);
+	connect(window, SIGNAL(doubleClicked(const QPointF&)), this, SLOT(removeSelectionWindow()));
+
 	chartView->chart()->legend()->setVisible(false);
 	connect(chartView, SIGNAL(new_zoom(bool)), this, SLOT(chartZoomed()));
 	connect(chartView, SIGNAL(selectionWindow(qreal,qreal)), this, SLOT(newSelectionWindow(qreal,qreal)));
-	// setWidget(chartView);
 	layout->addWidget(chartView);
 
 	xAxis = new QValueAxis(this);
@@ -61,7 +67,7 @@ graphUpdateTime(45)
 
 	QPushButton *resetButton = new QPushButton("Reset axes", this);
 	connect(resetButton, SIGNAL(clicked()), this, SLOT(resetAxes()));
-	
+
 	QLabel * binWidthLabel = new QLabel("Bin width / us:", this);
 	binWidthEdit = new QSpinBox(this);
 	binWidthEdit->setValue(binWidth);
@@ -224,8 +230,19 @@ void TofHistogram::closeEvent(QCloseEvent *event)
 void TofHistogram::newSelectionWindow(qreal left, qreal right)
 {
 	//update the selection window lines
-	QList<QPointF> window_list = {QPointF(left, 0), QPointF(left, yAxis->max()*10000), QPointF(right, yAxis->max()*10000), QPointF(right, 0)};
-	window->replace(window_list);	
+	QList<QPointF> window_list = {QPointF(left, yAxis->max()*10000), QPointF(right, yAxis->max()*10000)};
+	window_line->replace(window_list);
+
+	emit selectionWindow(left, right);
+}
+
+void TofHistogram::removeSelectionWindow()
+{
+	//reset to default values
+	qreal left = 0.0;
+	qreal right = 50.0;
+
+	window_line->clear();
 
 	emit selectionWindow(left, right);
 }
