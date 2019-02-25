@@ -20,8 +20,8 @@ tagger_started(false)
 	// mainWindow->setLayout(mainLayout);
 	// setCentralWidget(mainWindow);
 
-	// centralGraph = new GenericGraph(fake_tagger_temp_path, pdl_temp_path, this);
-	centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
+	centralGraph = new GenericGraph(fake_tagger_temp_path, pdl_temp_path, this);
+	// centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	
 	connect(centralGraph, SIGNAL(newEdge(qreal)), this, SLOT(setStatusValue(qreal)));
 	setCentralWidget(centralGraph);
@@ -183,8 +183,8 @@ void MainWindow::toggleTaggerDevice(bool start)
 		
 		tagger_started = taggerDevice->start_card();
 		
-		if(tagger_started)
-			centralGraph->newTagger();
+		// if(tagger_started)
+			// centralGraph->newTagger();
 	}else{
 		taggerDevice->stop_card();
 		delete taggerDevice;

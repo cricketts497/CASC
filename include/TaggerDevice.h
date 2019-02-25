@@ -3,7 +3,7 @@
 
 #include <QtWidgets>
 #include <QFile>
-#include "include/timetagger4_interface.h"
+// #include "include/timetagger4_interface.h"
 
 class TaggerDevice : public QTimer
 {
@@ -32,18 +32,13 @@ private:
 	
 	QFile * tag_temp_file;
 
-	timetagger4_device * device;
-	int error_code;
-	const char * err_message;
+	// timetagger4_device * device;
+	// int error_code;
+	// const char * err_message;
 	
-	timetagger4_read_in read_config;
-	timetagger4_read_out read_data;
-		
-	// int packet_count;
-	// int empty_packets;
-	// int packets_with_errors;
-	// bool last_read_no_data;
-
+	// timetagger4_read_in read_config;
+	// timetagger4_read_out read_data;
+	
 	bool card_running;
 	bool capture_running;
 

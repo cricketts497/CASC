@@ -134,11 +134,11 @@ void GenericGraph::updateTag()
 		return;
 	}
 	
-	// qint64 timestamp;
-	quint64 timestamp;
+	qint64 timestamp;
+	// quint64 timestamp;
 	uchar flag;
-	// quint64 packet_hits;
-	int packet_hits;
+	quint64 packet_hits;
+	// int packet_hits;
 	quint32 hit;
 	
 	qreal time;
@@ -160,12 +160,12 @@ void GenericGraph::updateTag()
 		//get the packet header
 		in >> timestamp >> packet_hits >> flag;
 
-		// hits = int(packet_hits);
-		hits = packet_hits;
+		hits = int(packet_hits);
+		// hits = packet_hits;
 
 		//get the hits
-		// for(quint64 i=0; i<packet_hits; i++){
-		for(int i=0; i<packet_hits; i++){
+		for(quint64 i=0; i<packet_hits; i++){
+		// for(int i=0; i<packet_hits; i++){
 			in >> hit;
 			offset = hit>>8&0xffffff;
 			if(offset<min_tof_int || offset>max_tof_int)
@@ -177,8 +177,8 @@ void GenericGraph::updateTag()
 		}
 
 		//since Epoch? in units of 500ps from tagger card
-		// time = qreal(timestamp) / 1000;
-		time = qreal(timestamp) / 2e9;
+		time = qreal(timestamp) / 1000;
+		// time = qreal(timestamp) / 2e9;
 		time -= start_time;
 
 		if(xAxisIndex == 0)
