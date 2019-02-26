@@ -10,6 +10,7 @@
 #include "include/TofHistogram.h"
 #include "include/MessageWindow.h"
 #include "include/TaggerDevice.h"
+#include "include/Listener.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -26,6 +27,8 @@ public:
 	MainWindow();
 
 private slots:
+	void keepMessage(QString message);
+
 	//widgets
 	// void togglePdl();
 	// void setStatusPDL(bool changed);
@@ -33,11 +36,15 @@ private slots:
 	void toggleMessage();
 
 	//devices
-	void togglePdlDevice(bool start);
+	void toggleListener(bool start);
+	void toggleFakePdlDevice(bool start);
 	void toggleFakeTaggerDevice(bool start);
 	void toggleTaggerDevice(bool start);
 
 	void setStatusValue(qreal value);
+
+signals:
+	void new_message(QString message);
 
 private:
 	void createActions();
@@ -50,6 +57,9 @@ private:
 	//main status text
 	QLabel *status;
 	const QString ready_message = "Ready";
+
+	QString messages_string;
+	QTextStream messages;
 
 	//file paths
 	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
@@ -78,6 +88,9 @@ private:
 
 
 	//devices
+	DeviceButton * listenerButton;
+	Listener * listener;
+
 	DeviceButton *fakePdlDeviceButton;
 	PdlDevice *fakePdlDevice;
 	QThread fakePdlDeviceThread;

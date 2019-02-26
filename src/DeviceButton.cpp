@@ -1,13 +1,13 @@
 #include <QtWidgets>
 #include "include/DeviceButton.h"
 
-DeviceButton::DeviceButton(const char *name, QToolBar *parent, const char *startTip, const char *stopTip, const char * failTip) :
+DeviceButton::DeviceButton(const char *name, bool local, QToolBar *parent, const char *startTip, const char *stopTip, const char * failTip) :
 QPushButton(name, parent),
 started(false),
 startTip(startTip),
 stopTip(stopTip),
-failTip(failTip)
-// local(local)
+failTip(failTip),
+local(local)
 {
 	emit button_message(QString("Button: init"));
 	
@@ -48,7 +48,7 @@ void DeviceButton::toggle()
 		started = false;
 		setStatusTip(startTip);
 		
-		emit toggle_device(false);
+		emit toggle_device(false, local);
 	} else{
 		setFlat(true);
 		
@@ -61,7 +61,7 @@ void DeviceButton::toggle()
 		started = true;
 		setStatusTip(stopTip);
 		
-		emit toggle_device(true);
+		emit toggle_device(true, local);
 	}
 }
 

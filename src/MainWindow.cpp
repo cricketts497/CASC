@@ -11,23 +11,20 @@ messageWindow_open(false),
 fake_tagger_started(false),
 tagger_started(false)
 {
+	messages.setString(&messages_string);
+
 	createActions();
 	createStatusBar();
 	createDevicesBar();
-
-	// mainWindow = new QWidget();
-	// mainLayout = new QHBoxLayout;
-	// mainWindow->setLayout(mainLayout);
-	// setCentralWidget(mainWindow);
 
 	centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, this);
 	// centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	
 	connect(centralGraph, SIGNAL(newEdge(qreal)), this, SLOT(setStatusValue(qreal)));
+	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC");
-	
+	setWindowTitle("CASC");	
 }
 
 void MainWindow::createActions()
@@ -67,20 +64,31 @@ void MainWindow::createDevicesBar()
 {
 	devicesBar = new QToolBar("&Devices", this);
 
-	fakePdlDeviceButton = new DeviceButton("Fake PDL", devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
-	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(togglePdlDevice(bool)));
+	listenerButton = new DeviceButton("Listener", true, devicesBar, "Start the listener", "Stop the Listener", "LISTENER FAIL");
+	connect(listenerButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleListener(bool)));
 
-	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
-	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
+	fakePdlDeviceButton = new DeviceButton("Fake PDL", true, devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
+	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleFakePdlDevice(bool)));
 
-	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
-	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
+	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", false, devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
+	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleFakeTaggerDevice(bool, bool)));
 
+	taggerDeviceButton = new DeviceButton("Tagger", true, devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
+	connect(taggerDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleTaggerDevice(bool)));
+
+	devicesBar->addWidget(listenerButton);
 	devicesBar->addWidget(fakePdlDeviceButton);
 	devicesBar->addWidget(fakeTaggerDeviceButton);
 	devicesBar->addWidget(taggerDeviceButton);
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
+}
+
+void MainWindow::keepMessage(QString message)
+{
+	messages << message;
+	messages << endl;
+	emit new_message(message);
 }
 
 
@@ -99,9 +107,7 @@ void MainWindow::toggleTof()
 		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
 		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
 		connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
-
-		if(messageWindow_open)
-			connect(tofHist, SIGNAL(tof_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		connect(tofHist, SIGNAL(tof_message(QString)), this, SLOT(keepMessage(QString)));
 
 		addDockWidget(Qt::RightDockWidgetArea, tofHist);
 
@@ -126,13 +132,16 @@ void MainWindow::toggleMessage()
 		messageWindow = new MessageWindow(this);
 
 		connect(messageWindow, SIGNAL(closing()), this, SLOT(toggleMessage()));
-		connect(centralGraph, SIGNAL(graph_message(QString)), messageWindow, SLOT(addMessage(QString)));
-		
-		// connect(taggerDeviceButton, SIGNAL(button_message(QString)), messageWindow, SLOT(addMessage(QString)));
-		
-		if(tagger_started){
-			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
+
+		//read all the stored messages
+		qint64 max_message_chars = 1000;
+		if(messages.pos() > max_message_chars){
+			messages.seek(messages.pos()-max_message_chars);
+			messageWindow->addMessage(messages.read(max_message_chars));
+		}else{
+			messageWindow->addMessage(messages.readAll());
 		}
+		connect(this, SIGNAL(new_message(QString)), messageWindow, SLOT(addMessage(QString)));
 
 		addDockWidget(Qt::LeftDockWidgetArea, messageWindow);
 
@@ -145,15 +154,27 @@ void MainWindow::toggleMessage()
 
 
 //devices
-//only local devices atm
-void MainWindow::togglePdlDevice(bool start)
+void MainWindow::toggleListener(bool start)
+{
+	if(start){
+		listener = new Listener();
+
+		connect(listener, SIGNAL(listener_fail()), listenerButton, SLOT(setFail()));
+		connect(listener, SIGNAL(listener_message(QString)), this, SLOT(keepMessage(QString)));
+
+		listener->start();
+	}else{
+		delete listener;
+	}
+}
+
+void MainWindow::toggleFakePdlDevice(bool start)
 {
 	if(start){
 		fakePdlDevice = new PdlDevice(500, fake_pdl_temp_path, &fakePdlFileMutex);
 
 		connect(fakePdlDevice, SIGNAL(pdl_fail()), fakePdlDeviceButton, SLOT(setFail()));
-		if(messageWindow_open)
-			connect(fakePdlDevice, SIGNAL(pdl_message(QString)), messageWindow, SLOT(addMessage(QString)));
+		connect(fakePdlDevice, SIGNAL(pdl_message(QString)), this, SLOT(keepMessage(QString)));
 
 		fakePdlDevice->moveToThread(&fakePdlDeviceThread);
 		connect(&fakeTaggerDeviceThread, SIGNAL(finished()), fakePdlDevice, SLOT(deleteLater()));
@@ -162,14 +183,12 @@ void MainWindow::togglePdlDevice(bool start)
 		centralGraph->newPdl();
 	}else{
 		fakePdlDeviceThread.quit();
-		// delete fakePdlDevice;
-		// centralGraph->closedPdl();
 	}
 }
 
-void MainWindow::toggleFakeTaggerDevice(bool start)
+void MainWindow::toggleFakeTaggerDevice(bool start, bool local)
 {
-	if(start){
+	if(start && local){
 		//100 events per second
 		fakeTaggerDevice = new FakeTagger(10, fake_tagger_temp_path, &fakeTaggerFileMutex);
 
@@ -182,10 +201,16 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 			tofHist->newTagger();
 		
 		fake_tagger_started = true;
-	}else{
+	}else if(!start && local){
 		fakeTaggerDeviceThread.quit();
 		
 		fake_tagger_started = false;
+	}else if(start && !local){
+		//start the remote device
+		listener->sendCommand(QString("start_faketagger"), QString("crfed"), 11111)
+	}else{
+		//stop the remote device
+		listener->sendCommand(QString("stop_faketagger"), QString("crfed"), 11111)
 	}
 }
 
@@ -195,9 +220,8 @@ void MainWindow::toggleTaggerDevice(bool start)
 		taggerDevice = new TaggerDevice(100, tagger_temp_path, this);
 		
 		connect(taggerDevice, SIGNAL(tagger_fail()), taggerDeviceButton, SLOT(setFail()));
-		if(messageWindow_open)
-			connect(taggerDevice, SIGNAL(tagger_message(QString)), messageWindow, SLOT(addMessage(QString)));
-		
+		connect(taggerDevice, SIGNAL(tagger_message(QString)), this, SLOT(keepMessage(QString)));
+
 		tagger_started = taggerDevice->start_card();
 		
 		// if(tagger_started)
@@ -209,12 +233,15 @@ void MainWindow::toggleTaggerDevice(bool start)
 	}
 }
 
+
+
+
+
 void MainWindow::setStatusValue(qreal value)
 {
 	QString message_str;
 	QTextStream message(&message_str);
 
-	// message << "Packet hits: " << hits;
 	message << "Value: " << value;
 
 	message_str = message.readAll();
