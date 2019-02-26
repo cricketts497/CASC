@@ -2,9 +2,11 @@
 #define LISTENER_H
 
 #include <QObject>
+#include <QHostAddress>
 
 class QNetworkSession;
 class QTcpServer;
+class QTcpSocket;
 
 class Listener : public QObject
 {
@@ -15,7 +17,7 @@ public:
 	~Listener();
 
 	void start();
-	void sendCommand(QString command, QString hostName, quint16 port);
+	void sendCommand(QString command, QString host, quint16 port);
 
 signals:
 	void listener_message(QString message);

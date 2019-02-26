@@ -108,16 +108,18 @@ void Listener::receiveCommand()
 	emit listener_message(QString("Listener: received command: %1 from %2").arg(command).arg(receiving_socket->peerName()));
 }
 
-void Listener::sendCommand(QString command, QString hostName, quint16 port)
+void Listener::sendCommand(QString command, QString host, quint16 port)
 {
 	QByteArray block;
 	QTextStream out(&block, QIODevice::WriteOnly);
 
 	out << command;
+	
+	QHostAddress address = QHostAddress(host);
 
-	sending_socket->connectToHost(hostName, port);
+	sending_socket->connectToHost(address, port);
 	if(!sending_socket->waitForConnected(timeout)){
-		emit listener_message(QString("LISTENER ERROR: sendCommand: timeout waitForConnection %1: %2").arg(hostName).arg(sending_socket->errorString()));
+		emit listener_message(QString("LISTENER ERROR: sendCommand: timeout waitForConnection %1: %2").arg(host).arg(sending_socket->errorString()));
 		emit listener_fail();
 		return;
 	}
@@ -126,7 +128,7 @@ void Listener::sendCommand(QString command, QString hostName, quint16 port)
 
 	sending_socket->disconnectFromHost();
 	if(!sending_socket->waitForDisconnected(timeout)){
-		emit listener_message(QString("LISTENER ERROR: sendCommand: timeout waitForDisconnected %1: %2").arg(hostName).arg(sending_socket->errorString()));
+		emit listener_message(QString("LISTENER ERROR: sendCommand: timeout waitForDisconnected %1: %2").arg(host).arg(sending_socket->errorString()));
 		emit listener_fail();
 	}
 }

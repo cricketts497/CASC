@@ -38,7 +38,7 @@ private slots:
 	//devices
 	void toggleListener(bool start);
 	void toggleFakePdlDevice(bool start);
-	void toggleFakeTaggerDevice(bool start);
+	void toggleFakeTaggerDevice(bool start, bool local);
 	void toggleTaggerDevice(bool start);
 
 	void setStatusValue(qreal value);

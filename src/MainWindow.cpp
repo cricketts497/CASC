@@ -207,10 +207,10 @@ void MainWindow::toggleFakeTaggerDevice(bool start, bool local)
 		fake_tagger_started = false;
 	}else if(start && !local){
 		//start the remote device
-		listener->sendCommand(QString("start_faketagger"), QString("crfed"), 11111)
+		listener->sendCommand(QString("start_faketagger"), QString("128.141.90.234"), 11111);
 	}else{
 		//stop the remote device
-		listener->sendCommand(QString("stop_faketagger"), QString("crfed"), 11111)
+		listener->sendCommand(QString("stop_faketagger"), QString("128.141.90.234"), 11111);
 	}
 }
 
