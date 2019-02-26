@@ -72,14 +72,14 @@ void Listener::sessionOpened()
 
 
 	QString ipAddress;
-	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-	//use the first non localhost IPv4 address
-	for(int i=0; i<ipAddressesList.size(); i++){
-		if(ipAddressesList.at(i) != QHostAddress::LocalHost && ipAddressesList.at(i).toIPv4Address()){
-			ipAddress = ipAddressesList.at(i).toString();
-			break;
-		}
-	}
+	// QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+	// //use the first non localhost IPv4 address
+	// for(int i=0; i<ipAddressesList.size(); i++){
+	// 	if(ipAddressesList.at(i) != QHostAddress::LocalHost && ipAddressesList.at(i).toIPv4Address()){
+	// 		ipAddress = ipAddressesList.at(i).toString();
+	// 		break;
+	// 	}
+	// }
 	//if we don't find one, use the localhost
 	if(ipAddress.isEmpty())
 		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
@@ -92,10 +92,10 @@ void Listener::receiveCommand()
 	QTcpSocket * receiving_socket = tcpServer->nextPendingConnection();
 	connect(receiving_socket, SIGNAL(disconnected()), receiving_socket, SLOT(deleteLater()));
 
-	QTextStream in(receiving_socket);
+	QDataStream in(receiving_socket);
 	
 	if(!receiving_socket->waitForReadyRead(timeout)){
-		emit listener_message(QString("LISTENER ERROR: receiveCommand: timeout waitForReadyRead, %1: %2").arg(receiving_socket->peerName()).arg(receiving_socket->errorString()));
+		emit listener_message(QString("LISTENER ERROR: receiveCommand: waitForReadyRead, %1: %2").arg(receiving_socket->peerName()).arg(receiving_socket->errorString()));
 		emit listener_fail();
 		return;
 	}
@@ -111,7 +111,7 @@ void Listener::receiveCommand()
 void Listener::sendCommand(QString command, QString host, quint16 port)
 {
 	QByteArray block;
-	QTextStream out(&block, QIODevice::WriteOnly);
+	QDataStream out(&block, QIODevice::WriteOnly);
 
 	out << command;
 	
@@ -126,9 +126,8 @@ void Listener::sendCommand(QString command, QString host, quint16 port)
 
 	sending_socket->write(block);
 
-	sending_socket->disconnectFromHost();
 	if(!sending_socket->waitForDisconnected(timeout)){
-		emit listener_message(QString("LISTENER ERROR: sendCommand: timeout waitForDisconnected %1: %2").arg(host).arg(sending_socket->errorString()));
+		emit listener_message(QString("LISTENER ERROR: sendCommand: waitForDisconnected %1: %2").arg(host).arg(sending_socket->errorString()));
 		emit listener_fail();
 	}
 }

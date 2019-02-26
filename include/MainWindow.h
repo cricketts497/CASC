@@ -90,6 +90,7 @@ private:
 	//devices
 	DeviceButton * listenerButton;
 	Listener * listener;
+	bool listener_running;
 
 	DeviceButton *fakePdlDeviceButton;
 	PdlDevice *fakePdlDevice;

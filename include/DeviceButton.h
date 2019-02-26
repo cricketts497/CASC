@@ -21,7 +21,7 @@ signals:
 
 	void toggle_device(bool start, bool local_device);
 
-private slots:
+public slots:
 	void setFail();
 
 private:

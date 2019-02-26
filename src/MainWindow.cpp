@@ -8,6 +8,7 @@ MainWindow::MainWindow() :
 tofHist_open(false),
 // PDL_open(false),
 messageWindow_open(false),
+listener_running(false),
 fake_tagger_started(false),
 tagger_started(false)
 {
@@ -24,7 +25,10 @@ tagger_started(false)
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC");	
+	setWindowTitle("CASC");
+
+	//auto start the listener
+	listenerButton->click();
 }
 
 void MainWindow::createActions()
@@ -70,7 +74,7 @@ void MainWindow::createDevicesBar()
 	fakePdlDeviceButton = new DeviceButton("Fake PDL", true, devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
 	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleFakePdlDevice(bool)));
 
-	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", false, devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
+	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", true, devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
 	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleFakeTaggerDevice(bool, bool)));
 
 	taggerDeviceButton = new DeviceButton("Tagger", true, devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
@@ -163,8 +167,10 @@ void MainWindow::toggleListener(bool start)
 		connect(listener, SIGNAL(listener_message(QString)), this, SLOT(keepMessage(QString)));
 
 		listener->start();
+		listener_running = true;
 	}else{
 		delete listener;
+		listener_running = false;
 	}
 }
 
@@ -205,12 +211,15 @@ void MainWindow::toggleFakeTaggerDevice(bool start, bool local)
 		fakeTaggerDeviceThread.quit();
 		
 		fake_tagger_started = false;
-	}else if(start && !local){
+	}else if(start && !local && listener_running){
 		//start the remote device
-		listener->sendCommand(QString("start_faketagger"), QString("128.141.90.234"), 11111);
-	}else{
+		listener->sendCommand(QString("start_faketagger"), QString("127.0.0.1"), 12345);
+	}else if(listener_running){
 		//stop the remote device
-		listener->sendCommand(QString("stop_faketagger"), QString("128.141.90.234"), 11111);
+		listener->sendCommand(QString("stop_faketagger"), QString("127.0.0.1"), 12345);
+	}else{
+		fakeTaggerDeviceButton->setFail();
+		keepMessage(QString("ERROR: Listener not started"));
 	}
 }
 
