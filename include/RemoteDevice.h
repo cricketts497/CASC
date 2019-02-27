@@ -12,7 +12,7 @@ public:
 	RemoteDevice(QString deviceName, QString config_file_path, QObject * parent=nullptr);
 
 protected slots:
-	void sendCommand(QString command);
+	bool sendCommand(QString command);
 
 protected:
 	QTcpSocket * socket;

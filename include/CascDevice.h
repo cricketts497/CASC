@@ -20,6 +20,8 @@ protected:
 	QString hostName;
 	quint16 hostListenPort;
 	quint16 hostDevicePort;
+
+	const char * noDataMessage;
 };
 
 #endif // CASC_DEVICE_H

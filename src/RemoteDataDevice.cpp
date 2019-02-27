@@ -28,9 +28,10 @@ void RemoteDataDevice::getData()
 	QString command = c.readAll();
 
 	//ask for the data
-	sendCommand(command);
+	if(!sendCommand(command))
+		return;
 
-	//wait for the data to be sent
+	//wait for the data to be returned
 	if(!socket->waitForReadyRead(timeout)){
 		emit device_message(QString("REMOTE %1 ERROR: getData: waitForReadyRead, %2: %3").arg(device_name).arg(hostName).arg(socket->errorString()));
 		emit device_fail();
@@ -40,7 +41,7 @@ void RemoteDataDevice::getData()
 	QByteArray data = socket->readAll();
 	socket->disconnectFromHost();
 
-	if(data.startsWith(char('n')))
+	if(data.endsWith(noDataMessage))
 		return;//up to date with local
 
 	QMutexLocker file_locker(file_mutex);

@@ -27,7 +27,7 @@ socket(new QTcpSocket(this))
 	}
 }
 
-void RemoteDevice::sendCommand(QString command)
+bool RemoteDevice::sendCommand(QString command)
 {
 	QByteArray block;
 	QDataStream out(&block, QIODevice::WriteOnly);
@@ -38,9 +38,10 @@ void RemoteDevice::sendCommand(QString command)
 	if(!socket->waitForConnected(timeout)){
 		emit device_message(QString("REMOTE %1 ERROR: sendCommand: waitForConnection, %2: %3").arg(device_name).arg(hostName).arg(socket->errorString()));
 		emit device_fail();
-		return;
+		return false;
 	}
 
 	socket->write(block);
 
+	return true;
 }

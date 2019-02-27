@@ -5,7 +5,8 @@
 CascDevice::CascDevice(QString deviceName, QString config_file_path, QObject * parent) :
 QObject(parent),
 device_name(deviceName),
-timeout(1000)
+timeout(1000),
+noDataMessage("no data")
 {
 	//load the config file
 	QFile * configFile = new QFile(config_file_path);
