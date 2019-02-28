@@ -96,17 +96,17 @@ void Listener::receiveCommand()
 	QDataStream in(receiving_socket);
 	
 	if(!receiving_socket->waitForReadyRead(timeout)){
-		emit listener_message(QString("LISTENER ERROR: receiveCommand: waitForReadyRead, %1: %2").arg(receiving_socket->peerName()).arg(receiving_socket->errorString()));
+		emit listener_message(QString("LISTENER ERROR: receiveCommand: waitForReadyRead: %1").arg(receiving_socket->errorString()));
 		emit listener_fail();
 		return;
 	}
 
-	QString command;
-	in >> command;
+	QByteArray com = receiving_socket->readAll();
+	QString command = QString::fromUtf8(com);
 
 	receiving_socket->disconnectFromHost();
 
-	emit listener_message(QString("Listener: received command: %1 from %2").arg(command).arg(receiving_socket->peerName()));
+	emit listener_message(QString("Listener: received command: %1").arg(command));
 
 	//deal with start/ stop device commands
 	QStringList command_list = command.split("_");

@@ -4,6 +4,9 @@ LocalDevice::LocalDevice(QString deviceName, CascConfig * config, QObject * pare
 CascDevice(deviceName, config, parent),
 deviceServer(new QTcpServer(this))
 {
+	if(device_failed)
+		return;
+
 	//start the device server
 	if(!deviceServer->listen(QHostAddress::Any, hostDevicePort)){
 		storeMessage(QString("LOCAL %1 ERROR: deviceServer->listen()").arg(deviceName), true);
@@ -27,15 +30,15 @@ void LocalDevice::receiveCommand()
 	QDataStream in(socket);
 
 	if(!socket->waitForReadyRead(timeout)){
-		emit device_message(QString("LOCAL %1 ERROR: receiveCommand: socket->waitForReadyRead, %1: %2").arg(device_name).arg(socket->peerName()).arg(socket->errorString()));
+		emit device_message(QString("LOCAL %1 ERROR: receiveCommand: socket->waitForReadyRead: %2").arg(device_name).arg(socket->errorString()));
 		emit device_fail();
 		return;
 	}
 
-	QString command;
-	in >> command;
+	QByteArray com = socket->readAll();
+	QString command = QString::fromUtf8(com);
 
-	emit device_message(QString("Local %1: received command from %2: %3").arg(device_name).arg(socket->peerName()).arg(command));
+	emit device_message(QString("Local %1: received command: %2").arg(device_name).arg(command));
 	
 	//connect the devices to this signal to do somthing with the command
 	emit newCommand(command, socket);

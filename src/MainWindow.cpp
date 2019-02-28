@@ -217,6 +217,7 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 		fakeTaggerDeviceThread.quit();
 		fake_tagger_started = false;
 	}
+	
 }
 
 

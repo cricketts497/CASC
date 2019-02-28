@@ -38,12 +38,13 @@ QStringList CascConfig::getDevice(QString deviceName)
 
 bool CascConfig::deviceLocal(QString deviceName)
 {
-	QStringList device = getDevice(deviceName);
+	// QStringList device = getDevice(deviceName);
 
-	if(device.at(1) == QHostInfo::localHostName()){
-		return true;
-	}else{
-		return false;
-	}
+	// if(device.at(1) == QHostInfo::localHostName()){
+	// 	return true;
+	// }else{
+	// 	return false;
+	// }
+	return true;
 	
 }

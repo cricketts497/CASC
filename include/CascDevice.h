@@ -31,11 +31,11 @@ protected:
 
 	const char * noDataMessage;
 
+	bool device_failed;
+
 private:
 	QTextStream messages;
 	QString messages_string;
-
-	bool device_failed;
 
 };
 

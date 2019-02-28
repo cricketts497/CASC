@@ -7,6 +7,9 @@ LocalDevice(deviceName, config, parent),
 file_mutex(file_mutex),
 maxPayload(100000)
 {
+	if(device_failed)
+		return;
+
 	data_file = new QFile(file_path);
 
 	connect(this, SIGNAL(newCommand(QString,QTcpSocket*)), this, SLOT(sendData(QString,QTcpSocket*)));
@@ -23,7 +26,7 @@ void LocalDataDevice::sendData(QString command, QTcpSocket * socket)
 
 	bool locked = file_mutex->tryLock();
 	if(!locked){
-		socket->write(noDataMessage);
+		socket->write(noDataMessage.toUtf8());
 		if(!socket->waitForDisconnected(timeout)){
 			emit device_message(QString("LOCAL %1 ERROR: sendData: waitForDisconnected, %1: %2").arg(socket->peerName()).arg(socket->errorString()));
 			emit device_fail();
@@ -35,7 +38,7 @@ void LocalDataDevice::sendData(QString command, QTcpSocket * socket)
 		emit device_message(QString("LOCAL %1 ERROR: sendData: data_file->open(read)"));
 		emit device_fail();
 		file_mutex->unlock();
-		socket->write(noDataMessage);
+		socket->write(noDataMessage.toUtf8());
 		if(!socket->waitForDisconnected(timeout)){
 			emit device_message(QString("LOCAL %1 ERROR: sendData: waitForDisconnected, %1: %2").arg(socket->peerName()).arg(socket->errorString()));
 			emit device_fail();
@@ -49,7 +52,7 @@ void LocalDataDevice::sendData(QString command, QTcpSocket * socket)
 		data_file->close();
 		file_mutex->unlock();
 		
-		socket->write(noDataMessage);
+		socket->write(noDataMessage.toUtf8());
 	}else{
 		data_file->seek(seek_pos);
 

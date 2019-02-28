@@ -6,7 +6,8 @@ CascDevice::CascDevice(QString deviceName, CascConfig * config, QObject * parent
 QObject(parent),
 device_name(deviceName),
 timeout(1000),
-noDataMessage("no data")
+noDataMessage("no data"),
+device_failed(false)
 {
 	messages.setString(&messages_string);
 

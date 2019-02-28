@@ -6,9 +6,15 @@ request_interval(1000),
 timer(new QTimer(this)),
 file_mutex(file_mutex)
 {
+	if(device_failed)
+		return;
+
 	data_file = new QFile(file_path);
+	QMutexLocker file_locker(file_mutex);
+	data_file->resize(0);
 
 	connect(timer, SIGNAL(timeout()), this, SLOT(getData()));
+	connect(this, SIGNAL(device_fail()), timer, SLOT(stop()));
 	timer->start(request_interval);
 }
 
@@ -26,7 +32,8 @@ void RemoteDataDevice::getData()
 	data_file->close();
 	file_mutex->unlock();
 
-	QTextStream c;
+	QString c_string;
+	QTextStream c(&c_string);
 	c << "data_" << size;
 
 	QString command = c.readAll();
@@ -45,7 +52,7 @@ void RemoteDataDevice::getData()
 	QByteArray data = socket->readAll();
 	socket->disconnectFromHost();
 
-	if(data.endsWith(noDataMessage))
+	if(data.endsWith(noDataMessage.toUtf8()))
 		return;//up to date with local
 
 	QMutexLocker file_locker(file_mutex);
