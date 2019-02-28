@@ -1,6 +1,4 @@
 #include <QtWidgets>
-#include <QFlags>
-#include <sstream>
 
 #include "include/MainWindow.h"
 
@@ -13,6 +11,9 @@ fake_tagger_started(false),
 tagger_started(false)
 {
 	messages.setString(&messages_string);
+
+	//read the config file
+	config = new CascConfig(config_file_path, this);
 
 	createActions();
 	createStatusBar();
@@ -68,17 +69,17 @@ void MainWindow::createDevicesBar()
 {
 	devicesBar = new QToolBar("&Devices", this);
 
-	listenerButton = new DeviceButton("Listener", true, devicesBar, "Start the listener", "Stop the Listener", "LISTENER FAIL");
-	connect(listenerButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleListener(bool)));
+	listenerButton = new DeviceButton("Listener", devicesBar, "Start the listener", "Stop the Listener", "LISTENER FAIL");
+	connect(listenerButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleListener(bool)));
 
-	fakePdlDeviceButton = new DeviceButton("Fake PDL", true, devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
-	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleFakePdlDevice(bool)));
+	fakePdlDeviceButton = new DeviceButton("Fake PDL", devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
+	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakePdlDevice(bool)));
 
-	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", true, devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
-	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleFakeTaggerDevice(bool, bool)));
+	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
+	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
 
-	taggerDeviceButton = new DeviceButton("Tagger", true, devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
-	connect(taggerDeviceButton, SIGNAL(toggle_device(bool, bool)), this, SLOT(toggleTaggerDevice(bool)));
+	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
+	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
 
 	devicesBar->addWidget(listenerButton);
 	devicesBar->addWidget(fakePdlDeviceButton);
@@ -165,6 +166,7 @@ void MainWindow::toggleListener(bool start)
 
 		connect(listener, SIGNAL(listener_fail()), listenerButton, SLOT(setFail()));
 		connect(listener, SIGNAL(listener_message(QString)), this, SLOT(keepMessage(QString)));
+		connect(listener, SIGNAL(toggle_device_command(QString,bool)), this, SLOT(toggleDevice(QString, bool)));
 
 		listener->start();
 		listener_running = true;
@@ -192,36 +194,31 @@ void MainWindow::toggleFakePdlDevice(bool start)
 	}
 }
 
-void MainWindow::toggleFakeTaggerDevice(bool start, bool local)
+void MainWindow::toggleFakeTaggerDevice(bool start)
 {
-	if(start && local){
-		//100 events per second
-		fakeTaggerDevice = new FakeTagger(10, fake_tagger_temp_path, &fakeTaggerFileMutex);
+	bool local = config->deviceLocal(QString("faketagger"));
 
-		fakeTaggerDevice->moveToThread(&fakeTaggerDeviceThread);
-		connect(&fakeTaggerDeviceThread, SIGNAL(finished()), fakeTaggerDevice, SLOT(deleteLater()));
-		fakeTaggerDeviceThread.start();
-		
+	if(start){
+		if(local){
+			//10 events per second
+			FakeTagger * fakeTaggerDevice = new FakeTagger(10, fake_tagger_temp_path, &fakeTaggerFileMutex, config);
+			setupDevice(fakeTaggerDevice, fakeTaggerDeviceButton, &fakeTaggerDeviceThread);
+		}else{
+			RemoteDataDevice * fakeTaggerDevice = new RemoteDataDevice(fake_tagger_temp_path, &fakeTaggerFileMutex, QString("faketagger"), config);
+			setupDevice(fakeTaggerDevice, fakeTaggerDeviceButton, &fakeTaggerDeviceThread);
+		}
+
 		centralGraph->newTagger();
 		if(tofHist_open)
 			tofHist->newTagger();
 		
 		fake_tagger_started = true;
-	}else if(!start && local){
-		fakeTaggerDeviceThread.quit();
-		
-		fake_tagger_started = false;
-	}else if(start && !local && listener_running){
-		//start the remote device
-		listener->sendCommand(QString("start_faketagger"), QString("127.0.0.1"), 12345);
-	}else if(listener_running){
-		//stop the remote device
-		listener->sendCommand(QString("stop_faketagger"), QString("127.0.0.1"), 12345);
 	}else{
-		fakeTaggerDeviceButton->setFail();
-		keepMessage(QString("ERROR: Listener not started"));
+		fakeTaggerDeviceThread.quit();
+		fake_tagger_started = false;
 	}
 }
+
 
 void MainWindow::toggleTaggerDevice(bool start)
 {
@@ -243,8 +240,23 @@ void MainWindow::toggleTaggerDevice(bool start)
 }
 
 
+void MainWindow::toggleDevice(QString device, bool start)
+{
+	if(device == "faketagger" && ((start && !fake_tagger_started && !fakeTaggerDeviceButton->started) || (!start && fake_tagger_started && fakeTaggerDeviceButton->started)))
+		fakeTaggerDeviceButton->click();
+}
 
+void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)
+{
+	connect(device, SIGNAL(device_fail()), button, SLOT(setFail()));
+	connect(device, SIGNAL(device_message(QString)), this, SLOT(keepMessage(QString)));
 
+	device->sendMessages();
+
+	device->moveToThread(thread);
+	connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
+	thread->start();
+}
 
 void MainWindow::setStatusValue(qreal value)
 {

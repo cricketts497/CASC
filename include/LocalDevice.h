@@ -3,18 +3,21 @@
 
 #include "include/CascDevice.h"
 
-class QTcpServer;
-class QTcpSocket;
+#include <QtNetwork>
 
 class LocalDevice : public CascDevice
 {
 	Q_OBJECT
 	
 public:
-	LocalDevice(QString deviceName, QObject * parent=nullptr);
+	LocalDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
+	~LocalDevice();
 
 signals:
 	void newCommand(QString command, QTcpSocket * socket);
+
+private slots:
+	void receiveCommand();
 
 private:
 	QTcpServer * deviceServer = nullptr;

@@ -10,7 +10,7 @@ class DeviceButton : public QPushButton
 	Q_OBJECT
 
 public:
-	DeviceButton(const char *name, bool local, QToolBar *parent=nullptr, const char *startTip="Start", const char *stopTip="Stop", const char *failTip="FAIL");
+	DeviceButton(const char *name, QToolBar *parent=nullptr, const char *startTip="Start", const char *stopTip="Stop", const char *failTip="FAIL");
 
 	void toggle();
 
@@ -19,7 +19,7 @@ public:
 signals:
 	void button_message(QString message);
 
-	void toggle_device(bool start, bool local_device);
+	void toggle_device(bool start);
 
 public slots:
 	void setFail();
@@ -35,8 +35,6 @@ private:
 	const char *startTip;
 	const char *stopTip;
 	const char *failTip;
-
-	const bool local;
 };
 
 #endif //DEVICE_BUTTON

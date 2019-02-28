@@ -11,6 +11,8 @@
 #include "include/MessageWindow.h"
 #include "include/TaggerDevice.h"
 #include "include/Listener.h"
+#include "include/CascConfig.h"
+#include "include/RemoteDataDevice.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -35,10 +37,13 @@ private slots:
 	void toggleTof();
 	void toggleMessage();
 
+	void toggleDevice(QString device, bool start);
+	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
+
 	//devices
 	void toggleListener(bool start);
 	void toggleFakePdlDevice(bool start);
-	void toggleFakeTaggerDevice(bool start, bool local);
+	void toggleFakeTaggerDevice(bool start);
 	void toggleTaggerDevice(bool start);
 
 	void setStatusValue(qreal value);
@@ -47,6 +52,9 @@ signals:
 	void new_message(QString message);
 
 private:
+	const QString config_file_path = "./config.txt";
+	CascConfig * config;
+
 	void createActions();
 	void createStatusBar();
 	void createDevicesBar();
@@ -96,8 +104,8 @@ private:
 	PdlDevice *fakePdlDevice;
 	QThread fakePdlDeviceThread;
 
-	DeviceButton *fakeTaggerDeviceButton;
-	FakeTagger *fakeTaggerDevice;
+	DeviceButton * fakeTaggerDeviceButton;
+	// FakeTagger * fakeTaggerDevice;
 	bool fake_tagger_started;
 	QThread fakeTaggerDeviceThread;
 

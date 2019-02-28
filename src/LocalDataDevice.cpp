@@ -1,7 +1,9 @@
 #include "include/LocalDataDevice.h"
 
-LocalDataDevice::LocalDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, QString config_file_path, QObject * parent = nullptr) :
-LocalDevice(deviceName, config_file_path, parent),
+#include <QMutex>
+
+LocalDataDevice::LocalDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+LocalDevice(deviceName, config, parent),
 file_mutex(file_mutex),
 maxPayload(100000)
 {

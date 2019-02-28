@@ -1,16 +1,20 @@
 #include "include/RemoteDataDevice.h"
 
-RemoteDataDevice::RemoteDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, QString config_file_path, QObject * parent) :
-RemoteDevice(deviceName, config_file_path, parent),
+RemoteDataDevice::RemoteDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+RemoteDevice(deviceName, config, parent),
+request_interval(1000),
+timer(new QTimer(this)),
 file_mutex(file_mutex)
 {
 	data_file = new QFile(file_path);
 
+	connect(timer, SIGNAL(timeout()), this, SLOT(getData()));
+	timer->start(request_interval);
 }
 
 void RemoteDataDevice::getData()
 {
-	//ask for the data beyond
+	//ask for the data beyond end of current local file
 	file_mutex->lock();
 	if(!data_file->open(QIODevice::ReadOnly)){
 		emit device_message(QString("REMOTE %1 ERROR: getData: data_file->open(Read)").arg(device_name));

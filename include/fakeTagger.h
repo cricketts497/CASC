@@ -1,19 +1,18 @@
 #ifndef FAKE_TAGGER
 #define FAKE_TAGGER
 
+#include "include/LocalDataDevice.h"
+
 #include <QTimer>
 
-class QMainWindow;
-class QFile;
-class QMutex;
-
-class FakeTagger: public QTimer
+class FakeTagger: public LocalDataDevice
 {
 	Q_OBJECT
 	
 public:
-	FakeTagger(int rate, const QString file_path, QMutex * file_mutex, QMainWindow *parent=nullptr);
-	
+	FakeTagger(int rate, QString file_path, QMutex * file_mutex, CascConfig * config, QObject *parent=nullptr);
+	void start_device();
+
 private slots:
 	void hit();
 
@@ -21,8 +20,12 @@ signals:
 	// void updateHits(int packetHits);
 	// void update(bool newPackets);
 	void tagger_fail();
-	
+
 private:
+	const int rate;
+	const QString file_path;
+	QTimer * timer;
+
 	void newPacket();
 
 	const uint hits_per_packet;

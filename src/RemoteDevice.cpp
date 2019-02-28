@@ -1,9 +1,7 @@
 #include <include/RemoteDevice.h>
 
-#include <QtNetwork>
-
-RemoteDevice::RemoteDevice(QString deviceName, QString config_file_path, QObject * parent) :
-CascDevice(deviceName, config_file_path, parent),
+RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * parent) :
+CascDevice(deviceName, config, parent),
 socket(new QTcpSocket(this))
 {
 	//send the command to start the device
@@ -13,16 +11,37 @@ socket(new QTcpSocket(this))
 	out << "start_" << deviceName;
 
 	socket->connectToHost(hostName, hostListenPort);
-	if(!waitForConnected(timeout)){
-		emit device_message(QString("REMOTE %1 ERROR: connect to listener, %2, port %3: %4").arg(deviceName).arg(hostName).arg(hostListenPort).arg(errorString()));
+	if(!socket->waitForConnected(timeout)){
+		storeMessage(QString("REMOTE %1 ERROR: init: connect to listener, %2, port %3: %4").arg(deviceName).arg(hostName).arg(hostListenPort).arg(socket->errorString()), true);
+		return;
+	}
+
+	socket->write(block);
+
+	if(!socket->waitForDisconnected(timeout)){
+		storeMessage(QString("REMOTE %1 ERROR: init: disconnect from listener, %2, port %3: %4").arg(deviceName).arg(hostName).arg(hostListenPort).arg(socket->errorString()), true);
+	}
+}
+
+RemoteDevice::~RemoteDevice()
+{
+	//send the command to stop the device
+	QByteArray block;
+	QDataStream out(&block, QIODevice::WriteOnly);
+
+	out << "stop_" << device_name;
+
+	socket->connectToHost(hostName, hostListenPort);
+	if(!socket->waitForConnected(timeout)){
+		emit device_message(QString("REMOTE %1 ERROR: init: connect to listener, %2, port %3: %4").arg(device_name).arg(hostName).arg(hostListenPort).arg(socket->errorString()));
 		emit device_fail();
 		return;
 	}
 
 	socket->write(block);
 
-	if(!waitForDisconnected(timeout)){
-		emit device_message(QString("REMOTE %1 ERROR: disconnect from listener, %2, port %3: %4").arg(deviceName).arg(hostName).arg(hostListenPort).arg(errorString()));
+	if(!socket->waitForDisconnected(timeout)){
+		emit device_message(QString("REMOTE %1 ERROR: init: disconnect from listener, %2, port %3: %4").arg(device_name).arg(hostName).arg(hostListenPort).arg(socket->errorString()));
 		emit device_fail();
 	}
 }

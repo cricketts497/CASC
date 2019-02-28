@@ -71,19 +71,20 @@ void Listener::sessionOpened()
 	connect(tcpServer, SIGNAL(newConnection()), this, SLOT(receiveCommand()));
 
 
-	QString ipAddress;
-	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-	//use the first non localhost IPv4 address
-	for(int i=0; i<ipAddressesList.size(); i++){
-		if(ipAddressesList.at(i) != QHostAddress::LocalHost && ipAddressesList.at(i).toIPv4Address()){
-			ipAddress = ipAddressesList.at(i).toString();
-			break;
-		}
-	}
-	//if we don't find one, use the localhost
-	if(ipAddress.isEmpty())
-		ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
-	emit listener_message(QString("Listener: Running on IP: %1, port: %2").arg(ipAddress).arg(tcpServer->serverPort()));
+	// QString ipAddress;
+	// QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+	// //use the first non localhost IPv4 address
+	// for(int i=0; i<ipAddressesList.size(); i++){
+	// 	if(ipAddressesList.at(i) != QHostAddress::LocalHost && ipAddressesList.at(i).toIPv4Address()){
+	// 		ipAddress = ipAddressesList.at(i).toString();
+	// 		break;
+	// 	}
+	// }
+	// //if we don't find one, use the localhost
+	// if(ipAddress.isEmpty())
+	// 	ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
+
+	emit listener_message(QString("Listener: Running, hostName: %1, port: %2").arg(QHostInfo::localHostName()).arg(tcpServer->serverPort()));
 
 }
 
@@ -106,31 +107,13 @@ void Listener::receiveCommand()
 	receiving_socket->disconnectFromHost();
 
 	emit listener_message(QString("Listener: received command: %1 from %2").arg(command).arg(receiving_socket->peerName()));
+
+	//deal with start/ stop device commands
+	QStringList command_list = command.split("_");
+
+	if(command_list.first() == QString("start"))
+		emit toggle_device_command(command_list.at(1), true);
+	else if(command_list.first() == QString("stop"))
+		emit toggle_device_command(command_list.at(1), false);
+
 }
-
-//move this to bespoke device for each local device
-///////////////////////////////////////////////////
-void Listener::sendCommand(QString command, QString host, quint16 port)
-{
-	QByteArray block;
-	QDataStream out(&block, QIODevice::WriteOnly);
-
-	out << command;
-	
-	QHostAddress address = QHostAddress(host);
-
-	sending_socket->connectToHost(address, port);
-	if(!sending_socket->waitForConnected(timeout)){
-		emit listener_message(QString("LISTENER ERROR: sendCommand: waitForConnection, %1: %2").arg(host).arg(sending_socket->errorString()));
-		emit listener_fail();
-		return;
-	}
-
-	sending_socket->write(block);
-
-	if(!sending_socket->waitForDisconnected(timeout)){
-		emit listener_message(QString("LISTENER ERROR: sendCommand: waitForDisconnected, %1: %2").arg(host).arg(sending_socket->errorString()));
-		emit listener_fail();
-	}
-}
-///////////////////////////////////////////////////

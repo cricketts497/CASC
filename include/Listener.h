@@ -17,11 +17,12 @@ public:
 	~Listener();
 
 	void start();
-	void sendCommand(QString command, QString host, quint16 port);
 
 signals:
 	void listener_message(QString message);
 	void listener_fail();
+
+	void toggle_device_command(QString deviceName, bool start);
 
 private slots:
 	void sessionOpened();

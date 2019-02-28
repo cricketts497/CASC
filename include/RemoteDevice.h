@@ -3,13 +3,14 @@
 
 #include "include/CascDevice.h"
 
-class QTcpSocket;
+#include <QtNetwork>
 
 class RemoteDevice : public CascDevice
 {
 	Q_OBJECT
 public:
-	RemoteDevice(QString deviceName, QString config_file_path, QObject * parent=nullptr);
+	RemoteDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
+	~RemoteDevice();
 
 protected slots:
 	bool sendCommand(QString command);

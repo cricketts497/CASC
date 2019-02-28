@@ -3,13 +3,11 @@
 
 #include "include/LocalDevice.h"
 
-class QMutex;
-
 class LocalDataDevice : public LocalDevice
 {
 	Q_OBJECT
 public:
-	LocalDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, QString config_file_path, QObject * parent = nullptr);
+	LocalDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
 
 private slots:
 	void sendData(QString command, QTcpSocket * socket);

@@ -2,18 +2,26 @@
 #define CASC_DEVICE_H
 
 #include <QObject>
+#include <QFile>
+#include <QDataStream>
+#include <QTextStream>
+
+class CascConfig;
 
 class CascDevice : public QObject
 {
 	Q_OBJECT
 public:
-	CascDevice(QString deviceName, QString config_file_path, QObject * parent = nullptr);
+	CascDevice(QString deviceName, CascConfig * config, QObject * parent = nullptr);
+	void sendMessages();
 
 signals:
 	void device_message(QString message);
 	void device_fail();
 
 protected:
+	void storeMessage(QString message, bool fail);
+
 	const QString device_name;
 	const int timeout;
 
@@ -22,6 +30,13 @@ protected:
 	quint16 hostDevicePort;
 
 	const char * noDataMessage;
+
+private:
+	QTextStream messages;
+	QString messages_string;
+
+	bool device_failed;
+
 };
 
 #endif // CASC_DEVICE_H
