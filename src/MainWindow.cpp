@@ -162,7 +162,7 @@ void MainWindow::toggleMessage()
 void MainWindow::toggleListener(bool start)
 {
 	if(start){
-		listener = new Listener();
+		listener = new Listener(22222);
 
 		connect(listener, SIGNAL(listener_fail()), listenerButton, SLOT(setFail()));
 		connect(listener, SIGNAL(listener_message(QString)), this, SLOT(keepMessage(QString)));

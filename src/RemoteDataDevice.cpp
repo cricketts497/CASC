@@ -52,7 +52,7 @@ void RemoteDataDevice::getData()
 	QByteArray data = socket->readAll();
 	socket->disconnectFromHost();
 
-	if(data.endsWith(noDataMessage.toUtf8()))
+	if(data.endsWith(noDataMessage))
 		return;//up to date with local
 
 	QMutexLocker file_locker(file_mutex);
