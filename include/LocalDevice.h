@@ -11,13 +11,23 @@ class LocalDevice : public CascDevice
 	
 public:
 	LocalDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
-	~LocalDevice();
+	
+public slots:
+	void stop_device();
 
 signals:
-	void newCommand(QString command, QTcpSocket * socket);
+	void newCommand(QString command);
+	
+protected:
+	QTcpSocket * socket = nullptr;
 
 private slots:
+	void newCon();
 	void receiveCommand();
+	void dataReceived();
+	
+	void connectionTimeout();
+	void socketError();
 
 private:
 	QTcpServer * deviceServer = nullptr;

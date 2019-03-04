@@ -5,10 +5,14 @@
 CascDevice::CascDevice(QString deviceName, CascConfig * config, QObject * parent) :
 QObject(parent),
 device_name(deviceName),
-timeout(1000),
 noDataMessage("no data"),
-device_failed(false)
+device_failed(false),
+timeout(1000)
 {
+	connection_timer = new QTimer(this);
+	connection_timer->setSingleShot(true);
+	connection_timer->setInterval(timeout);
+	
 	messages.setString(&messages_string);
 
 	QStringList device = config->getDevice(deviceName);
@@ -17,9 +21,21 @@ device_failed(false)
 		return;
 	}
 
-	hostName = device.at(1);
+	hostAddress = QHostAddress(device.at(1));
 	hostListenPort = device.at(2).toUShort();
 	hostDevicePort = device.at(3).toUShort();
+	
+	storeMessage(QString("%1: started").arg(deviceName), false);
+}
+
+CascDevice::~CascDevice()
+{
+	emit device_message(QString("%1: stopped").arg(device_name));
+}
+
+void CascDevice::stop_device()
+{
+	
 }
 
 void CascDevice::storeMessage(QString message, bool fail)

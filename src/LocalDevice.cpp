@@ -12,39 +12,71 @@ deviceServer(new QTcpServer(this))
 		storeMessage(QString("LOCAL %1 ERROR: deviceServer->listen()").arg(deviceName), true);
 		return;
 	}
-	connect(deviceServer, SIGNAL(newConnection()), this, SLOT(receiveCommand()));
+	connect(deviceServer, SIGNAL(newConnection()), this, SLOT(newCon()));
+	
+	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
 
-	storeMessage(QString("Local %1: Running, hostName: %2, port: %3").arg(deviceName).arg(QHostInfo::localHostName()).arg(deviceServer->serverPort()), false);
+	storeMessage(QString("Local %1: Running, port: %2").arg(deviceName).arg(deviceServer->serverPort()), false);
 }
 
-LocalDevice::~LocalDevice()
+void LocalDevice::stop_device()
 {
-	emit device_message(QString("Local %1: stopped").arg(device_name));
+	emit stopped();
+}
+
+void LocalDevice::newCon()
+{
+	socket = deviceServer->nextPendingConnection();
+	deviceServer->pauseAccepting();//one connection at a time
+	connect(socket, SIGNAL(disconnected()), this, SLOT(dataReceived()));
+	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
+	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
+	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
+	
+	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
+	connection_timer->start();
 }
 
 void LocalDevice::receiveCommand()
-{
-	QTcpSocket * socket = deviceServer->nextPendingConnection();
-	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
-
-	QDataStream in(socket);
-
-	if(!socket->waitForReadyRead(timeout)){
-		emit device_message(QString("LOCAL %1 ERROR: receiveCommand: socket->waitForReadyRead: %2").arg(device_name).arg(socket->errorString()));
-		emit device_fail();
-		return;
-	}
-
+{	
 	QByteArray com = socket->readAll();
 	QString command = QString::fromUtf8(com);
 
-	emit device_message(QString("Local %1: received command: %2").arg(device_name).arg(command));
+	// emit device_message(QString("Local %1: received command: %2").arg(device_name).arg(command));
 	
 	//connect the devices to this signal to do somthing with the command
-	emit newCommand(command, socket);
+	emit newCommand(command);
 	/////////////////////////////////////////////////////////////////
+}
 
+void LocalDevice::dataReceived()
+{
+	deviceServer->resumeAccepting();
+}
+
+//error handling
+///////////////////////////////////////////////////////////////
+void LocalDevice::connectionTimeout()
+{
+	storeMessage(QString("LOCAL %1 ERROR: Connection timeout").arg(device_name), true);
+	emit device_message(QString("LOCAL %1 ERROR: Connection timeout").arg(device_name));
+	emit device_fail();
+	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
 		socket->disconnectFromHost();
+}
 
+void LocalDevice::socketError()
+{
+	//ignore if the remote host closes the connection
+	if(socket->error() == QAbstractSocket::RemoteHostClosedError)
+		return;
+	
+	storeMessage(QString("LOCAL %1 ERROR: %2").arg(device_name).arg(socket->errorString()), true);
+	emit device_message(QString("LOCAL %1 ERROR: %2").arg(device_name).arg(socket->errorString()));
+	emit device_fail();
+	
+	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
+		socket->disconnectFromHost();
+	
 }

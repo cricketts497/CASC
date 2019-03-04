@@ -7,13 +7,14 @@
 class QNetworkSession;
 class QTcpServer;
 class QTcpSocket;
+class QTimer;
 
 class Listener : public QObject
 {
 	Q_OBJECT
 
 public:
-	Listener(quint16 port=11111, QObject * parent = nullptr);
+	Listener(quint16 server_port=11111, QObject * parent = nullptr);
 	~Listener();
 
 	void start();
@@ -26,18 +27,22 @@ signals:
 
 private slots:
 	void sessionOpened();
+	void newCom();
 	void receiveCommand();
+	
+	void connectionTimeout();
+	void socketError();
 
 private:
 	QNetworkSession * networkSession = nullptr;
+	
 	const int timeout;
+	QTimer * connection_timer;
 
 	//server to receive commands
 	QTcpServer * tcpServer = nullptr;
 	const quint16 server_port;
-
-	//socket to send commands
-	QTcpSocket * sending_socket = nullptr;
+	QTcpSocket * socket = nullptr;
 
 };
 

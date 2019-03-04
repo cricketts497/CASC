@@ -1,15 +1,16 @@
 #include <QtNetwork>
-// #include <QtCore>
+#include <QTimer>
 
 #include "include/Listener.h"
 
 Listener::Listener(quint16 server_port, QObject * parent) : 
 QObject(parent),
 timeout(3000),
-server_port(server_port),
-sending_socket(new QTcpSocket(this))
+server_port(server_port)
 {
-
+	connection_timer = new QTimer(this);
+	connection_timer->setSingleShot(true);
+	connection_timer->setInterval(timeout);
 }
 
 Listener::~Listener()
@@ -68,8 +69,9 @@ void Listener::sessionOpened()
 		emit listener_fail();
 		return;
 	}
-	connect(tcpServer, SIGNAL(newConnection()), this, SLOT(receiveCommand()));
+	connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newCom()));
 
+	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
 
 	// QString ipAddress;
 	// QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
@@ -84,27 +86,29 @@ void Listener::sessionOpened()
 	// if(ipAddress.isEmpty())
 	// 	ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
 
-	emit listener_message(QString("Listener: Running, hostName: %1, port: %2").arg(QHostInfo::localHostName()).arg(tcpServer->serverPort()));
+	emit listener_message(QString("Listener: Running, port: %1").arg(tcpServer->serverPort()));
 
+}
+
+void Listener::newCom()
+{
+	socket = tcpServer->nextPendingConnection();
+	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
+	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
+	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
+	
+	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
+	connection_timer->start();	
 }
 
 void Listener::receiveCommand()
 {
-	QTcpSocket * receiving_socket = tcpServer->nextPendingConnection();
-	connect(receiving_socket, SIGNAL(disconnected()), receiving_socket, SLOT(deleteLater()));
+	QDataStream in(socket);
 
-	QDataStream in(receiving_socket);
-	
-	if(!receiving_socket->waitForReadyRead(timeout)){
-		emit listener_message(QString("LISTENER ERROR: receiveCommand: waitForReadyRead: %1").arg(receiving_socket->errorString()));
-		emit listener_fail();
-		return;
-	}
-
-	QByteArray com = receiving_socket->readAll();
+	QByteArray com = socket->readAll();
 	QString command = QString::fromUtf8(com);
 
-	receiving_socket->disconnectFromHost();
+	socket->disconnectFromHost();
 
 	emit listener_message(QString("Listener: received command: %1").arg(command));
 
@@ -116,4 +120,28 @@ void Listener::receiveCommand()
 	else if(command_list.first() == QString("stop"))
 		emit toggle_device_command(command_list.at(1), false);
 
+}
+
+//Error handling
+///////////////////////////////////////////////////////////////////
+void Listener::connectionTimeout()
+{
+	emit listener_message(QString("LISTENER ERROR: connection timeout"));
+	emit listener_fail();
+	
+	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
+		socket->disconnectFromHost();
+}
+
+void Listener::socketError()
+{
+	//ignore if the remote host closes the connection
+	if(socket->error() == QAbstractSocket::RemoteHostClosedError)
+		return;
+	
+	emit listener_message(QString("LISTENER ERROR: %1").arg(socket->errorString()));
+	emit listener_fail();
+	
+	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
+		socket->disconnectFromHost();
 }

@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QHostInfo>
+#include <QNetworkInterface>
 
 CascConfig::CascConfig(QString config_file_path, QObject * parent) :
 QObject(parent)
@@ -18,7 +19,7 @@ QObject(parent)
 		QString line = QString(configFile->readLine());
 		QStringList device = line.split(',');
 
-		//device has structure: deviceName, hostName, hostListenPort, hostDevicePort
+		//device has structure: deviceName, hostAddress, hostListenPort, hostDevicePort
 		devices.append(device);
 	}
 	configFile->close();
@@ -39,11 +40,13 @@ QStringList CascConfig::getDevice(QString deviceName)
 bool CascConfig::deviceLocal(QString deviceName)
 {
 	QStringList device = getDevice(deviceName);
-
-	if(device.at(1) == QHostInfo::localHostName()){
-		return true;
-	}else{
-		return false;
-	}	
-	// return false;
+	
+	QHostAddress deviceAddress = QHostAddress(device.at(1));
+	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+	for(int i=0; i<ipAddressesList.size(); i++){
+		if(ipAddressesList.at(i) == deviceAddress){
+			return true;
+		}
+	}
+	return false;
 }

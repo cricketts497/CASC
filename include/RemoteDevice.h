@@ -10,14 +10,21 @@ class RemoteDevice : public CascDevice
 	Q_OBJECT
 public:
 	RemoteDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
-	~RemoteDevice();
-
-protected slots:
-	bool sendCommand(QString command);
+	
+public slots:
+	void stop_device();
 
 protected:
 	QTcpSocket * socket;
+	QString command;
 	
+private slots:
+	void writeCommand();
+	
+	void connectionTimeout();
+	void socketError();
+	
+	void emitStopped();
 };
 
 

@@ -162,7 +162,7 @@ void MainWindow::toggleMessage()
 void MainWindow::toggleListener(bool start)
 {
 	if(start){
-		listener = new Listener(22222);
+		listener = new Listener();
 
 		connect(listener, SIGNAL(listener_fail()), listenerButton, SLOT(setFail()));
 		connect(listener, SIGNAL(listener_message(QString)), this, SLOT(keepMessage(QString)));
@@ -214,7 +214,7 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 		
 		fake_tagger_started = true;
 	}else{
-		fakeTaggerDeviceThread.quit();
+		//stop_device slot connected in setupDevice() below
 		fake_tagger_started = false;
 	}
 	
@@ -241,6 +241,9 @@ void MainWindow::toggleTaggerDevice(bool start)
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////
+
+
 void MainWindow::toggleDevice(QString device, bool start)
 {
 	if(device == "faketagger" && ((start && !fake_tagger_started && !fakeTaggerDeviceButton->started) || (!start && fake_tagger_started && fakeTaggerDeviceButton->started)))
@@ -257,6 +260,9 @@ void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread
 	device->moveToThread(thread);
 	connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
 	thread->start();
+	connect(device, SIGNAL(stopped()), thread, SLOT(quit()));
+	
+	connect(button, SIGNAL(toggle_device(bool)), device, SLOT(stop_device()));
 }
 
 void MainWindow::setStatusValue(qreal value)
