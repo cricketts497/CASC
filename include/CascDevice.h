@@ -34,7 +34,7 @@ protected:
 	
 	QTimer * connection_timer;
 
-	QHostAddress hostAddress;
+	QString hostAddress;
 	quint16 hostListenPort;
 	quint16 hostDevicePort;
 

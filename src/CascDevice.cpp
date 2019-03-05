@@ -27,7 +27,7 @@ timeout(1000)
 		storeMessage(QString("%1 ERROR: device not found in config").arg(deviceName), true);
 		return;
 	}
-	hostAddress = QHostAddress(device.at(1));
+	hostAddress = device.at(1);
 	hostDevicePort = device.at(2).toUShort();
 	
 	storeMessage(QString("%1: started").arg(deviceName), false);

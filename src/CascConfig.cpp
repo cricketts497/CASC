@@ -54,13 +54,47 @@ bool CascConfig::deviceLocal(QString deviceName)
 			return false;
 	}	
 	//////////////////////
-	
-	QHostAddress deviceAddress = QHostAddress(device.at(1));
+
+	//check local ip addresses
 	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
 	for(int i=0; i<ipAddressesList.size(); i++){
-		if(ipAddressesList.at(i) == deviceAddress){
+		if(ipAddressesList.at(i).toString() == device.at(1)){
 			return true;
 		}
 	}
+	
+	//check if local host name
+	if(device.at(1) == QHostInfo::localHostName())
+		return true;
+	
 	return false;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
