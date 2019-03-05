@@ -3,6 +3,7 @@
 #include "include/MainWindow.h"
 
 MainWindow::MainWindow() :
+config(new CascConfig(config_file_path, this)),
 tofHist_open(false),
 // PDL_open(false),
 messageWindow_open(false),
@@ -13,7 +14,7 @@ tagger_started(false)
 	messages.setString(&messages_string);
 
 	//read the config file
-	config = new CascConfig(config_file_path, this);
+	// config = new CascConfig(config_file_path, this);
 
 	createActions();
 	createStatusBar();
@@ -162,7 +163,7 @@ void MainWindow::toggleMessage()
 void MainWindow::toggleListener(bool start)
 {
 	if(start){
-		listener = new Listener();
+		listener = new Listener(config);
 
 		connect(listener, SIGNAL(listener_fail()), listenerButton, SLOT(setFail()));
 		connect(listener, SIGNAL(listener_message(QString)), this, SLOT(keepMessage(QString)));
@@ -243,7 +244,7 @@ void MainWindow::toggleTaggerDevice(bool start)
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-
+//deal with start stop signals received by listener
 void MainWindow::toggleDevice(QString device, bool start)
 {
 	if(device == "faketagger" && ((start && !fake_tagger_started && !fakeTaggerDeviceButton->started) || (!start && fake_tagger_started && fakeTaggerDeviceButton->started)))
@@ -255,16 +256,20 @@ void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread
 	connect(device, SIGNAL(device_fail()), button, SLOT(setFail()));
 	connect(device, SIGNAL(device_message(QString)), this, SLOT(keepMessage(QString)));
 
+	//emit messages stored during init
 	device->sendMessages();
 
+	//independent thread for each device
 	device->moveToThread(thread);
 	connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
 	thread->start();
 	connect(device, SIGNAL(stopped()), thread, SLOT(quit()));
 	
+	//stop the device before quitting and destroying it
 	connect(button, SIGNAL(toggle_device(bool)), device, SLOT(stop_device()));
 }
 
+//debug function to send messages to status bar
 void MainWindow::setStatusValue(qreal value)
 {
 	QString message_str;

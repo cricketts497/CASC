@@ -14,16 +14,21 @@ timeout(1000)
 	connection_timer->setInterval(timeout);
 	
 	messages.setString(&messages_string);
+	
+	QStringList listener = config->getDevice(QString("listener"));
+	if(listener.isEmpty() || listener.size() != 2){
+		storeMessage(QString("%1 ERROR: listener not found in config").arg(deviceName), true);
+		return;
+	}
+	hostListenPort = listener.at(1).toUShort();
 
 	QStringList device = config->getDevice(deviceName);
-	if(device.isEmpty() || device.size() != 4){
+	if(device.isEmpty() || device.size() != 3){
 		storeMessage(QString("%1 ERROR: device not found in config").arg(deviceName), true);
 		return;
 	}
-
 	hostAddress = QHostAddress(device.at(1));
-	hostListenPort = device.at(2).toUShort();
-	hostDevicePort = device.at(3).toUShort();
+	hostDevicePort = device.at(2).toUShort();
 	
 	storeMessage(QString("%1: started").arg(deviceName), false);
 }

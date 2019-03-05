@@ -19,7 +19,8 @@ QObject(parent)
 		QString line = QString(configFile->readLine());
 		QStringList device = line.split(',');
 
-		//device has structure: deviceName, hostAddress, hostListenPort, hostDevicePort
+		//device has structure: deviceName,hostAddress,hostDevicePort
+		//except for the listener which has structure: listener,listenerPort
 		devices.append(device);
 	}
 	configFile->close();
@@ -39,6 +40,9 @@ QStringList CascConfig::getDevice(QString deviceName)
 
 bool CascConfig::deviceLocal(QString deviceName)
 {
+	if(deviceName == QString("listener"))
+		return true;
+	
 	QStringList device = getDevice(deviceName);
 	
 	QHostAddress deviceAddress = QHostAddress(device.at(1));

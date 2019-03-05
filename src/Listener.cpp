@@ -2,11 +2,12 @@
 #include <QTimer>
 
 #include "include/Listener.h"
+#include "include/CascConfig.h"
 
-Listener::Listener(quint16 server_port, QObject * parent) : 
+Listener::Listener(CascConfig * config, QObject * parent) : 
 QObject(parent),
-timeout(3000),
-server_port(server_port)
+config(config),
+timeout(3000)
 {
 	connection_timer = new QTimer(this);
 	connection_timer->setSingleShot(true);
@@ -20,27 +21,35 @@ Listener::~Listener()
 
 void Listener::start()
 {
+	QStringList listen_config = config->getDevice(QString("listener"));
+	if(listen_config.isEmpty() || listen_config.size() != 2){
+		emit listener_message(QString("LISTENER ERROR: listener not found in config"));
+		emit listener_fail();
+		return;
+	}
+	listenPort = listen_config.at(1).toUShort();
+	
 	//check if the system requires a network session before network operations can be performed
 	QNetworkConfigurationManager manager;
 	if(manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired){
 		// Get saved network configuration
-        QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
-        settings.beginGroup(QLatin1String("QtNetwork"));
-        const QString id = settings.value(QLatin1String("DefaultNetworkConfiguration")).toString();
-        settings.endGroup();
+		QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
+		settings.beginGroup(QLatin1String("QtNetwork"));
+		const QString id = settings.value(QLatin1String("DefaultNetworkConfiguration")).toString();
+		settings.endGroup();
 
-        // If the saved network configuration is not currently discovered use the system default
-        QNetworkConfiguration config = manager.configurationFromIdentifier(id);
-        if ((config.state() & QNetworkConfiguration::Discovered) !=
-            QNetworkConfiguration::Discovered) {
-            config = manager.defaultConfiguration();
-        }
+		// If the saved network configuration is not currently discovered use the system default
+		QNetworkConfiguration config = manager.configurationFromIdentifier(id);
+		if ((config.state() & QNetworkConfiguration::Discovered) !=
+				QNetworkConfiguration::Discovered) {
+				config = manager.defaultConfiguration();
+		}
 
-        networkSession = new QNetworkSession(config, this);
-        connect(networkSession, SIGNAL(opened()), this, SLOT(sessionOpened()));
+		networkSession = new QNetworkSession(config, this);
+		connect(networkSession, SIGNAL(opened()), this, SLOT(sessionOpened()));
 
-        emit listener_message(QString("Listener: Opening network session"));
-        networkSession->open();
+		emit listener_message(QString("Listener: Opening network session"));
+		networkSession->open();
 	}else{
 		sessionOpened();
 	}
@@ -53,18 +62,18 @@ void Listener::sessionOpened()
 		QNetworkConfiguration config = networkSession->configuration();
 		QString id;
 		if (config.type() == QNetworkConfiguration::UserChoice)
-            id = networkSession->sessionProperty(QLatin1String("UserChoiceConfiguration")).toString();
-        else
-            id = config.identifier();
+				id = networkSession->sessionProperty(QLatin1String("UserChoiceConfiguration")).toString();
+		else
+				id = config.identifier();
 
-        QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
-        settings.beginGroup(QLatin1String("QtNetwork"));
-        settings.setValue(QLatin1String("DefaultNetworkConfiguration"), id);
-        settings.endGroup();
+		QSettings settings(QSettings::UserScope, QLatin1String("QtProject"));
+		settings.beginGroup(QLatin1String("QtNetwork"));
+		settings.setValue(QLatin1String("DefaultNetworkConfiguration"), id);
+		settings.endGroup();
 	}
 
 	tcpServer = new QTcpServer(this);
-	if(!tcpServer->listen(QHostAddress::Any, server_port)){
+	if(!tcpServer->listen(QHostAddress::Any, listenPort)){
 		emit listener_message(QString("LISTENER ERROR: tcpServer->listen(): unable to start server"));
 		emit listener_fail();
 		return;

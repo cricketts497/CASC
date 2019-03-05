@@ -9,12 +9,14 @@ class QTcpServer;
 class QTcpSocket;
 class QTimer;
 
+class CascConfig;
+
 class Listener : public QObject
 {
 	Q_OBJECT
 
 public:
-	Listener(quint16 server_port=11111, QObject * parent = nullptr);
+	Listener(CascConfig * config, QObject * parent = nullptr);
 	~Listener();
 
 	void start();
@@ -34,6 +36,8 @@ private slots:
 	void socketError();
 
 private:
+	CascConfig * config = nullptr;
+
 	QNetworkSession * networkSession = nullptr;
 	
 	const int timeout;
@@ -41,7 +45,7 @@ private:
 
 	//server to receive commands
 	QTcpServer * tcpServer = nullptr;
-	const quint16 server_port;
+	quint16 listenPort;
 	QTcpSocket * socket = nullptr;
 
 };
