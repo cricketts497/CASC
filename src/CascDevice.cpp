@@ -23,7 +23,7 @@ timeout(1000)
 	hostListenPort = listener.at(1).toUShort();
 
 	QStringList device = config->getDevice(deviceName);
-	if(device.isEmpty() || device.size() != 3){
+	if(device.isEmpty() || device.size() < 3){
 		storeMessage(QString("%1 ERROR: device not found in config").arg(deviceName), true);
 		return;
 	}
