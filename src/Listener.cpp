@@ -82,19 +82,6 @@ void Listener::sessionOpened()
 
 	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
 
-	// QString ipAddress;
-	// QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-	// //use the first non localhost IPv4 address
-	// for(int i=0; i<ipAddressesList.size(); i++){
-	// 	if(ipAddressesList.at(i) != QHostAddress::LocalHost && ipAddressesList.at(i).toIPv4Address()){
-	// 		ipAddress = ipAddressesList.at(i).toString();
-	// 		break;
-	// 	}
-	// }
-	// //if we don't find one, use the localhost
-	// if(ipAddress.isEmpty())
-	// 	ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
-
 	emit listener_message(QString("Listener: Running, port: %1").arg(tcpServer->serverPort()));
 
 }

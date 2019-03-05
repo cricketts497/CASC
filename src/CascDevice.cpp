@@ -5,11 +5,11 @@
 CascDevice::CascDevice(QString deviceName, CascConfig * config, QObject * parent) :
 QObject(parent),
 device_name(deviceName),
+connection_timer(new QTimer(this)),
 noDataMessage("no data"),
 device_failed(false),
 timeout(1000)
 {
-	connection_timer = new QTimer(this);
 	connection_timer->setSingleShot(true);
 	connection_timer->setInterval(timeout);
 	

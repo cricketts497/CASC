@@ -32,7 +32,7 @@ protected:
 
 	const QString device_name;
 	
-	QTimer * connection_timer;
+	QTimer * connection_timer = nullptr;
 
 	QString hostAddress;
 	quint16 hostListenPort;

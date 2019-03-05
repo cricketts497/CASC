@@ -44,9 +44,8 @@ void LocalDevice::receiveCommand()
 
 	// emit device_message(QString("Local %1: received command: %2").arg(device_name).arg(command));
 	
-	//connect the devices to this signal to do somthing with the command
+	//connect the devices to this signal to do somthing with the command//////
 	emit newCommand(command);
-	/////////////////////////////////////////////////////////////////
 }
 
 void LocalDevice::dataReceived()
