@@ -25,7 +25,11 @@ protected:
 	
 	QTimer * serial_timer = nullptr;
 		
+protected slots:
+	void waitForResponse();
+
 private slots:
+	
 	void readResponse();
 	
 	void serialTimeout();

@@ -1,2 +1,3 @@
 listener,28120
-faketagger,162.158.90.118,28121
+faketagger,pccris16,28121
+heinzingerps,pccris16,28122,COM3,local

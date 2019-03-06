@@ -14,7 +14,7 @@ signals:
 	void set_voltage(uint voltage);
 	
 public slots:
-	void readbackVoltage(int voltage);
+	void readbackVoltage(qreal voltage);
 	
 private slots:
 	void changeVoltage();

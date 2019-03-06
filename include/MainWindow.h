@@ -33,7 +33,7 @@ public:
 
 private slots:
 	void keepMessage(QString message);
-	void keepHeinzingerVoltage(int voltage);
+	void keepHeinzingerVoltage(qreal voltage);
 	void setHeinzingerVoltage(uint voltage);
 
 	//widgets
@@ -59,7 +59,7 @@ private slots:
 signals:
 	void new_message(QString message);
 	
-	void new_heinzinger_true_voltage(int voltage);
+	void new_heinzinger_true_voltage(qreal voltage);
 	void new_heinzinger_set_voltage(uint voltage);
 
 private:

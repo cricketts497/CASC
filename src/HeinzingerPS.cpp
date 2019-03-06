@@ -6,7 +6,7 @@ voltage_file(new QFile(file_path)),
 file_mutex(file_mutex),
 time(new QDateTime()),
 voltage_query_timer(new QTimer(this)),
-voltage_query_timeout(5000),
+voltage_query_timeout(10000),
 voltage_setpoint(0),
 nAverages(4)
 {
@@ -36,13 +36,14 @@ nAverages(4)
 	serial_port->setDataBits(QSerialPort::Data8);
 	serial_port->setParity(QSerialPort::NoParity);
 	serial_port->setStopBits(QSerialPort::OneStop);
-	serial_port->setFlowControl(QSerialPort::HardwareControl);//HardwareControl or SoftwareControl	
+	serial_port->setFlowControl(QSerialPort::SoftwareControl);//HardwareControl or SoftwareControl	
 	
 	serial_port->open(QIODevice::ReadWrite);	
-	voltage_query_timer->start();
+	// voltage_query_timer->start();
 	
 	//connect with remote devices
 	connect(this, SIGNAL(newCommand(QString)), this, SLOT(remoteVoltageCommand(QString)));
+
 }
 
 /////////////////////////////////////////////////////////////
@@ -53,23 +54,44 @@ void HeinzingerPS::setVoltage(uint voltage)
 	
 	//reset the power supply
 	serial_port->write("*RST\n");
+	connect(serial_port, SIGNAL(bytesWritten(qint64)), this, SLOT(sendSetVolt()));
+}
 	
+void HeinzingerPS::sendSetVolt()
+{
+	disconnect(serial_port, SIGNAL(bytes_written(qint64)),0,0);
 	//set the voltage
 	QString outString;
 	QTextStream out(&outString);
-	out << "VOLT " << voltage << "\n";
+	out << "VOLT " << voltage_setpoint << "\n";
+	emit device_message(QString("Heinzinger: sending %1").arg(out.readAll()));
 	serial_port->write(out.readAll().toUtf8());
+	connect(serial_port, SIGNAL(bytesWritten(qint64)), this, SLOT(sendQueryAppliedVolt()));
+}
+
+void HeinzingerPS::sendQueryAppliedVolt()
+{	
+	disconnect(serial_port, SIGNAL(bytes_written(qint64)),0,0);
+	
+	connect(serial_port, SIGNAL(bytesWritten(qint64)), this, SLOT(waitForResponse()));
+	connect(this, SIGNAL(newResponse(QString)), this, SLOT(applyVoltage(QString)));
 	
 	//query the voltage applied
-	connect(this, SIGNAL(newResponse(QString)), this, SLOT(applyVoltage(QString)));
-	serial_port->write("VOLT?\n");
+	emit device_message(QString("Heinzinger: sending VOLT?"));
+	serial_port->write(QString("VOLT?\n").toUtf8());
 	serial_timer->start();
+}
+
+void HeinzingerPS::bytesWrite()
+{
+	emit device_message(QString("Heinzinger: bytes to write %1").arg(serial_port->bytesToWrite()));
 }
 
 void HeinzingerPS::applyVoltage(QString response)
 {
 	disconnect(this, SIGNAL(newReponse(QString)), 0,0);
 	
+	emit device_message(QString("Heinzinger: received %1").arg(response));
 	bool response_status;
 	uint applied_voltage = response.toUInt(&response_status);
 	if(!response_status){
@@ -85,22 +107,27 @@ void HeinzingerPS::applyVoltage(QString response)
 	}
 	
 	//turn on the output
+	emit device_message(QString("Heinzinger: sending OUTP ON"));
 	serial_port->write("OUTP ON\n");
 	
 	//set the number of recordings for average value calculation
 	QString outString;
 	QTextStream out(&outString);
 	out << "AVER " << nAverages << "\n";
+	emit device_message(QString("Heinzinger: sending %1").arg(out.readAll()));
 	serial_port->write(out.readAll().toUtf8());
 	
 	//query the number of averages
 	connect(this, SIGNAL(newResponse(QString)), this, SLOT(checkAverages(QString)));
+	emit device_message(QString("Heinzinger: sending AVER?"));
 	serial_port->write("AVER?\n");
 	serial_timer->start();	
 }
 
 void HeinzingerPS::checkAverages(QString response)
 {
+	emit device_message(QString("Heinzinger: received %1").arg(response));
+
 	disconnect(this, SIGNAL(newResponse(QString)),0,0);
 	
 	bool response_status;
@@ -136,7 +163,7 @@ void HeinzingerPS::readbackVoltage(QString response)
 	disconnect(this, SIGNAL(newResponse(QString)),0,0);
 	
 	bool response_status;
-	qint64 response_true_voltage = response.toLongLong(&response_status);
+	qreal response_true_voltage = response.toDouble(&response_status);
 	if(!response_status){
 		emit device_message(QString("LOCAL SERIAL HEINZINGER ERROR: True voltage response invalid: %1").arg(response));
 		emit device_fail();
@@ -144,16 +171,16 @@ void HeinzingerPS::readbackVoltage(QString response)
 	}
 	true_voltage = response_true_voltage;
 	
-	//save the voltage to file
-	QMutexLocker file_locker(file_mutex);
-	if(!voltage_file->open(QIODevice::Append)){
-		emit device_message(QString("LOCAL SERIAL HEINZINGER ERROR: readbackVoltage: file->open(append)"));
-		emit device_fail();
-		return;
-	}
-	QDataStream out(voltage_file);
-	out << current_time << true_voltage;
-	voltage_file->close();
+	// //save the voltage to file
+	// QMutexLocker file_locker(file_mutex);
+	// if(!voltage_file->open(QIODevice::Append)){
+		// emit device_message(QString("LOCAL SERIAL HEINZINGER ERROR: readbackVoltage: file->open(append)"));
+		// emit device_fail();
+		// return;
+	// }
+	// QDataStream out(voltage_file);
+	// out << current_time << true_voltage;
+	// voltage_file->close();
 	
 	emit newTrueVoltage(true_voltage);
 }

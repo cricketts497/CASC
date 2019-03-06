@@ -170,7 +170,7 @@ void MainWindow::toggleMessage()
 	}
 }
 
-void MainWindow::keepHeinzingerVoltage(int voltage)
+void MainWindow::keepHeinzingerVoltage(qreal voltage)
 {
 	emit new_heinzinger_true_voltage(voltage);	
 }
@@ -284,13 +284,13 @@ void MainWindow::toggleHeinzingerDevice(bool start)
 			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
 			
 			connect(this, SIGNAL(new_heinzinger_set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
-			connect(heinzingerDevice, SIGNAL(newTrueVoltage(int)), this, SLOT(new_heinzinger_true_voltage(int)));
+			connect(heinzingerDevice, SIGNAL(newTrueVoltage(qreal)), this, SLOT(new_heinzinger_true_voltage(qreal)));
 		}else{
 			RemoteHeinzingerPS * heinzingerDevice = new RemoteHeinzingerPS(QString("heinzingerps"), config);
 			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
 			
 			connect(this, SIGNAL(new_heinzinger_set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
-			connect(heinzingerDevice, SIGNAL(newTrueVoltage(int)), this, SLOT(new_heinzinger_true_voltage(int)));
+			connect(heinzingerDevice, SIGNAL(newTrueVoltage(qreal)), this, SLOT(new_heinzinger_true_voltage(qreal)));
 		}
 		heinzinger_started = true;
 	}else{

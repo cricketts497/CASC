@@ -4,7 +4,7 @@ SerialDevice::SerialDevice(QString deviceName, CascConfig * config, QObject * pa
 LocalDevice(deviceName, config, parent),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
-serial_timeout(1000)
+serial_timeout(10000)
 {
 	if(device_failed)
 		return;
@@ -13,7 +13,6 @@ serial_timeout(1000)
 	serial_timer->setInterval(serial_timeout);
 	
 	connect(serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialError()));
-	connect(serial_port, SIGNAL(readyRead()), this, SLOT(readResponse()));
 	
 	connect(serial_timer, SIGNAL(timeout()), this, SLOT(serialTimeout()));
 	connect(serial_port, SIGNAL(readyRead()), serial_timer, SLOT(stop()));
@@ -37,8 +36,18 @@ void SerialDevice::stop_device()
 	}
 }
 
+void SerialDevice::waitForResponse()
+{
+	disconnect(serial_port, SIGNAL(bytesWritten(qint64)),0,0);
+	emit device_message(QString("Serial: bytesWritten"));
+	connect(serial_port, SIGNAL(readyRead()), this, SLOT(readResponse()));
+}
+
 void SerialDevice::readResponse()
 {
+	emit device_message(QString("Serial: response"));
+	disconnect(serial_port, SIGNAL(readyRead()), this, SLOT(readResponse()));
+	
 	QByteArray resp = serial_port->readAll();
 	QString response = QString::fromUtf8(resp);
 	
@@ -61,6 +70,9 @@ void SerialDevice::serialTimeout()
 
 void SerialDevice::serialError()
 {
+	if(serial_port->error() == QSerialPort::NoError)
+		return;
+	
 	storeMessage(QString("LOCAL SERIAL %1 ERROR: %2").arg(device_name).arg(serial_port->errorString()), true);
 	emit device_message(QString("LOCAL SERIAL %1 ERROR: %2").arg(device_name).arg(serial_port->errorString()));
 	emit device_fail();

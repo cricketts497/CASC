@@ -24,7 +24,7 @@ voltageReadback(new QLabel("0", this))
 	layout->addWidget(voltageReadbackLabel, 1,0);
 	layout->addWidget(voltageReadback,1,1);
 	
-	setFixedSize(150,100);
+	setFixedSize(200,150);
 }
 
 void HeinzingerVoltageWindow::changeVoltage()
@@ -34,7 +34,7 @@ void HeinzingerVoltageWindow::changeVoltage()
 	emit set_voltage(voltage);	
 }
 
-void HeinzingerVoltageWindow::readbackVoltage(int voltage)
+void HeinzingerVoltageWindow::readbackVoltage(qreal voltage)
 {
 	QString voltage_string = QString::number(voltage);
 	

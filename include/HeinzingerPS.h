@@ -11,12 +11,14 @@ public:
 	HeinzingerPS(QString deviceName, QString file_path, QMutex * file_mutex, CascConfig * config, QObject * parent=nullptr);
 	
 signals:
-	void newTrueVoltage(int voltage);
+	void newTrueVoltage(qreal voltage);
 	
 public slots:
 	void setVoltage(uint voltage);
 	
 private slots:
+	void sendSetVolt();
+	void sendQueryAppliedVolt();
 	void applyVoltage(QString response);
 	void checkAverages(QString response);
 	
@@ -27,6 +29,8 @@ private slots:
 	
 	void heinzingerError();
 	
+	void bytesWrite();
+	
 private:
 	QFile * voltage_file;
 	QMutex * file_mutex;
@@ -36,10 +40,11 @@ private:
 	const int voltage_query_timeout;
 	
 	uint voltage_setpoint;
-	qint64 true_voltage;
+	qreal true_voltage;
 	const uint nAverages;
 	
 	QMetaObject::Connection connection;
+
 };
 
 
