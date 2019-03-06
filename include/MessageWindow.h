@@ -1,21 +1,14 @@
 #ifndef MESSAGE_WINDOW
 #define MESSAGE_WINDOW
 
-#include <QDockWidget>
+#include "include/CascWidget.h"
 
-class QPlainTextEdit;
-
-class MessageWindow : public QDockWidget
+class MessageWindow : public CascWidget
 {
 	Q_OBJECT
+	
 public:
 	MessageWindow(QWidget * parent=nullptr);
-
-protected:
-	void closeEvent(QCloseEvent *event);
-
-signals:
-	void closing();
 
 public slots:
 	void addMessage(QString message);
@@ -24,6 +17,5 @@ private:
 	QPlainTextEdit * textEdit;
 
 };
-
 
 #endif //MESSGAE_WINDOW

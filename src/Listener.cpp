@@ -7,9 +7,9 @@
 Listener::Listener(CascConfig * config, QObject * parent) : 
 QObject(parent),
 config(config),
-timeout(3000)
+timeout(3000),
+connection_timer(new QTimer(this))
 {
-	connection_timer = new QTimer(this);
 	connection_timer->setSingleShot(true);
 	connection_timer->setInterval(timeout);
 }
@@ -74,7 +74,7 @@ void Listener::sessionOpened()
 
 	tcpServer = new QTcpServer(this);
 	if(!tcpServer->listen(QHostAddress::Any, listenPort)){
-		emit listener_message(QString("LISTENER ERROR: tcpServer->listen(): unable to start server"));
+		emit listener_message(QString("LISTENER ERROR: tcpServer->listen(%1): unable to start server").arg(listenPort));
 		emit listener_fail();
 		return;
 	}

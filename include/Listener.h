@@ -41,7 +41,7 @@ private:
 	QNetworkSession * networkSession = nullptr;
 	
 	const int timeout;
-	QTimer * connection_timer;
+	QTimer * connection_timer = nullptr;
 
 	//server to receive commands
 	QTcpServer * tcpServer = nullptr;

@@ -45,9 +45,9 @@ bool CascConfig::deviceLocal(QString deviceName)
 	
 	QStringList device = getDevice(deviceName);
 	
-	//debug config file, 4th argument for local/remote
+	//debug config file, 5th argument for local/remote
 	//////////////////////
-	if(device.size() == 4){
+	if(device.size() == 5){
 		if(device.last() == QString("local"))
 			return true;
 		else if(device.last() == QString("remote"))

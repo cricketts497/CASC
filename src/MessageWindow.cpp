@@ -2,7 +2,7 @@
 #include <QtWidgets>
 
 MessageWindow::MessageWindow(QWidget * parent) :
-QDockWidget("Messages", parent)
+CascWidget("Messages", parent)
 {
 	// textEdit = new QPlainTextEdit(this);
 	textEdit = new QPlainTextEdit(this);
@@ -14,9 +14,4 @@ QDockWidget("Messages", parent)
 void MessageWindow::addMessage(QString message)
 {
 	textEdit->appendPlainText(message);
-}
-
-void MessageWindow::closeEvent(QCloseEvent *event)
-{
-	emit closing();
 }

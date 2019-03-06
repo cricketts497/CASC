@@ -8,6 +8,8 @@
 #include <QTimer>
 #include <QHostAddress>
 
+#include "include/CascConfig.h"
+
 class CascConfig;
 
 class CascDevice : public QObject

@@ -2,7 +2,7 @@
 #define MAIN_WINDOW_H
 
 #include <QMainWindow>
-// #include "include/PdlScanner.h"
+
 #include "include/DeviceButton.h"
 #include "include/PdlDevice.h"
 #include "include/GenericGraph.h"
@@ -13,6 +13,8 @@
 #include "include/Listener.h"
 #include "include/CascConfig.h"
 #include "include/RemoteDataDevice.h"
+#include "include/HeinzingerPS.h"
+#include "include/HeinzingerVoltageWindow.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -32,19 +34,22 @@ private slots:
 	void keepMessage(QString message);
 
 	//widgets
-	// void togglePdl();
-	// void setStatusPDL(bool changed);
+	void setupWidget(CascWidget * widget, QAction * action);
+	
 	void toggleTof();
 	void toggleMessage();
-
-	void toggleDevice(QString device, bool start);
-	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
+	void toggleHeinzinger();
+	
 
 	//devices
+	void toggleDevice(QString device, bool start);
+	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
+	
 	void toggleListener(bool start);
 	void toggleFakePdlDevice(bool start);
 	void toggleFakeTaggerDevice(bool start);
 	void toggleTaggerDevice(bool start);
+	void toggleHeinzingerDevice(bool start);
 
 	void setStatusValue(qreal value);
 
@@ -73,18 +78,16 @@ private:
 	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
 	const QString tagger_temp_path = "./temp/tag_temp.dat";
 	const QString fake_pdl_temp_path = "./temp/fake_pdl_temp.dat";
+	const QString heinzinger_temp_path = "./temp/heinzinger_temp.dat";
 
 	QMutex fakeTaggerFileMutex;
 	QMutex fakePdlFileMutex;
+	QMutex heinzingerFileMutex;
 
 	//graph widget as central of main window
 	GenericGraph *centralGraph;
 
 	//task widgets
-	// QAction *pdlAct;
-	// PdlScanner *pdlScanner;
-	// bool PDL_open;
-
 	QAction *tofAct;
 	TofHistogram *tofHist;
 	bool tofHist_open;
@@ -92,8 +95,11 @@ private:
 	QAction *messageAct;
 	MessageWindow * messageWindow;
 	bool messageWindow_open;
-
-
+	
+	QAction *heinzingerAct;
+	HeinzingerVoltageWindow * heinzingerWindow;
+	bool heinzingerWindow_open;
+	uint maxHeinzingerVoltage;
 
 	//devices
 	DeviceButton * listenerButton;
@@ -109,10 +115,14 @@ private:
 	bool fake_tagger_started;
 	QThread fakeTaggerDeviceThread;
 
-	DeviceButton *taggerDeviceButton;
+	DeviceButton * taggerDeviceButton;
 	TaggerDevice * taggerDevice;
 	bool tagger_started;
-
+	
+	DeviceButton * heinzingerDeviceButton;
+	HeinzingerPS * heinzingerDevice;
+	bool heinzinger_started;
+	QThread heinzingerDeviceThread;
 };
 
 #endif //MAIN_WINDOW_H

@@ -8,20 +8,33 @@ class HeinzingerPS : public SerialDevice
 	Q_OBJECT
 	
 public:
-	HeinzingerPS(CascConfig * config, QObject * parent=nullptr);
+	HeinzingerPS(QString deviceName, QString file_path, QMutex * file_mutex, CascConfig * config, QObject * parent=nullptr);
+	
+signals:
+	void newTrueVoltage(int voltage);
 	
 public slots:
 	void setVoltage(uint voltage);
-	void queryVoltage();
 	
 private slots:
 	void applyVoltage(QString response);
-	void readbackVoltage();
+	void checkAverages(QString response);
+	
+	void queryVoltage();
+	void readbackVoltage(QString response);
+	
+	void heinzingerError();
 	
 private:
+	QFile * voltage_file;
+	QMutex * file_mutex;
+	
+	QDateTime * time;
+	QTimer * voltage_query_timer;
+	const int voltage_query_timeout;
+	
 	uint voltage_setpoint;
-	uint true_voltage;
-	uint nAverages;
+	const uint nAverages;
 	
 	QMetaObject::Connection connection;
 };

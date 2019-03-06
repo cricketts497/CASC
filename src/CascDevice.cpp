@@ -1,7 +1,5 @@
 #include "include/CascDevice.h"
 
-#include "include/CascConfig.h"
-
 CascDevice::CascDevice(QString deviceName, CascConfig * config, QObject * parent) :
 QObject(parent),
 device_name(deviceName),
@@ -17,14 +15,14 @@ timeout(1000)
 	
 	QStringList listener = config->getDevice(QString("listener"));
 	if(listener.isEmpty() || listener.size() != 2){
-		storeMessage(QString("%1 ERROR: listener not found in config").arg(deviceName), true);
+		storeMessage(QString("%1 ERROR: Listener not found in config").arg(deviceName), true);
 		return;
 	}
 	hostListenPort = listener.at(1).toUShort();
 
 	QStringList device = config->getDevice(deviceName);
-	if(device.isEmpty() || device.size() < 3){
-		storeMessage(QString("%1 ERROR: device not found in config").arg(deviceName), true);
+	if(device.size() < 3){
+		storeMessage(QString("%1 ERROR: Device not found in config").arg(deviceName), true);
 		return;
 	}
 	hostAddress = device.at(1);

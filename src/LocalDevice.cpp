@@ -28,7 +28,7 @@ void LocalDevice::newCon()
 {
 	socket = deviceServer->nextPendingConnection();
 	deviceServer->pauseAccepting();//one connection at a time
-	connect(socket, SIGNAL(disconnected()), this, SLOT(dataReceived()));
+	connect(socket, SIGNAL(disconnected()), this, SLOT(messageReceived()));
 	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
 	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
@@ -48,7 +48,7 @@ void LocalDevice::receiveCommand()
 	emit newCommand(command);
 }
 
-void LocalDevice::dataReceived()
+void LocalDevice::messageReceived()
 {
 	deviceServer->resumeAccepting();
 }

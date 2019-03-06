@@ -24,7 +24,7 @@ protected:
 private slots:
 	void newCon();
 	void receiveCommand();
-	void dataReceived();
+	void messageReceived();
 	
 	void connectionTimeout();
 	void socketError();
