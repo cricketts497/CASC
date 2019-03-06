@@ -28,12 +28,14 @@ void LocalDevice::newCon()
 {
 	socket = deviceServer->nextPendingConnection();
 	deviceServer->pauseAccepting();//one connection at a time
+	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
+	
+	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
+	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
+	
 	connect(socket, SIGNAL(disconnected()), this, SLOT(messageReceived()));
 	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
-	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
-	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
 	
-	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
 	connection_timer->start();
 }
 

@@ -14,8 +14,6 @@ socket(new QTcpSocket(this))
 	connect(socket, SIGNAL(connected()), connection_timer, SLOT(stop()));
 	connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
 	
-	//add timeout
-
 	//send the command to start the device
 	QString outString;
 	QTextStream out(&outString);

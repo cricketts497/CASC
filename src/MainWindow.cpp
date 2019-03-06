@@ -102,12 +102,7 @@ void MainWindow::createDevicesBar()
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
 }
 
-void MainWindow::keepMessage(QString message)
-{
-	messages << message;
-	messages << endl;
-	emit new_message(message);
-}
+
 
 
 //widgets
@@ -136,6 +131,13 @@ void MainWindow::toggleTof()
 		tofAct->setStatusTip("Close the tagger time of flight histogram");
 		tofHist_open = true;
 	}
+}
+
+void MainWindow::keepMessage(QString message)
+{
+	messages << message;
+	messages << endl;
+	emit new_message(message);
 }
 
 void MainWindow::toggleMessage()
@@ -168,6 +170,16 @@ void MainWindow::toggleMessage()
 	}
 }
 
+void MainWindow::keepHeinzingerVoltage(int voltage)
+{
+	emit new_heinzinger_true_voltage(voltage);	
+}
+
+void MainWindow::setHeinzingerVoltage(uint voltage)
+{
+	emit new_heinzinger_set_voltage(voltage);
+}
+	
 void MainWindow::toggleHeinzinger()
 {
 	if(heinzingerWindow_open){
@@ -179,11 +191,8 @@ void MainWindow::toggleHeinzinger()
 		heinzingerWindow = new HeinzingerVoltageWindow(maxHeinzingerVoltage, this);
 		setupWidget(heinzingerWindow, heinzingerAct);
 		
-		//connections to device
-		if(heinzinger_started){
-			connect(heinzingerWindow, SIGNAL(set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
-			connect(heinzingerDevice, SIGNAL(newTrueVoltage(int)), heinzingerWindow, SLOT(readbackVoltage(int)));
-		}
+		connect(heinzingerWindow, SIGNAL(set_voltage(uint)), this, SLOT(setHeinzingerVoltage(uint)));
+		connect(this, SIGNAL(new_heinzinger_true_voltage(int)), heinzingerWindow, SLOT(readbackVoltage(int)));
 		
 		addDockWidget(Qt::RightDockWidgetArea, heinzingerWindow);
 		
@@ -267,17 +276,22 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 
 void MainWindow::toggleHeinzingerDevice(bool start)
 {
+	bool local = config->deviceLocal(QString("heinzingerps"));
+	
 	if(start){
-		//only local device for now
-		heinzingerDevice = new HeinzingerPS(QString("heinzingerps"), heinzinger_temp_path, &heinzingerFileMutex, config);
-		setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
-		
-		//connect to widgets
-		if(heinzingerWindow_open){
-			connect(heinzingerWindow, SIGNAL(set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
-			connect(heinzingerDevice, SIGNAL(newTrueVoltage(int)), heinzingerWindow, SLOT(readbackVoltage(int)));
+		if(local){
+			HeinzingerPS * heinzingerDevice = new HeinzingerPS(QString("heinzingerps"), heinzinger_temp_path, &heinzingerFileMutex, config);
+			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
+			
+			connect(this, SIGNAL(new_heinzinger_set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
+			connect(heinzingerDevice, SIGNAL(newTrueVoltage(int)), this, SLOT(new_heinzinger_true_voltage(int)));
+		}else{
+			RemoteHeinzingerPS * heinzingerDevice = new RemoteHeinzingerPS(QString("heinzingerps"), config);
+			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
+			
+			connect(this, SIGNAL(new_heinzinger_set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
+			connect(heinzingerDevice, SIGNAL(newTrueVoltage(int)), this, SLOT(new_heinzinger_true_voltage(int)));
 		}
-		
 		heinzinger_started = true;
 	}else{
 		//stop_device slot connection in setupDevice() below

@@ -23,6 +23,8 @@ private slots:
 	void queryVoltage();
 	void readbackVoltage(QString response);
 	
+	void remoteVoltageCommand(QString command);
+	
 	void heinzingerError();
 	
 private:
@@ -34,6 +36,7 @@ private:
 	const int voltage_query_timeout;
 	
 	uint voltage_setpoint;
+	qint64 true_voltage;
 	const uint nAverages;
 	
 	QMetaObject::Connection connection;
