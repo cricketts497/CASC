@@ -38,7 +38,7 @@ CascDevice::~CascDevice()
 
 void CascDevice::stop_device()
 {
-	
+	emit stopped();
 }
 
 void CascDevice::storeMessage(QString message, bool fail)
@@ -55,4 +55,9 @@ void CascDevice::sendMessages()
 	emit device_message(messages.readAll());
 	if(device_failed)
 		emit device_fail();
+}
+
+void CascDevice::deviceCommand(QString command)
+{
+    emit newCommand(command);
 }

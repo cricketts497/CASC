@@ -63,7 +63,7 @@ void FakeTagger::newPacket()
 {
 	// increase the coarse packet timestamp
 	// interval in ms, timestamp in multiples of 500ps
-	timestamp += timestamp_interval*packet_hits;
+	// timestamp += timestamp_interval*packet_hits;
 	timestamp = time->currentMSecsSinceEpoch();//*2e6;
 
 	QMutexLocker file_locker(file_mutex);

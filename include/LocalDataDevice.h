@@ -9,13 +9,14 @@ class LocalDataDevice : public LocalDevice
 public:
 	LocalDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
 
+protected:
+    QFile * data_file;
+	QMutex * file_mutex;
+    
 private slots:
 	void sendData(QString command);
 
 private:
-	QFile * data_file;
-	QMutex * file_mutex;
-
 	const qint64 maxPayload;
 };
 

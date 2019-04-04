@@ -19,11 +19,6 @@ deviceServer(new QTcpServer(this))
 	storeMessage(QString("Local %1: Running, port: %2").arg(deviceName).arg(deviceServer->serverPort()), false);
 }
 
-void LocalDevice::stop_device()
-{
-	emit stopped();
-}
-
 void LocalDevice::newCon()
 {
 	socket = deviceServer->nextPendingConnection();

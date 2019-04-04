@@ -13,6 +13,9 @@ socket(new QTcpSocket(this))
 	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
 	connect(socket, SIGNAL(connected()), connection_timer, SLOT(stop()));
 	connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
+    
+    //write device commands received from local widgets
+    connect(this, SIGNAL(newCommand(QString)), this, SLOT(writeDeviceCommand(QString)));
 	
 	//send the command to start the device
 	QString outString;
@@ -40,12 +43,16 @@ void RemoteDevice::stop_device()
 	socket->connectToHost(hostAddress, hostListenPort);
 	connection_timer->start();
 	
-	connect(socket, SIGNAL(disconnected()), this, SLOT(emitStopped()));
+	connect(socket, &QTcpSocket::disconnected, this, &CascDevice::stop_device);
 }
 
-void RemoteDevice::emitStopped()
+//write device commands from the widgets
+void RemoteDevice::writeDeviceCommand(QString device_com)
 {
-	emit stopped();
+    command = device_com;
+    
+    socket->connectToHost(hostAddress, hostListenPort);
+	connection_timer->start();
 }
 
 void RemoteDevice::writeCommand()

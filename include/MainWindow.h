@@ -14,7 +14,6 @@
 #include "include/CascConfig.h"
 #include "include/RemoteDataDevice.h"
 #include "include/HeinzingerPS.h"
-#include "include/RemoteHeinzingerPS.h"
 #include "include/HeinzingerVoltageWindow.h"
 
 class QToolBar;
@@ -33,8 +32,6 @@ public:
 
 private slots:
 	void keepMessage(QString message);
-	void keepHeinzingerVoltage(qreal voltage);
-	void setHeinzingerVoltage(uint voltage);
 
 	//widgets
 	void setupWidget(CascWidget * widget, QAction * action);
@@ -42,6 +39,8 @@ private slots:
 	void toggleTof();
 	void toggleMessage();
 	void toggleHeinzinger();
+    
+    void heinzingerCommand(QString command);
 	
 
 	//devices
@@ -59,8 +58,7 @@ private slots:
 signals:
 	void new_message(QString message);
 	
-	void new_heinzinger_true_voltage(qreal voltage);
-	void new_heinzinger_set_voltage(uint voltage);
+	void newHeinzingerCommand(QString command);
 
 private:
 	const QString config_file_path = "./config.txt";
@@ -105,7 +103,7 @@ private:
 	QAction *heinzingerAct;
 	HeinzingerVoltageWindow * heinzingerWindow;
 	bool heinzingerWindow_open;
-	uint maxHeinzingerVoltage;
+	const uint maxHeinzingerVoltage;
 
 	//devices
 	DeviceButton * listenerButton;
@@ -126,7 +124,6 @@ private:
 	bool tagger_started;
 	
 	DeviceButton * heinzingerDeviceButton;
-	// HeinzingerPS * heinzingerDevice;
 	bool heinzinger_started;
 	QThread heinzingerDeviceThread;
 };

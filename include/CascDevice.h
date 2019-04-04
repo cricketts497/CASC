@@ -21,9 +21,12 @@ public:
 	void sendMessages();
 
 public slots:
+    void deviceCommand(QString command);
 	void stop_device();
 
 signals:
+    void newCommand(QString command);
+
 	void device_message(QString message);
 	void device_fail();
 	

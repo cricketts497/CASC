@@ -8,21 +8,24 @@ class HeinzingerVoltageWindow : public CascWidget
 	Q_OBJECT
 	
 public:
-	HeinzingerVoltageWindow(uint maxVoltage=1, QWidget * parent=nullptr);
+	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, QWidget * parent=nullptr);
 	
 signals:
-	void set_voltage(uint voltage);
-	
-public slots:
-	void readbackVoltage(qreal voltage);
+	void sendCommand(QString command);
 	
 private slots:
-	void changeVoltage();
+	void setVoltage();
+    
+    void readVoltage();
 	
 private:
 	QSpinBox * voltageEdit;
-	
 	QLabel * voltageReadback;
+    
+    QFile * voltage_file;
+    QMutex * voltageFileMutex;
+    
+    quint64 current_applied_voltage;
 	
 };
 

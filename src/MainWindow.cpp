@@ -48,11 +48,11 @@ void MainWindow::createActions()
 	// taskBar->addAction(pdlAct);
 
 	//TOF spectrum
-	const QIcon tofIcon = QIcon("./resources/tof.png");
-	tofAct = new QAction(tofIcon, "&TOF", this);
-	tofAct->setStatusTip("Open the tagger time of flight histogram");
-	connect(tofAct, &QAction::triggered, this, &MainWindow::toggleTof);
-	taskBar->addAction(tofAct);
+	// const QIcon tofIcon = QIcon("./resources/tof.png");
+	// tofAct = new QAction(tofIcon, "&TOF", this);
+	// tofAct->setStatusTip("Open the tagger time of flight histogram");
+	// connect(tofAct, &QAction::triggered, this, &MainWindow::toggleTof);
+	// taskBar->addAction(tofAct);
 
 	//Error message display window
 	const QIcon messageIcon = QIcon("./resources/message.png");
@@ -81,23 +81,25 @@ void MainWindow::createDevicesBar()
 	listenerButton = new DeviceButton("Listener", devicesBar, "Start the listener", "Stop the Listener", "LISTENER FAIL");
 	connect(listenerButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleListener(bool)));
 
-	fakePdlDeviceButton = new DeviceButton("Fake PDL", devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
-	connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakePdlDevice(bool)));
+	// fakePdlDeviceButton = new DeviceButton("Fake PDL", devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
+	// connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakePdlDevice(bool)));
 
-	fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
-	connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
+	// fakeTaggerDeviceButton = new DeviceButton("Fake tagger", devicesBar, "Start the fake tagger device", "Stop the fake tagger device", "FAKE TAGGER FAIL");
+	// connect(fakeTaggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakeTaggerDevice(bool)));
 
-	taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
-	connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
+	// taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
+	// connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
 	
 	heinzingerDeviceButton = new DeviceButton("Heinzinger", devicesBar, "Start the heinzinger power supply device", "Stop the heinzinger device", "HEINZINGER FAIL");
 	connect(heinzingerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzingerDevice(bool)));
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
-	devicesBar->addWidget(fakePdlDeviceButton);
-	devicesBar->addWidget(fakeTaggerDeviceButton);
-	devicesBar->addWidget(taggerDeviceButton);
+	// devicesBar->addWidget(fakePdlDeviceButton);
+	// devicesBar->addWidget(fakeTaggerDeviceButton);
+	// devicesBar->addWidget(taggerDeviceButton);
 	devicesBar->addWidget(heinzingerDeviceButton);
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
 }
@@ -170,15 +172,7 @@ void MainWindow::toggleMessage()
 	}
 }
 
-void MainWindow::keepHeinzingerVoltage(qreal voltage)
-{
-	emit new_heinzinger_true_voltage(voltage);	
-}
 
-void MainWindow::setHeinzingerVoltage(uint voltage)
-{
-	emit new_heinzinger_set_voltage(voltage);
-}
 	
 void MainWindow::toggleHeinzinger()
 {
@@ -188,17 +182,20 @@ void MainWindow::toggleHeinzinger()
 		heinzingerAct->setStatusTip("Open the heinzinger voltage controller");
 		heinzingerWindow_open = false;
 	}else{
-		heinzingerWindow = new HeinzingerVoltageWindow(maxHeinzingerVoltage, this);
+		heinzingerWindow = new HeinzingerVoltageWindow(heinzinger_temp_path, &heinzingerFileMutex, maxHeinzingerVoltage, this);
 		setupWidget(heinzingerWindow, heinzingerAct);
 		
-		connect(heinzingerWindow, SIGNAL(set_voltage(uint)), this, SLOT(setHeinzingerVoltage(uint)));
-		connect(this, SIGNAL(new_heinzinger_true_voltage(int)), heinzingerWindow, SLOT(readbackVoltage(int)));
+		connect(heinzingerWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzingerCommand(QString)));
 		
 		addDockWidget(Qt::RightDockWidgetArea, heinzingerWindow);
 		
 		heinzingerAct->setStatusTip("Close the heinzinger voltage controller");
 		heinzingerWindow_open = true;
 	}
+}
+void MainWindow::heinzingerCommand(QString command)
+{
+    emit newHeinzingerCommand(command);
 }
 
 /////////////////////////////////////////
@@ -280,18 +277,15 @@ void MainWindow::toggleHeinzingerDevice(bool start)
 	
 	if(start){
 		if(local){
-			HeinzingerPS * heinzingerDevice = new HeinzingerPS(QString("heinzingerps"), heinzinger_temp_path, &heinzingerFileMutex, config);
+			HeinzingerPS * heinzingerDevice = new HeinzingerPS(maxHeinzingerVoltage, 3, heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
 			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
-			
-			connect(this, SIGNAL(new_heinzinger_set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
-			connect(heinzingerDevice, SIGNAL(newTrueVoltage(qreal)), this, SLOT(new_heinzinger_true_voltage(qreal)));
-		}else{
-			RemoteHeinzingerPS * heinzingerDevice = new RemoteHeinzingerPS(QString("heinzingerps"), config);
-			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
-			
-			connect(this, SIGNAL(new_heinzinger_set_voltage(uint)), heinzingerDevice, SLOT(setVoltage(uint)));
-			connect(heinzingerDevice, SIGNAL(newTrueVoltage(qreal)), this, SLOT(new_heinzinger_true_voltage(qreal)));
+            connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
+        }else{
+            RemoteDataDevice * heinzingerDevice = new RemoteDataDevice(heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
+            setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
+            connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
 		}
+        
 		heinzinger_started = true;
 	}else{
 		//stop_device slot connection in setupDevice() below

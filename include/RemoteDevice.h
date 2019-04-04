@@ -19,12 +19,12 @@ protected:
 	QString command;
 	
 private slots:
+    void writeDeviceCommand(QString com);
+
 	void writeCommand();
 	
 	void connectionTimeout();
 	void socketError();
-	
-	void emitStopped();
 };
 
 

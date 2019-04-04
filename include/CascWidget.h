@@ -16,7 +16,9 @@ protected:
 	
 signals:
 	void closing();
-	
+    
+    void widget_message(QString message);
+    void widget_fail();
 };
 
 
