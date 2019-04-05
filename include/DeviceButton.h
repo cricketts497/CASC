@@ -10,7 +10,7 @@ class DeviceButton : public QPushButton
 	Q_OBJECT
 
 public:
-	DeviceButton(const char *name, QToolBar *parent=nullptr, const char *startTip="Start", const char *stopTip="Stop", const char *failTip="FAIL");
+	DeviceButton(const char *name, QWidget *parent=nullptr, const char *startTip="Start", const char *stopTip="Stop", const char *failTip="FAIL");
 
 	void toggle();
 

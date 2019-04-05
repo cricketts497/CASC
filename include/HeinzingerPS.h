@@ -9,8 +9,13 @@ class HeinzingerPS : public SerialDevice
 	
 public:
 	HeinzingerPS(uint voltage_limit, uint current_limit, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent=nullptr);
-    
+ 
+signals:
+    void voltage_set_zero();
+ 
 public slots:
+    void stop_device();
+
     void setVoltage(uint voltage);
     void setCurrent(uint current);
     void setOutput(bool on);
@@ -48,6 +53,7 @@ private:
     const uint current_limit;
     const QVector<uint> possible_averages = {1,2,4,8,16};
     
+    bool output_setpoint;
     uint voltage_setpoint;
     uint current_setpoint;
     uint averages_setpoint;

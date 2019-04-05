@@ -2,6 +2,7 @@
 #define HEINZINGER_VOLTAGE_WINDOW_H
 
 #include "include/CascWidget.h"
+#include "include/DeviceButton.h"
 
 class HeinzingerVoltageWindow : public CascWidget
 {
@@ -14,12 +15,16 @@ signals:
 	void sendCommand(QString command);
 	
 private slots:
-	void setVoltage();
+    void voltageChanged();
+	void setVoltage(bool set);
+    void setOutput(bool start);
     
     void readVoltage();
 	
 private:
 	QSpinBox * voltageEdit;
+    DeviceButton * voltageSetButton;
+    DeviceButton * outputButton;
 	QLabel * voltageReadback;
     
     QFile * voltage_file;

@@ -1,7 +1,7 @@
 #include <QtWidgets>
 #include "include/DeviceButton.h"
 
-DeviceButton::DeviceButton(const char *name, QToolBar *parent, const char *startTip, const char *stopTip, const char * failTip) :
+DeviceButton::DeviceButton(const char *name, QWidget *parent, const char *startTip, const char *stopTip, const char * failTip) :
 QPushButton(name, parent),
 started(false),
 startTip(startTip),
