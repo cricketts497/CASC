@@ -79,9 +79,9 @@ private:
 	QTextStream messages;
 
 	//file paths
-	const QString fake_tagger_temp_path = "./temp/fake_tag_temp.dat";
-	const QString tagger_temp_path = "./temp/tag_temp.dat";
-	const QString fake_pdl_temp_path = "./temp/fake_pdl_temp.dat";
+	const QString fake_tagger_temp_path = "./temp/faketag_temp.dat";
+	const QString tagger_temp_path = "./temp/tagger_temp.dat";
+	const QString fake_pdl_temp_path = "./temp/fakepdl_temp.dat";
 	const QString heinzinger_temp_path = "./temp/heinzinger_temp.dat";
 
 	QMutex fakeTaggerFileMutex;
@@ -104,6 +104,7 @@ private:
 	HeinzingerVoltageWindow * heinzingerWindow;
 	bool heinzingerWindow_open;
 	const uint maxHeinzingerVoltage;
+    const uint maxHeinzingerCurrent;
 
 	//devices
 	DeviceButton * listenerButton;

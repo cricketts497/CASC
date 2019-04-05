@@ -4,7 +4,7 @@ SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString devic
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
-serial_timeout(10000)
+serial_timeout(3000)
 {
 	if(device_failed)
 		return;
@@ -118,9 +118,12 @@ bool SerialDevice::writeCommand(QString command, bool response)
         return false;
     }
     
+    storeMessage(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command), false);
+    emit device_message(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command));
+    
     QByteArray cm = command.toUtf8();
     serial_port->write(cm);
-    
+        
     if(response){
         serial_timer->start();
     }
@@ -129,8 +132,9 @@ bool SerialDevice::writeCommand(QString command, bool response)
 
 void SerialDevice::readResponse()
 {
-	// emit device_message(QString("Local serial: %1: response").arg(device_name));
-	
+    //wait for the rest of the response
+    QThread::msleep(500);
+    
 	QByteArray resp = serial_port->readAll();
 	QString response = QString::fromUtf8(resp);
 	

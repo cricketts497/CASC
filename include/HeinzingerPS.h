@@ -22,9 +22,11 @@ public slots:
     
 private slots:
     void dealWithResponse(QString response);
+    void queryAfterSet();
     void heinzingerCommand(QString command);
+   
     void queryAppliedVoltage();
-    
+ 
 private:
     void setAverages(uint averages);
 
@@ -34,7 +36,7 @@ private:
     void querySetCurrent();
     void queryAppliedCurrent();
     void queryAverages(); 
-    
+
     void responseID(QString response);
     void responseVersion(QString response);
     void responseSetVoltage(QString response);
@@ -54,6 +56,11 @@ private:
     const QVector<uint> possible_averages = {1,2,4,8,16};
     
     bool output_setpoint;
+    
+    int activeSetFunction;
+    QTimer * queryAfterSetTimer;
+    const int queryAfterSetTimeout;
+    
     uint voltage_setpoint;
     uint current_setpoint;
     uint averages_setpoint;
@@ -64,6 +71,7 @@ private:
     uint voltage_set;
     uint current_set;
     quint64 voltage_applied;
+    quint64 voltage_decimal_applied;
     uint current_applied;
     uint averages_set;
 };

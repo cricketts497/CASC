@@ -8,6 +8,7 @@ tofHist_open(false),
 messageWindow_open(false),
 heinzingerWindow_open(false),
 maxHeinzingerVoltage(20000),
+maxHeinzingerCurrent(3),
 listener_running(false),
 fake_tagger_started(false),
 tagger_started(false),
@@ -135,13 +136,6 @@ void MainWindow::toggleTof()
 	}
 }
 
-void MainWindow::keepMessage(QString message)
-{
-	messages << message;
-	messages << endl;
-	emit new_message(message);
-}
-
 void MainWindow::toggleMessage()
 {
 	if(messageWindow_open){
@@ -172,6 +166,12 @@ void MainWindow::toggleMessage()
 	}
 }
 
+void MainWindow::keepMessage(QString message)
+{
+	messages << message;
+	messages << endl;
+	emit new_message(message);
+}
 
 	
 void MainWindow::toggleHeinzinger()
@@ -182,7 +182,7 @@ void MainWindow::toggleHeinzinger()
 		heinzingerAct->setStatusTip("Open the heinzinger voltage controller");
 		heinzingerWindow_open = false;
 	}else{
-		heinzingerWindow = new HeinzingerVoltageWindow(heinzinger_temp_path, &heinzingerFileMutex, maxHeinzingerVoltage, this);
+		heinzingerWindow = new HeinzingerVoltageWindow(heinzinger_temp_path, &heinzingerFileMutex, maxHeinzingerVoltage, maxHeinzingerCurrent, this);
 		setupWidget(heinzingerWindow, heinzingerAct);
 		
 		connect(heinzingerWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzingerCommand(QString)));
@@ -203,6 +203,7 @@ void MainWindow::heinzingerCommand(QString command)
 void MainWindow::setupWidget(CascWidget * widget, QAction * button)
 {
 	connect(widget, SIGNAL(closing()), button, SLOT(trigger()));
+    connect(widget, SIGNAL(widget_message(QString)), this, SLOT(keepMessage(QString)));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,7 +278,7 @@ void MainWindow::toggleHeinzingerDevice(bool start)
 	
 	if(start){
 		if(local){
-			HeinzingerPS * heinzingerDevice = new HeinzingerPS(maxHeinzingerVoltage, 3, heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
+			HeinzingerPS * heinzingerDevice = new HeinzingerPS(maxHeinzingerVoltage, maxHeinzingerCurrent, heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
 			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
             connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
         }else{

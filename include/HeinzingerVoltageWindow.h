@@ -9,14 +9,16 @@ class HeinzingerVoltageWindow : public CascWidget
 	Q_OBJECT
 	
 public:
-	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, QWidget * parent=nullptr);
+	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, uint maxCurrent=1, QWidget * parent=nullptr);
 	
 signals:
 	void sendCommand(QString command);
 	
 private slots:
     void voltageChanged();
+    void currentChanged();
 	void setVoltage(bool set);
+    void setCurrent(bool set);
     void setOutput(bool start);
     
     void readVoltage();
@@ -24,14 +26,21 @@ private slots:
 private:
 	QSpinBox * voltageEdit;
     DeviceButton * voltageSetButton;
-    DeviceButton * outputButton;
 	QLabel * voltageReadback;
+    
+    QSpinBox * currentEdit;
+    DeviceButton * currentSetButton;
+    
+    DeviceButton * outputButton;
+    
+    QTimer * voltageReadTimer;
+    const int voltageReadTimeout;
     
     QFile * voltage_file;
     QMutex * voltageFileMutex;
     
-    quint64 current_applied_voltage;
-	
+    quint64 applied_voltage_int;
+    quint64 applied_voltage_decimal;
 };
 
 

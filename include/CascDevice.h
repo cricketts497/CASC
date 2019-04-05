@@ -10,8 +10,6 @@
 
 #include "include/CascConfig.h"
 
-class CascConfig;
-
 class CascDevice : public QObject
 {
 	Q_OBJECT
