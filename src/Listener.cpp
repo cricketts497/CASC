@@ -6,7 +6,7 @@
 
 Listener::Listener(CascConfig * config, QObject * parent) : 
 QObject(parent),
-config(config),
+casc_config(config),
 timeout(3000),
 connection_timer(new QTimer(this))
 {
@@ -21,7 +21,7 @@ Listener::~Listener()
 
 void Listener::start()
 {
-	QStringList listen_config = config->getDevice(QString("listener"));
+	QStringList listen_config = casc_config->getDevice(QString("listener"));
 	if(listen_config.isEmpty() || listen_config.size() != 2){
 		emit listener_message(QString("LISTENER ERROR: listener not found in config"));
 		emit listener_fail();

@@ -40,7 +40,7 @@ void RemoteDataDevice::askData()
 	QString c_string;
 	QTextStream c(&c_string);
 	c << "data_" << size;
-	command = c.readAll();
+	remoteCommand = c.readAll();
 
 	socket->connectToHost(hostAddress, hostDevicePort);
 	connection_timer->start();

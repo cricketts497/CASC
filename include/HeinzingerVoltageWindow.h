@@ -11,8 +11,6 @@ class HeinzingerVoltageWindow : public CascWidget
 public:
 	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, uint maxCurrent=1, QWidget * parent=nullptr);
 	
-signals:
-	void sendCommand(QString command);
 	
 private slots:
     void voltageChanged();

@@ -36,7 +36,7 @@ private slots:
 	void socketError();
 
 private:
-	CascConfig * config = nullptr;
+	CascConfig * casc_config = nullptr;
 
 	QNetworkSession * networkSession = nullptr;
 	

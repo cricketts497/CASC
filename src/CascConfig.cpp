@@ -46,14 +46,15 @@ bool CascConfig::deviceLocal(QString deviceName)
 	QStringList device = getDevice(deviceName);
 	
 	//debug config file, 5th argument for local/remote
-	//////////////////////
-	if(device.size() == 5){
-		if(device.last() == QString("local"))
-			return true;
-		else if(device.last() == QString("remote"))
-			return false;
-	}	
-	//////////////////////
+	// //////////////////////
+    if(device.length() >=5){
+        if(device.at(4) == QString("local")){
+            return true;
+        }else if(device.at(4) == QString("remote")){
+            return false;
+        }
+    }
+	// //////////////////////
 
 	//check local ip addresses
 	QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
@@ -64,6 +65,7 @@ bool CascConfig::deviceLocal(QString deviceName)
 	}
 	
 	//check if local host name
+    emit config_message(QHostInfo::localHostName());
 	if(device.at(1) == QHostInfo::localHostName())
 		return true;
 	

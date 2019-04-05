@@ -12,14 +12,14 @@ public:
 	RemoteDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
 	
 public slots:
+    void deviceCommand(QString command);
 	void stop_device();
 
 protected:
 	QTcpSocket * socket;
-	QString command;
+	QString remoteCommand;
 	
 private slots:
-    void writeDeviceCommand(QString com);
 
 	void writeCommand();
 	

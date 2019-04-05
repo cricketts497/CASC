@@ -19,6 +19,8 @@ signals:
     
     void widget_message(QString message);
     void widget_fail();
+    
+    void sendCommand(QString command);
 };
 
 

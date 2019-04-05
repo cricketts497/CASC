@@ -15,6 +15,8 @@
 #include "include/RemoteDataDevice.h"
 #include "include/HeinzingerPS.h"
 #include "include/HeinzingerVoltageWindow.h"
+#include "include/DataSaver.h"
+#include "include/DummyScanner.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -39,8 +41,10 @@ private slots:
 	void toggleTof();
 	void toggleMessage();
 	void toggleHeinzinger();
+    void toggleDummyScanner();
     
     void heinzingerCommand(QString command);
+    void dummyScannerCommand(QString command);
 	
 
 	//devices
@@ -48,6 +52,7 @@ private slots:
 	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
 	
 	void toggleListener(bool start);
+    void toggleDataSaver(bool start);
 	void toggleFakePdlDevice(bool start);
 	void toggleFakeTaggerDevice(bool start);
 	void toggleTaggerDevice(bool start);
@@ -59,6 +64,7 @@ signals:
 	void new_message(QString message);
 	
 	void newHeinzingerCommand(QString command);
+    void newDummyScannerCommand(QString command);
 
 private:
 	const QString config_file_path = "./config.txt";
@@ -83,6 +89,9 @@ private:
 	const QString tagger_temp_path = "./temp/tagger_temp.dat";
 	const QString fake_pdl_temp_path = "./temp/fakepdl_temp.dat";
 	const QString heinzinger_temp_path = "./temp/heinzinger_temp.dat";
+    
+    //base path containing the scan directories
+    const QString finalBasePath = "./data";
 
 	QMutex fakeTaggerFileMutex;
 	QMutex fakePdlFileMutex;
@@ -105,11 +114,19 @@ private:
 	bool heinzingerWindow_open;
 	const uint maxHeinzingerVoltage;
     const uint maxHeinzingerCurrent;
+    
+    QAction * dummyScannerAct;
+    DummyScanner * dummyScanner;
+    bool dummyScanner_open;
 
 	//devices
 	DeviceButton * listenerButton;
 	Listener * listener;
 	bool listener_running;
+    
+    DeviceButton * dataSaverDeviceButton;
+    bool data_saver_started;
+    QThread dataSaverDeviceThread;
 
 	DeviceButton *fakePdlDeviceButton;
 	PdlDevice *fakePdlDevice;
@@ -127,6 +144,7 @@ private:
 	DeviceButton * heinzingerDeviceButton;
 	bool heinzinger_started;
 	QThread heinzingerDeviceThread;
+
 };
 
 #endif //MAIN_WINDOW_H

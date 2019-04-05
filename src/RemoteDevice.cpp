@@ -15,13 +15,13 @@ socket(new QTcpSocket(this))
 	connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
     
     //write device commands received from local widgets
-    connect(this, SIGNAL(newCommand(QString)), this, SLOT(writeDeviceCommand(QString)));
+    // connect(this, SIGNAL(newCommand(QString)), this, SLOT(writeDeviceCommand(QString)));
 	
-	//send the command to start the device
+	//send the remote command to start the device
 	QString outString;
 	QTextStream out(&outString);
 	out << "start_" << deviceName;
-	command = out.readAll();
+	remoteCommand = out.readAll();
 	
 	socket->connectToHost(hostAddress, hostListenPort);
 	connection_timer->start();
@@ -34,11 +34,11 @@ void RemoteDevice::stop_device()
 		return;
 	}
 
-	//send the command to stop the device
+	//send the remote command to stop the device
 	QString outString;
 	QTextStream out(&outString);
 	out << "stop_" << device_name;
-	command = out.readAll();
+	remoteCommand = out.readAll();
 
 	socket->connectToHost(hostAddress, hostListenPort);
 	connection_timer->start();
@@ -47,17 +47,17 @@ void RemoteDevice::stop_device()
 }
 
 //write device commands from the widgets
-void RemoteDevice::writeDeviceCommand(QString device_com)
+void RemoteDevice::deviceCommand(QString device_com)
 {
-    command = device_com;
+    remoteCommand = device_com;
     
-    socket->connectToHost(hostAddress, hostListenPort);
+    socket->connectToHost(hostAddress, hostDevicePort);
 	connection_timer->start();
 }
 
 void RemoteDevice::writeCommand()
 {
-	socket->write(command.toUtf8());
+	socket->write(remoteCommand.toUtf8());
 }
 
 //error handling

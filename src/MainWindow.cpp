@@ -9,15 +9,14 @@ messageWindow_open(false),
 heinzingerWindow_open(false),
 maxHeinzingerVoltage(20000),
 maxHeinzingerCurrent(3),
+dummyScanner_open(false),
 listener_running(false),
+data_saver_started(false),
 fake_tagger_started(false),
 tagger_started(false),
 heinzinger_started(false)
 {
 	messages.setString(&messages_string);
-
-	//read the config file
-	// config = new CascConfig(config_file_path, this);
 
 	createActions();
 	createStatusBar();
@@ -32,6 +31,8 @@ heinzinger_started(false)
 	
 	setWindowTitle("CASC");
 
+    connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
+    
 	//auto start the listener
 	listenerButton->click();
 }
@@ -61,12 +62,18 @@ void MainWindow::createActions()
 	messageAct->setStatusTip("Open the error message display window");
 	connect(messageAct, &QAction::triggered, this, &MainWindow::toggleMessage);
 	taskBar->addAction(messageAct);
+    
+    const QIcon dummyScannerIcon = QIcon("./resources/dummyScanner.png");
+	dummyScannerAct = new QAction(dummyScannerIcon, "&DUMMY", this);
+	dummyScannerAct->setStatusTip("Open the dummy scanner for saving sets of data as scans");
+	connect(dummyScannerAct, &QAction::triggered, this, &MainWindow::toggleDummyScanner);
+	taskBar->addAction(dummyScannerAct); 
 	
 	const QIcon heinzingerIcon = QIcon("./resources/heinzinger.png");
 	heinzingerAct = new QAction(heinzingerIcon, "&HEINZINGER", this);
 	heinzingerAct->setStatusTip("Open the heinzinger voltage controller");
 	connect(heinzingerAct, &QAction::triggered, this, &MainWindow::toggleHeinzinger);
-	taskBar->addAction(heinzingerAct);	
+	taskBar->addAction(heinzingerAct);
 }
 
 void MainWindow::createStatusBar()
@@ -81,6 +88,9 @@ void MainWindow::createDevicesBar()
 
 	listenerButton = new DeviceButton("Listener", devicesBar, "Start the listener", "Stop the Listener", "LISTENER FAIL");
 	connect(listenerButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleListener(bool)));
+    
+    dataSaverDeviceButton = new DeviceButton("Data saver", devicesBar, "Start the scan saving device", "Stop the scan saving device", "DATA SAVER FAIL");
+    connect(dataSaverDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleDataSaver(bool)));
 
 	// fakePdlDeviceButton = new DeviceButton("Fake PDL", devicesBar, "Start the fake PDL scanner device", "Stop the fake PDL scanner device");
 	// connect(fakePdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleFakePdlDevice(bool)));
@@ -96,6 +106,7 @@ void MainWindow::createDevicesBar()
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
+    devicesBar->addWidget(dataSaverDeviceButton);
 	// devicesBar->addWidget(fakePdlDeviceButton);
 	// devicesBar->addWidget(fakeTaggerDeviceButton);
 	// devicesBar->addWidget(taggerDeviceButton);
@@ -198,6 +209,30 @@ void MainWindow::heinzingerCommand(QString command)
     emit newHeinzingerCommand(command);
 }
 
+void MainWindow::toggleDummyScanner()
+{
+    if(dummyScanner_open){
+        delete dummyScanner;
+        
+        dummyScannerAct->setStatusTip("Open the dummy scanner");
+        dummyScanner_open = false;
+    }else{
+        dummyScanner = new DummyScanner(this);
+        setupWidget(dummyScanner, dummyScannerAct);
+    
+        connect(dummyScanner, SIGNAL(sendCommand(QString)), this, SLOT(dummyScannerCommand(QString)));
+        
+        addDockWidget(Qt::TopDockWidgetArea, dummyScanner);
+        
+        dummyScannerAct->setStatusTip("Close the dummy scanner");
+        dummyScanner_open = true;
+    }    
+}
+void MainWindow::dummyScannerCommand(QString command)
+{
+    emit newDummyScannerCommand(command);
+}
+
 /////////////////////////////////////////
 
 void MainWindow::setupWidget(CascWidget * widget, QAction * button)
@@ -225,6 +260,27 @@ void MainWindow::toggleListener(bool start)
 		delete listener;
 		listener_running = false;
 	}
+}
+
+void MainWindow::toggleDataSaver(bool start)
+{
+    if(start){
+        bool local = config->deviceLocal(QString("datasaver"));
+        if(local){
+            QStringList temp_path_list = {heinzinger_temp_path};
+            QVector<QMutex*> file_mutex_list = {&heinzingerFileMutex};
+            DataSaver * dataSaverDevice = new DataSaver(temp_path_list, finalBasePath, file_mutex_list, config);
+            setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
+            connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
+        }else{
+            RemoteDevice * dataSaverDevice = new RemoteDevice(QString("datasaver"), config);
+            setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
+            connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
+        }
+        data_saver_started = true;
+    }else{
+        data_saver_started = false;
+    }    
 }
 
 void MainWindow::toggleFakePdlDevice(bool start)
@@ -286,7 +342,6 @@ void MainWindow::toggleHeinzingerDevice(bool start)
             setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
             connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
 		}
-        
 		heinzinger_started = true;
 	}else{
 		//stop_device slot connection in setupDevice() below
@@ -321,6 +376,10 @@ void MainWindow::toggleDevice(QString device, bool start)
 {
 	if(device == "faketagger" && ((start && !fake_tagger_started && !fakeTaggerDeviceButton->started) || (!start && fake_tagger_started && fakeTaggerDeviceButton->started)))
 		fakeTaggerDeviceButton->click();
+    else if(device == "heinzingerps" && ((start && !heinzinger_started && !heinzingerDeviceButton->started) || (!start && heinzinger_started && heinzingerDeviceButton->started)))
+        heinzingerDeviceButton->click();
+    else if(device == "datasaver" && ((start && !data_saver_started && !dataSaverDeviceButton->started) || (!start && data_saver_started && dataSaverDeviceButton->started)))
+        dataSaverDeviceButton->click();
 }
 
 void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)
@@ -341,6 +400,9 @@ void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread
 	connect(button, SIGNAL(toggle_device(bool)), device, SLOT(stop_device()));
 }
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////
 //debug function to send messages to status bar
 void MainWindow::setStatusValue(qreal value)
 {
