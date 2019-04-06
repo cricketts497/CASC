@@ -9,17 +9,17 @@
 #include <QHostAddress>
 
 #include "include/CascConfig.h"
-
+  
 class CascDevice : public QObject
 {
 	Q_OBJECT
 public:
 	CascDevice(QString deviceName, CascConfig * config, QObject * parent = nullptr);
 	~CascDevice();
+    
 	void sendMessages();
 
 public slots:
-    void deviceCommand(QString command);
 	void stop_device();
 
 signals:
@@ -46,10 +46,11 @@ protected:
 	bool device_failed;
 	
 private:
+    const int connection_timeout;
+
 	QTextStream messages;
 	QString messages_string;
-	
-	const int timeout;
+
 };
 
 #endif // CASC_DEVICE_H

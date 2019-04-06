@@ -94,7 +94,7 @@ void Listener::newCom()
 	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
 	
 	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
-	connection_timer->start();	
+	connection_timer->start();
 }
 
 void Listener::receiveCommand()

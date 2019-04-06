@@ -1,5 +1,14 @@
 #include "include/LocalDevice.h"
 
+/*!
+    \class LocalDevice
+    \brief Physical or virtual backend devices in CASC on this PC.
+    \inherits CascDevice
+    
+    Initialisation: Creates a QTcpServer deviceServer for receiving commands from remote PCs connected to hostDevicePort.
+    
+  */
+  
 LocalDevice::LocalDevice(QString deviceName, CascConfig * config, QObject * parent) :
 CascDevice(deviceName, config, parent),
 deviceServer(new QTcpServer(this))
@@ -7,7 +16,6 @@ deviceServer(new QTcpServer(this))
 	if(device_failed)
 		return;
 
-	//start the device server
 	if(!deviceServer->listen(QHostAddress::Any, hostDevicePort)){
 		storeMessage(QString("LOCAL %1 ERROR: deviceServer->listen()").arg(deviceName), true);
 		return;
@@ -19,6 +27,9 @@ deviceServer(new QTcpServer(this))
 	storeMessage(QString("Local %1: Running, port: %2").arg(deviceName).arg(deviceServer->serverPort()), false);
 }
 
+/*!
+Run when deviceServer emits \l QTcpServer::newConnection() upon receiving a connection from the device on a remote PC. The \l {QTcpSocket::}readyRead() signal is connected to receiveCommand(). The server pauses accepting new connections until the messageReceived signal is emitted.
+*/
 void LocalDevice::newCon()
 {
 	socket = deviceServer->nextPendingConnection();
@@ -34,17 +45,33 @@ void LocalDevice::newCon()
 	connection_timer->start();
 }
 
+/*!
+    Slot connected to local \l CascWidget via intermediate \l MainWindow member function. Emits signal newCommand() connected to slots in child classes \sa RemoteDevice::deviceCommand().
+*/
+void LocalDevice::deviceCommand(QString command)
+{
+    emit newCommand(command);
+}
+
+/*!
+    Run when the \l {QTcpSocket::}readyRead() signal is emitted by socket. Reads the command and emits it through newCommand()
+*/
 void LocalDevice::receiveCommand()
 {	
 	QByteArray com = socket->readAll();
 	QString command = QString::fromUtf8(com);
-
-	// emit device_message(QString("Local %1: received command: %2").arg(device_name).arg(command));
 	
-	//connect the devices to this signal to do somthing with the command//////
+    //only leave the port open for data command
+    if(command.split("_").first() != QString("data"))
+        socket->disconnectFromHost();
+    
+	//connect the devices to this signal to do something with the command
 	emit newCommand(command);
 }
 
+/*!
+    \overload QTcpServer::resumeAccepting()
+*/
 void LocalDevice::messageReceived()
 {
 	deviceServer->resumeAccepting();

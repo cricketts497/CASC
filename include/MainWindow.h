@@ -17,6 +17,7 @@
 #include "include/HeinzingerVoltageWindow.h"
 #include "include/DataSaver.h"
 #include "include/DummyScanner.h"
+#include "include/RemoteDataSaver.h"
 
 class QToolBar;
 class QHBoxLayout;

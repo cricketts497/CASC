@@ -1,4 +1,4 @@
-#include <include/RemoteDevice.h>
+#include "include/RemoteDevice.h"
 
 RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * parent) :
 CascDevice(deviceName, config, parent),

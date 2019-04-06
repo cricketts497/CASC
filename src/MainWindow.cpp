@@ -273,7 +273,7 @@ void MainWindow::toggleDataSaver(bool start)
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
             connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
         }else{
-            RemoteDevice * dataSaverDevice = new RemoteDevice(QString("datasaver"), config);
+            RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger_started, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
             connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
         }
