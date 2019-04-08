@@ -111,11 +111,15 @@ void Listener::receiveCommand()
 	//deal with start/ stop device commands
 	QStringList command_list = command.split("_");
 
-	if(command_list.first() == QString("start"))
-		emit toggle_device_command(command_list.at(1), true);
-	else if(command_list.first() == QString("stop"))
-		emit toggle_device_command(command_list.at(1), false);
-
+	if(command_list.first() == QString("start")){
+        for(int i=1; i<command_list.length(); i++){
+            emit toggle_device_command(command_list.at(i), true);
+        }
+	}else if(command_list.first() == QString("stop")){
+		for(int i=1; i<command_list.length(); i++){
+            emit toggle_device_command(command_list.at(i), false);
+        }
+    }
 }
 
 //Error handling

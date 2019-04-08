@@ -7,7 +7,10 @@ class RemoteDataSaver : public RemoteDevice
 {
     Q_OBJECT
 public:
-    RemoteDataSaver(bool heinzinger_start, CascConfig * config, QObject * parent=nullptr);   
+    RemoteDataSaver(bool heinzinger_start, CascConfig * config, QObject * parent=nullptr); 
+
+public slots:
+    void startDevice(QString device);
     
 };
 

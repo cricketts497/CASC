@@ -276,11 +276,17 @@ void MainWindow::toggleDataSaver(bool start)
             RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger_started, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
             connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
+            connect(this, SIGNAL(newDataSaverStart(QString)), dataSaverDevice, SLOT(startDevice(QString)));
         }
         data_saver_started = true;
     }else{
         data_saver_started = false;
     }    
+}
+
+void MainWindow::dataSaverStart(QString device)
+{
+    emit newDataSaverStart(device);
 }
 
 void MainWindow::toggleFakePdlDevice(bool start)
@@ -342,6 +348,8 @@ void MainWindow::toggleHeinzingerDevice(bool start)
             setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
             connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
 		}
+        //tell the data saver PC to start requesting new heinzingerps data
+        dataSaverStart("heinzingerps");
 		heinzinger_started = true;
 	}else{
 		//stop_device slot connection in setupDevice() below

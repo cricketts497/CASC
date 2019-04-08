@@ -17,10 +17,10 @@ public slots:
 
 protected:
 	QTcpSocket * socket;
-	QString remoteCommand;
+    
+    QString remoteCommand;
 	
 private slots:
-
 	void writeCommand();
 	
 	void connectionTimeout();

@@ -63,7 +63,8 @@ private slots:
 
 signals:
 	void new_message(QString message);
-	
+	void newDataSaverStart(QString device);
+    
 	void newHeinzingerCommand(QString command);
     void newDummyScannerCommand(QString command);
 
@@ -128,6 +129,7 @@ private:
     DeviceButton * dataSaverDeviceButton;
     bool data_saver_started;
     QThread dataSaverDeviceThread;
+    void dataSaverStart(QString device);
 
 	DeviceButton *fakePdlDeviceButton;
 	PdlDevice *fakePdlDevice;
