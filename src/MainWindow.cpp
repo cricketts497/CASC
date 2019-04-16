@@ -29,7 +29,8 @@ heinzinger_started(false)
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC");
+	setWindowTitle("CASC v1");
+    setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
     
@@ -198,6 +199,9 @@ void MainWindow::toggleHeinzinger()
 		
 		connect(heinzingerWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzingerCommand(QString)));
 		
+        if(heinzinger_started)
+            heinzingerWindow->heinzingerDeviceOn(true);
+        
 		addDockWidget(Qt::RightDockWidgetArea, heinzingerWindow);
 		
 		heinzingerAct->setStatusTip("Close the heinzinger voltage controller");
@@ -221,6 +225,9 @@ void MainWindow::toggleDummyScanner()
         setupWidget(dummyScanner, dummyScannerAct);
     
         connect(dummyScanner, SIGNAL(sendCommand(QString)), this, SLOT(dummyScannerCommand(QString)));
+        
+        if(data_saver_started)
+            dummyScanner->dataSaverOn(true);
         
         addDockWidget(Qt::TopDockWidgetArea, dummyScanner);
         
@@ -281,7 +288,9 @@ void MainWindow::toggleDataSaver(bool start)
         data_saver_started = true;
     }else{
         data_saver_started = false;
-    }    
+    }
+    if(dummyScanner_open)
+        dummyScanner->dataSaverOn(data_saver_started);
 }
 
 void MainWindow::dataSaverStart(QString device)
@@ -355,6 +364,8 @@ void MainWindow::toggleHeinzingerDevice(bool start)
 		//stop_device slot connection in setupDevice() below
 		heinzinger_started = false;
 	}
+    if(heinzingerWindow_open)
+        heinzingerWindow->heinzingerDeviceOn(heinzinger_started);
 }
 
 void MainWindow::toggleTaggerDevice(bool start)

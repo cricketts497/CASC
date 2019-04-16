@@ -9,6 +9,8 @@ class DummyScanner : public CascWidget
 public:
     DummyScanner(QWidget * parent=nullptr);
     
+    void dataSaverOn(bool on);
+    
 private slots:
     void startClicked();
     void stopClicked();

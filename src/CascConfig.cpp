@@ -65,7 +65,6 @@ bool CascConfig::deviceLocal(QString deviceName)
 	}
 	
 	//check if local host name
-    emit config_message(QHostInfo::localHostName());
 	if(device.at(1) == QHostInfo::localHostName())
 		return true;
 	

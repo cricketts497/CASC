@@ -23,8 +23,11 @@ voltageFileMutex(voltageFileMutex)
     currentEdit->setValue(0);
     currentEdit->setRange(0, maxCurrent);
     
+    voltageSetButton->setEnabled(false);
     connect(voltageEdit, SIGNAL(valueChanged(int)), this, SLOT(voltageChanged()));
 	connect(voltageSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setVoltage(bool)));
+    
+    currentSetButton->setEnabled(false);
     connect(currentEdit, SIGNAL(valueChanged(int)), this, SLOT(currentChanged()));
 	connect(currentSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setCurrent(bool)));
     
@@ -60,7 +63,19 @@ voltageFileMutex(voltageFileMutex)
     voltage_file = new QFile(voltage_file_path, this);
     voltageReadTimer->setInterval(voltageReadTimeout);
     connect(voltageReadTimer, SIGNAL(timeout()), this, SLOT(readVoltage()));
-    voltageReadTimer->start();
+    // voltageReadTimer->start();
+}
+
+void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
+{
+    if(on && !currentSetButton->started && !voltageSetButton->started){
+        currentSetButton->setEnabled(true);
+        voltageSetButton->setEnabled(true);
+    }else if(!on){
+        currentSetButton->setEnabled(false);
+        voltageSetButton->setEnabled(false);
+        outputButton->setEnabled(false);
+    }
 }
 
 void HeinzingerVoltageWindow::voltageChanged()

@@ -14,12 +14,23 @@ stopButton(new QPushButton("Stop", this))
     connect(startButton, SIGNAL(clicked()), this, SLOT(startClicked()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stopClicked()));
     
+    startButton->setEnabled(false);
     stopButton->setEnabled(false);
     
     vlayout->addWidget(startButton);
     vlayout->addWidget(stopButton);    
     
     setFixedSize(minimumSizeHint());
+}
+
+void DummyScanner::dataSaverOn(bool on)
+{
+    if(on && !stopButton->isEnabled()){
+        startButton->setEnabled(true);
+    }else if(!on){
+        startButton->setEnabled(false);
+        stopButton->setEnabled(false);
+    }        
 }
 
 void DummyScanner::startClicked()
