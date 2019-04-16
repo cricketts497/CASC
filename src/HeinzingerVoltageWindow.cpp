@@ -63,7 +63,6 @@ voltageFileMutex(voltageFileMutex)
     voltage_file = new QFile(voltage_file_path, this);
     voltageReadTimer->setInterval(voltageReadTimeout);
     connect(voltageReadTimer, SIGNAL(timeout()), this, SLOT(readVoltage()));
-    // voltageReadTimer->start();
 }
 
 void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
@@ -71,6 +70,7 @@ void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
     if(on && !currentSetButton->started && !voltageSetButton->started){
         currentSetButton->setEnabled(true);
         voltageSetButton->setEnabled(true);
+        
     }else if(!on){
         currentSetButton->setEnabled(false);
         voltageSetButton->setEnabled(false);
@@ -135,9 +135,11 @@ void HeinzingerVoltageWindow::setOutput(bool start)
     if(start){
         outputButton->setText("Output on");
         emit sendCommand(QString("OUTP_1"));
+        voltageReadTimer->start();
     }else{
         outputButton->setText("Output off");
         emit sendCommand(QString("OUTP_0"));
+        voltageReadTimer->stop();
     }
 }
 
