@@ -22,6 +22,7 @@ protected:
 	
 private slots:
 	void writeCommand();
+    void readResponse();
 	
 	void connectionTimeout();
 	void socketError();

@@ -15,6 +15,8 @@ QObject(parent),
 device_name(deviceName),
 connection_timer(new QTimer(this)),
 noDataMessage("no data"),
+okMessage("ok"),
+failMessage("fail"),
 device_failed(false),
 connection_timeout(1000)
 {
@@ -38,6 +40,8 @@ connection_timeout(1000)
 	hostAddress = device.at(1);
 	hostDevicePort = device.at(2).toUShort();
 	
+    connect(this, SIGNAL(deviceFail()), this, SLOT(setFailed()));
+    
 	storeMessage(QString("%1: started").arg(deviceName), false);
 }
 
@@ -56,6 +60,11 @@ CascDevice::~CascDevice()
 void CascDevice::stop_device()
 {
 	emit stopped();
+}
+
+void CascDevice::setFailed()
+{
+    device_failed = true;  
 }
 
 /*!

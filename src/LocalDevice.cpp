@@ -7,7 +7,7 @@
     
     Initialisation: Creates a QTcpServer deviceServer for receiving commands from remote PCs connected to hostDevicePort.
     
-  */
+*/
   
 LocalDevice::LocalDevice(QString deviceName, CascConfig * config, QObject * parent) :
 CascDevice(deviceName, config, parent),
@@ -33,13 +33,13 @@ Run when deviceServer emits \l QTcpServer::newConnection() upon receiving a conn
 void LocalDevice::newCon()
 {
 	socket = deviceServer->nextPendingConnection();
-	deviceServer->pauseAccepting();//one connection at a time
+	// deviceServer->pauseAccepting();//one connection at a time
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
 	
 	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
-	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
 	
-	connect(socket, SIGNAL(disconnected()), this, SLOT(messageReceived()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(messageReceived()));
+    connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
 	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
 	
 	connection_timer->start();
@@ -50,7 +50,7 @@ void LocalDevice::newCon()
 */
 void LocalDevice::deviceCommand(QString command)
 {
-    emit newCommand(command);
+    emit newLocalCommand(command);
 }
 
 /*!
@@ -58,15 +58,16 @@ void LocalDevice::deviceCommand(QString command)
 */
 void LocalDevice::receiveCommand()
 {	
+    if(device_failed){
+        socket->write(failMessage);
+        return;
+    }
+
 	QByteArray com = socket->readAll();
 	QString command = QString::fromUtf8(com);
-	
-    //only leave the port open for data command
-    if(command.split("_").first() != QString("data"))
-        socket->disconnectFromHost();
     
 	//connect the devices to this signal to do something with the command
-	emit newCommand(command);
+	emit newRemoteCommand(command);
 }
 
 /*!
@@ -74,7 +75,9 @@ void LocalDevice::receiveCommand()
 */
 void LocalDevice::messageReceived()
 {
-	deviceServer->resumeAccepting();
+	// deviceServer->resumeAccepting();
+    if(deviceServer->hasPendingConnections())
+        newCon();
 }
 
 //error handling

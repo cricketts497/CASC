@@ -53,8 +53,11 @@ averages_set(0)
 	setStopBits(1);
 	setFlowControl(0);//SoftwareControl
     
-    //commands from local and remote devices
-    connect(this, SIGNAL(newCommand(QString)), this, SLOT(heinzingerCommand(QString)));
+    //commands from local widgets
+    connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(heinzingerCommand(QString)));
+    
+    //commands from remote widgets
+    connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));
     
     //response from device
     connect(this, SIGNAL(newResponse(QString)), this, SLOT(dealWithResponse(QString)));
@@ -93,6 +96,16 @@ void HeinzingerPS::stop_device()
     //when the response comes that the output is disabled, close the serial port
     connect(this, &HeinzingerPS::voltage_set_zero, this, &SerialDevice::stop_device); 
 }
+
+void HeinzingerPS::heinzingerRemoteCommand(QString command)
+{
+    QStringList command_list = command.split("_");
+    if(command_list.first() == QString("VOLT") || command_list.first() == QString("CURR") || command_list.first() == QString("OUTP"))
+        socket->write(okMessage);
+        heinzingerCommand(command);
+    }
+}
+
 
 //receive commands from remote device
 void HeinzingerPS::heinzingerCommand(QString command)

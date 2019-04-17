@@ -11,9 +11,8 @@ socket(new QTcpSocket(this))
 	connect(socket, SIGNAL(connected()), this, SLOT(writeCommand()));
 	
 	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
-	connect(socket, SIGNAL(connected()), connection_timer, SLOT(stop()));
+	// connect(socket, SIGNAL(connected()), connection_timer, SLOT(stop()));
 	connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(nextCommand()));
     
     //write device commands received from local widgets
     // connect(this, SIGNAL(newCommand(QString)), this, SLOT(writeDeviceCommand(QString)));
@@ -54,11 +53,23 @@ void RemoteDevice::deviceCommand(QString device_com)
     
     socket->connectToHost(hostAddress, hostDevicePort);
     connection_timer->start();
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readResponse()));
 }
 
 void RemoteDevice::writeCommand()
 {
     socket->write(remoteCommand.toUtf8());
+}
+
+void RemoteDevice::readResponse()
+{
+    QByteArray resp = socket->readAll();
+    socket->disconnectFromHost();
+    
+    if(resp.endsWith(failMessage)){
+        emit device_message(QString("REMOTE %1 ERROR: fail message received from local").arg(device_name));
+		emit device_fail();
+    }
 }
 
 

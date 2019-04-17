@@ -3,7 +3,7 @@
 RemoteDataDevice::RemoteDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 RemoteDevice(deviceName, config, parent),
 request_interval(200),
-timer(new QTimer(this)),
+askDataTimer(new QTimer(this)),
 file_mutex(file_mutex)
 {
 	if(device_failed)
@@ -13,9 +13,9 @@ file_mutex(file_mutex)
 	QMutexLocker file_locker(file_mutex);
 	data_file->resize(0);
 
-	connect(timer, SIGNAL(timeout()), this, SLOT(askData()));
-	connect(this, SIGNAL(device_fail()), timer, SLOT(stop()));
-	timer->start(request_interval);
+	connect(askDataTimer, SIGNAL(timeout()), this, SLOT(askData()));
+	connect(this, SIGNAL(device_fail()), askDataTimer, SLOT(stop()));
+	askDataTimer->start(request_interval);
 }
 
 void RemoteDataDevice::askData()
@@ -50,11 +50,15 @@ void RemoteDataDevice::askData()
 void RemoteDataDevice::receiveData()
 {
 	QByteArray data = socket->readAll();
-	
 	socket->disconnectFromHost();
-	// connection_timer->start();
+    
+    if(data.endsWith(failMessage)){
+        emit device_message(QString("REMOTE %1 ERROR: receiveData: fail message received from local").arg(device_name));
+		emit device_fail();
+		return;
+    }
 
-	if(data.endsWith(noDataMessage))
+	if(data.endsWith(noDataMessage) || data.endsWith(okMessage))
 		return;//up to date with local
 
 	QMutexLocker file_locker(file_mutex);

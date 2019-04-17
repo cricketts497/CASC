@@ -23,8 +23,6 @@ public slots:
 	void stop_device();
 
 signals:
-    void newCommand(QString command);
-
 	void device_message(QString message);
 	void device_fail();
 	
@@ -42,9 +40,14 @@ protected:
 	quint16 hostDevicePort;
 
 	const char * noDataMessage;
+    const char * okMessage;
+    const char * failMessage;
 
 	bool device_failed;
 	
+private slots:
+    void setFailed();
+    
 private:
     const int connection_timeout;
 

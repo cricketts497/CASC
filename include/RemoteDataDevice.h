@@ -15,7 +15,7 @@ private slots:
 
 private:
 	const int request_interval;
-	QTimer * timer;
+	QTimer * askDataTimer;
 
 	QMutex * file_mutex;
 	QFile * data_file;
