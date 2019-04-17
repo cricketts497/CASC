@@ -351,7 +351,7 @@ void MainWindow::toggleHeinzingerDevice(bool start)
 		if(local){
 			HeinzingerPS * heinzingerDevice = new HeinzingerPS(maxHeinzingerVoltage, maxHeinzingerCurrent, heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
 			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
-            connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
+            connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(heinzingerCommand(QString)));
         }else{
             RemoteDataDevice * heinzingerDevice = new RemoteDataDevice(heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
             setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);

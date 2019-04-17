@@ -9,7 +9,7 @@ class HeinzingerVoltageWindow : public CascWidget
 	Q_OBJECT
 	
 public:
-	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, uint maxCurrent=1, QWidget * parent=nullptr);
+	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, qreal maxCurrent=1.0, QWidget * parent=nullptr);
 	
     void heinzingerDeviceOn(bool on);
 	
@@ -27,7 +27,7 @@ private:
     DeviceButton * voltageSetButton;
 	QLabel * voltageReadback;
     
-    QSpinBox * currentEdit;
+    QDoubleSpinBox * currentEdit;
     DeviceButton * currentSetButton;
     
     DeviceButton * outputButton;

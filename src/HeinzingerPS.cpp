@@ -25,7 +25,9 @@ amps_ok(false),
 voltage_set(0),
 current_set(0),
 voltage_applied(0),
+voltage_decimal_applied(0),
 current_applied(0),
+current_decimal_applied(0),
 averages_set(0)
 {
     if(device_failed)
@@ -121,7 +123,7 @@ void HeinzingerPS::heinzingerCommand(QString command)
         }
         setVoltage(voltage);
     }else if(command_list.first() == QString("CURR")){
-        uint current = command_list.at(1).toUInt(&conv_ok);
+        qreal current = command_list.at(1).toFloat(&conv_ok);
         if(!conv_ok){
             emit device_message(QString("Local Heinzinger: command: Bad current"));
             return;
@@ -232,10 +234,10 @@ void HeinzingerPS::setVoltage(uint voltage)
     }
 }
 
-void HeinzingerPS::setCurrent(uint current)
+void HeinzingerPS::setCurrent(qreal current)
 {
     amps_ok = false;
-    if(current > current_limit){
+    if(current > current_limit || current < 0){
         emit device_message(QString("Local Heinzinger: Trying to set current %1 mA, above maximum value %2 mA").arg(current).arg(current_limit));
         return;        
     }
@@ -392,14 +394,14 @@ void HeinzingerPS::responseSetVoltage(QString response)
 void HeinzingerPS::responseSetCurrent(QString response)
 {
     //If response contains a decimal point
-    QStringList response_list = response.split(".");
+    // QStringList response_list = response.split(".");
     
     bool response_status = true;
-	uint response_current;
-    if(response_list.first() == QString("")){
+	qreal response_current;
+    if(response == QString("")){
         response_current = 0;
     }else{
-        response_current = response_list.first().toUInt(&response_status);
+        response_current = response.toFloat(&response_status);
     }
     
     if(!response_status){
@@ -411,7 +413,8 @@ void HeinzingerPS::responseSetCurrent(QString response)
     
     current_set = response_current;
     
-    if(current_set != current_setpoint){
+    //some padding around the setpoint
+    if(current_set > current_setpoint+0.01 || current_set < current_setpoint-0.01){
         amps_ok = false;
         emit device_message(QString("LOCAL HEINZINGER ERROR: current set query response (%1) not equal to current setpoint (%2)").arg(current_set).arg(current_setpoint));
 		emit device_fail();
@@ -464,14 +467,14 @@ void HeinzingerPS::responseAppliedVoltage(QString response)
 void HeinzingerPS::responseAppliedCurrent(QString response)
 {
     //If response contains a decimal point
-    QStringList response_list = response.split(".");
+    // QStringList response_list = response.split(".");
     
     bool response_status = true;
-	uint response_current;
-    if(response_list.first() == QString("")){
+	qreal response_current;
+    if(response == QString("")){
         response_current = 0;
     }else{
-        response_current = response_list.first().toUInt(&response_status);
+        response_current = response.toFloat(&response_status);
     }
 
     if(!response_status){

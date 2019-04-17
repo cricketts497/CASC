@@ -1,11 +1,11 @@
 #include "include/HeinzingerVoltageWindow.h"
 
-HeinzingerVoltageWindow::HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage, uint maxCurrent, QWidget * parent) :
+HeinzingerVoltageWindow::HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage, qreal maxCurrent, QWidget * parent) :
 CascWidget("Heinzinger", parent),
 voltageEdit(new QSpinBox(this)),
 voltageSetButton(new DeviceButton("Set volts", this, "Set the voltage on the device", "", "SET VOLTS FAIL")),
 voltageReadback(new QLabel("0", this)),
-currentEdit(new QSpinBox(this)),
+currentEdit(new QDoubleSpinBox(this)),
 currentSetButton(new DeviceButton("Set amps", this, "Set the current limit on the device", "", "SET AMPS FAIL")),
 outputButton(new DeviceButton("Output off", this, "Turn on the output", "Turn off the output", "OUTPUT FAIL")),
 voltageReadTimer(new QTimer(this)),
@@ -20,8 +20,11 @@ voltageFileMutex(voltageFileMutex)
 	
 	voltageEdit->setValue(0);
 	voltageEdit->setRange(0, maxVoltage);
-    currentEdit->setValue(0);
-    currentEdit->setRange(0, maxCurrent);
+    voltageEdit->setSingleStep(10);
+    currentEdit->setValue(0.0);
+    currentEdit->setRange(0.0, maxCurrent);
+    currentEdit->setSingleStep(0.1);
+    currentEdit->setDecimals(2);
     
     voltageSetButton->setEnabled(false);
     connect(voltageEdit, SIGNAL(valueChanged(int)), this, SLOT(voltageChanged()));
@@ -116,7 +119,7 @@ void HeinzingerVoltageWindow::setVoltage(bool set)
 void HeinzingerVoltageWindow::setCurrent(bool set)
 {
     if(set){
-        uint current = uint(currentEdit->value());
+        qreal current = currentEdit->value();
         
         QString outString;
         QTextStream out(&outString);

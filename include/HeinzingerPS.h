@@ -17,7 +17,7 @@ public slots:
     void stop_device();
 
     void setVoltage(uint voltage);
-    void setCurrent(uint current);
+    void setCurrent(qreal current);
     void setOutput(bool on);
     
 private slots:
@@ -54,7 +54,7 @@ private:
     int activeQuery;
     
     const uint voltage_limit;
-    const uint current_limit;
+    const qreal current_limit;
     const QVector<uint> possible_averages = {1,2,4,8,16};
     
     bool output_setpoint;
@@ -64,17 +64,18 @@ private:
     const int queryAfterSetTimeout;
     
     uint voltage_setpoint;
-    uint current_setpoint;
+    qreal current_setpoint;
     uint averages_setpoint;
     
     bool volts_ok;
     bool amps_ok;
     
     uint voltage_set;
-    uint current_set;
+    qreal current_set;
     quint64 voltage_applied;
     quint64 voltage_decimal_applied;
     uint current_applied;
+    uint current_decimal_applied;
     uint averages_set;
 };
 
