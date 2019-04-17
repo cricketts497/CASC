@@ -85,12 +85,9 @@ void RemoteDevice::connectionTimeout()
 		socket->disconnectFromHost();
 }
 
+//including if remote host closes the connection
 void RemoteDevice::socketError()
-{
-	//ignore if the remote host closes the connection
-	if(socket->error() == QAbstractSocket::RemoteHostClosedError)
-		return;
-	
+{	
 	storeMessage(QString("REMOTE %1 ERROR: %2").arg(device_name).arg(socket->errorString()), true);
 	emit device_message(QString("REMOTE %1 ERROR: %2").arg(device_name).arg(socket->errorString()));
 	emit device_fail();

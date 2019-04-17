@@ -89,7 +89,7 @@ void LocalDevice::connectionTimeout()
 	emit device_fail();
 	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
-		socket->disconnectFromHost();
+		socket->write(failMessage);
 }
 
 void LocalDevice::socketError()
@@ -104,5 +104,4 @@ void LocalDevice::socketError()
 	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
 		socket->disconnectFromHost();
-	
 }
