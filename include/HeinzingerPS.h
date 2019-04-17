@@ -23,6 +23,8 @@ public slots:
 private slots:
     void dealWithResponse(QString response);
     void queryAfterSet();
+    
+    void heinzingerRemoteCommand(QString command);
     void heinzingerCommand(QString command);
    
     void queryAppliedVoltage();

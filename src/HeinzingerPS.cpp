@@ -100,7 +100,7 @@ void HeinzingerPS::stop_device()
 void HeinzingerPS::heinzingerRemoteCommand(QString command)
 {
     QStringList command_list = command.split("_");
-    if(command_list.first() == QString("VOLT") || command_list.first() == QString("CURR") || command_list.first() == QString("OUTP"))
+    if(command_list.first() == QString("VOLT") || command_list.first() == QString("CURR") || command_list.first() == QString("OUTP")){
         socket->write(okMessage);
         heinzingerCommand(command);
     }
