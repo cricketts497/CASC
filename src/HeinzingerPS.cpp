@@ -56,7 +56,8 @@ averages_set(0)
 	setFlowControl(0);//SoftwareControl
     
     //commands from local widgets
-    connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(heinzingerCommand(QString)));
+    //connected directly in MainWindow
+    // connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(heinzingerCommand(QString)));
     
     //commands from remote widgets
     connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));

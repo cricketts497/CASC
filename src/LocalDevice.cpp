@@ -70,9 +70,6 @@ void LocalDevice::receiveCommand()
 	emit newRemoteCommand(command);
 }
 
-/*!
-    \overload QTcpServer::resumeAccepting()
-*/
 void LocalDevice::messageReceived()
 {
 	// deviceServer->resumeAccepting();

@@ -11,7 +11,7 @@ public:
 
 private slots:
 	void askData();
-	void receiveData();
+	void receiveData(QByteArray data);
 
 private:
 	const int request_interval;

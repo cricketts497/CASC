@@ -2,21 +2,21 @@
 
 RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * parent) :
 CascDevice(deviceName, config, parent),
-socket(new QTcpSocket(this))
+socket(new QTcpSocket(this)),
+remoteCommand(QString(""))
 {
 	if(device_failed)
 		return;
 	
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
+
 	connect(socket, SIGNAL(connected()), this, SLOT(writeCommand()));
 	
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readResponse()));
+
 	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
-	// connect(socket, SIGNAL(connected()), connection_timer, SLOT(stop()));
 	connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
     
-    //write device commands received from local widgets
-    // connect(this, SIGNAL(newCommand(QString)), this, SLOT(writeDeviceCommand(QString)));
-	
 	//send the remote command to start the device
 	QString outString;
 	QTextStream out(&outString);
@@ -46,30 +46,46 @@ void RemoteDevice::stop_device()
 	connect(socket, &QTcpSocket::disconnected, this, &CascDevice::stop_device);
 }
 
+void RemoteDevice::writeCommand()
+{    
+    if(remoteCommand.split("_").first() != QString("stop") && remoteCommand.split("_").first() != QString("start")){
+        remoteCommand = remoteDeviceCommandQueue.dequeue();
+    }
+    
+    socket->write(remoteCommand.toUtf8());
+}
+
+
 //write device commands from the widgets
 void RemoteDevice::deviceCommand(QString device_com)
 {
-    remoteCommand = device_com;
+    remoteDeviceCommandQueue.enqueue(device_com);
     
-    socket->connectToHost(hostAddress, hostDevicePort);
-    connection_timer->start();
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readResponse()));
+    if(socket->state() == QAbstractSocket::UnconnectedState){
+        socket->connectToHost(hostAddress, hostDevicePort);
+        connection_timer->start();
+    }
 }
 
-void RemoteDevice::writeCommand()
-{
-    socket->write(remoteCommand.toUtf8());
-}
 
 void RemoteDevice::readResponse()
 {
     QByteArray resp = socket->readAll();
-    socket->disconnectFromHost();
     
     if(resp.endsWith(failMessage)){
         emit device_message(QString("REMOTE %1 ERROR: fail message received from local").arg(device_name));
 		emit device_fail();
+        return;
     }
+    
+    emit newResponse(resp);
+    
+    //next pending command
+    if(!remoteDeviceCommandQueue.isEmpty()){
+        writeCommand();
+    }else{
+        socket->disconnectFromHost();
+    }    
 }
 
 
@@ -88,6 +104,11 @@ void RemoteDevice::connectionTimeout()
 //including if remote host closes the connection
 void RemoteDevice::socketError()
 {	
+    //listener closes the connection, ignore this
+    if((remoteCommand.split("_").first() == QString("stop") || remoteCommand.split("_").first() == QString("start")) && socket->error() == QAbstractSocket::RemoteHostClosedError){ 
+        return;
+    }
+    
 	storeMessage(QString("REMOTE %1 ERROR: %2").arg(device_name).arg(socket->errorString()), true);
 	emit device_message(QString("REMOTE %1 ERROR: %2").arg(device_name).arg(socket->errorString()));
 	emit device_fail();
