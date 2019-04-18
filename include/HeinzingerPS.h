@@ -15,21 +15,21 @@ signals:
  
 public slots:
     void stop_device();
-
-    void setVoltage(uint voltage);
-    void setCurrent(qreal current);
-    void setOutput(bool on);
     
 private slots:
     void dealWithResponse(QString response);
     void queryAfterSet();
     
     void heinzingerRemoteCommand(QString command);
-    void heinzingerCommand(QString command);
    
     void queryAppliedVoltage();
  
 private:
+    void heinzingerCommand();
+
+    void setVoltage(uint voltage);
+    void setCurrent(qreal current);
+    void setOutput(bool on);
     void setAverages(uint averages);
 
     void queryID();

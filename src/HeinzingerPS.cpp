@@ -56,14 +56,17 @@ averages_set(0)
 	setFlowControl(0);//SoftwareControl
     
     //commands from local widgets
-    //connected directly in MainWindow
+    //connected directly in MainWindow, disconnect now queuing commands
     // connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(heinzingerCommand(QString)));
     
     //commands from remote widgets
     connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));
     
     //response from device
-    connect(this, SIGNAL(newResponse(QString)), this, SLOT(dealWithResponse(QString)));
+    connect(this, SIGNAL(newSerialResponse(QString)), this, SLOT(dealWithResponse(QString)));
+    
+    //communication finished, take next command
+    connect(this, SIGNAL(serialComFinished()), this, SLOT(heinzingerCommand()));
     
     //disable the output on fail
     connect(this, SIGNAL(device_fail()), this, SLOT(stop_device()));
@@ -105,14 +108,17 @@ void HeinzingerPS::heinzingerRemoteCommand(QString command)
     QStringList command_list = command.split("_");
     if(command_list.first() == QString("VOLT") || command_list.first() == QString("CURR") || command_list.first() == QString("OUTP")){
         socket->write(okMessage);
-        heinzingerCommand(command);
+        queueSerialCommand(command);
     }
 }
 
-
 //receive commands from remote device
-void HeinzingerPS::heinzingerCommand(QString command)
+void HeinzingerPS::heinzingerCommand()
 {	
+    if(serialCommandQueue.isEmpty())
+        return;
+    
+    QString command = serialCommandQueue.dequeue();
 	QStringList command_list = command.split("_");
 	
     bool conv_ok;

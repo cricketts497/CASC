@@ -2,6 +2,7 @@
 
 SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
+activeSerialCommand(false),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
 serial_timeout(3000)
@@ -50,6 +51,14 @@ void SerialDevice::stop_device()
 		emit stopped();
 	}
     emit device_message(QString("Local serial: %1: Serial port closed").arg(device_name));
+}
+
+void SerialDevice::queueSerialCommand(QString command)
+{
+    serialCommandQueue.enqueue(command);
+    
+    if(!serial_timer->isActive())
+        emit serialComFinished();  
 }
 
 //protected settings
@@ -113,7 +122,8 @@ bool SerialDevice::writeCommand(QString command, bool response)
         return false;
     
     //don't write the message if already waiting for a reply from another command
-    if(response && serial_timer->isActive()){
+    // if(response && serial_timer->isActive()){
+    if(serial_timer->isActive()){
         emit device_message(QString("Local serial: %1: Busy waiting for reply").arg(device_name));
         return false;
     }
@@ -124,9 +134,10 @@ bool SerialDevice::writeCommand(QString command, bool response)
     QByteArray cm = command.toUtf8();
     serial_port->write(cm);
         
-    if(response){
-        serial_timer->start();
-    }
+    expectResponse = response;
+    // if(response){
+    serial_timer->start();
+    // }
     return true;
 }
 
@@ -138,7 +149,8 @@ void SerialDevice::readResponse()
 	QByteArray resp = serial_port->readAll();
 	QString response = QString::fromUtf8(resp);
 	
-	emit newResponse(response);
+	emit newSerialResponse(response);
+    emit serialComFinished();
 }
 
 
@@ -146,6 +158,12 @@ void SerialDevice::readResponse()
 /////////////////////////////////////////////////////////////
 void SerialDevice::serialTimeout()
 {
+    //not expecting a response
+    if(!expectResponse){
+        emit serialComFinished();
+        return;
+    }
+    
 	storeMessage(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout").arg(device_name), true);
 	emit device_message(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout").arg(device_name));
 	emit device_fail();
