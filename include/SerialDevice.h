@@ -44,6 +44,7 @@ private:
     QTimer * serial_timer = nullptr;
 	const int serial_timeout;
     bool expectResponse;
+    bool commandInProgress;
 };
 
 #endif //SERIAL_DEVICE_H

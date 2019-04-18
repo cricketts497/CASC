@@ -46,7 +46,7 @@ averages_set(0)
     
     //set the interval to query the true voltage
 	voltage_query_timer->setInterval(voltage_query_timeout);
-	connect(voltage_query_timer, SIGNAL(timeout()), this, SLOT(queryAppliedVoltage()));
+	connect(voltage_query_timer, SIGNAL(timeout()), this, SLOT(queryAppliedVoltageTimeout()));
 
 	//settings for serial communication with the power supplies taken from the manual
 	setBaudRate(9600);
@@ -66,7 +66,7 @@ averages_set(0)
     connect(this, SIGNAL(newSerialResponse(QString)), this, SLOT(dealWithResponse(QString)));
     
     //communication finished, take next command
-    connect(this, SIGNAL(serialComFinished()), this, SLOT(heinzingerCommand()));
+    connect(this, &SerialDevice::serialComFinished, this, &HeinzingerPS::heinzingerCommand);
     
     //disable the output on fail
     connect(this, SIGNAL(device_fail()), this, SLOT(stop_device()));
@@ -148,6 +148,8 @@ void HeinzingerPS::heinzingerCommand()
         }else if(on == 1){
             setOutput(true);
         }
+    }else if(command_list.first() == QString("MEASVOLT")){
+        queryAppliedVoltage();
     }
 }
 
@@ -319,6 +321,12 @@ void HeinzingerPS::querySetCurrent()
     }
     if(writeCommand(QString("CURR? \n"), true))
         activeQuery = 4;
+}
+
+//queue the command to query the voltage on timeout
+void HeinzingerPS::queryAppliedVoltageTimeout()
+{
+    queueSerialCommand(QString("MEASVOLT"));
 }
 
 void HeinzingerPS::queryAppliedVoltage()

@@ -22,7 +22,7 @@ private slots:
     
     void heinzingerRemoteCommand(QString command);
    
-    void queryAppliedVoltage();
+    void queryAppliedVoltageTimeout();
  
 private:
     void heinzingerCommand();
@@ -36,6 +36,7 @@ private:
     void queryVersion();
     void querySetVoltage();
     void querySetCurrent();
+    void queryAppliedVoltage();
     void queryAppliedCurrent();
     void queryAverages(); 
 

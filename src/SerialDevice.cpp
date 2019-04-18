@@ -4,7 +4,8 @@ SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString devic
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
-serial_timeout(3000)
+serial_timeout(400),
+commandInProgress(false)
 {
 	if(device_failed)
 		return;
@@ -56,8 +57,9 @@ void SerialDevice::queueSerialCommand(QString command)
 {
     serialCommandQueue.enqueue(command);
     
-    if(!serial_timer->isActive())
-        emit serialComFinished();  
+    if(!commandInProgress){
+        emit serialComFinished();
+    }
 }
 
 //protected settings
@@ -122,7 +124,7 @@ bool SerialDevice::writeCommand(QString command, bool response)
     
     //don't write the message if already waiting for a reply from another command
     // if(response && serial_timer->isActive()){
-    if(serial_timer->isActive()){
+    if(commandInProgress){
         emit device_message(QString("Local serial: %1: Busy waiting for reply").arg(device_name));
         return false;
     }
@@ -134,6 +136,9 @@ bool SerialDevice::writeCommand(QString command, bool response)
     serial_port->write(cm);
         
     expectResponse = response;
+        
+    commandInProgress = true;
+        
     // if(response){
     serial_timer->start();
     // }
@@ -142,12 +147,16 @@ bool SerialDevice::writeCommand(QString command, bool response)
 
 void SerialDevice::readResponse()
 {
+    if(serial_timer->isActive())
+        serial_timer->stop();
+    
     //wait for the rest of the response
     QThread::msleep(500);
     
 	QByteArray resp = serial_port->readAll();
 	QString response = QString::fromUtf8(resp);
 	
+    commandInProgress = false;
 	emit newSerialResponse(response);
     emit serialComFinished();
 }
@@ -157,6 +166,12 @@ void SerialDevice::readResponse()
 /////////////////////////////////////////////////////////////
 void SerialDevice::serialTimeout()
 {
+    if(serial_timer->isActive())
+        serial_timer->stop();
+    
+    //either a failure so want to be able to send stop command or not expecting response
+    commandInProgress = false;
+
     //not expecting a response
     if(!expectResponse){
         emit serialComFinished();

@@ -31,7 +31,7 @@ voltageFileMutex(voltageFileMutex)
 	connect(voltageSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setVoltage(bool)));
     
     currentSetButton->setEnabled(false);
-    connect(currentEdit, SIGNAL(valueChanged(int)), this, SLOT(currentChanged()));
+    connect(currentEdit, SIGNAL(valueChanged(double)), this, SLOT(currentChanged()));
 	connect(currentSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setCurrent(bool)));
     
     outputButton->setEnabled(false);
