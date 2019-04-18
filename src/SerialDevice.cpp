@@ -2,7 +2,6 @@
 
 SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
-activeSerialCommand(false),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
 serial_timeout(3000)
