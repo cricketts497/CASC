@@ -12,8 +12,8 @@ class LocalDevice : public CascDevice
 public:
 	LocalDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
 	
-public slots:
-    void deviceCommand(QString command);
+// public slots:
+    // void localDeviceCommand(QString command);
     
 signals:
     void newLocalCommand(QString command);

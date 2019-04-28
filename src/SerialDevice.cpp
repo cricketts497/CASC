@@ -10,6 +10,8 @@ commandInProgress(false)
 	if(device_failed)
 		return;
 	
+    connect(this, &LocalDevice::newLocalCommand, this, &SerialDevice::queueSerialCommand);
+    
     //setup the timeout timer for the serial communication
 	serial_timer->setSingleShot(true);
 	serial_timer->setInterval(serial_timeout);
@@ -123,7 +125,6 @@ bool SerialDevice::writeCommand(QString command, bool response)
         return false;
     
     //don't write the message if already waiting for a reply from another command
-    // if(response && serial_timer->isActive()){
     if(commandInProgress){
         emit device_message(QString("Local serial: %1: Busy waiting for reply").arg(device_name));
         return false;
@@ -139,9 +140,8 @@ bool SerialDevice::writeCommand(QString command, bool response)
         
     commandInProgress = true;
         
-    // if(response){
     serial_timer->start();
-    // }
+
     return true;
 }
 

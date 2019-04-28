@@ -57,9 +57,7 @@ void RemoteDevice::remoteDeviceCommand(QString device_com, bool toListener)
 
 void RemoteDevice::writeCommand()
 {    
-    // if(remoteCommand.split("_").first() == QString("stop") && remoteCommand.split("_").first() != QString("start")){
     QString remoteCommand = remoteDeviceCommandQueue.dequeue();
-    // }
     
     // emit device_message(QString("Remote device: %1: writing command %2").arg(device_name).arg(remoteCommand));
     

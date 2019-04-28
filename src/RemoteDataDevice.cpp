@@ -21,11 +21,7 @@ file_mutex(file_mutex)
 }
 
 void RemoteDataDevice::askData()
-{
-	// //check for other operations
-	// if(socket->state() != QAbstractSocket::UnconnectedState)
-		// return;
-	
+{	
 	//ask for the data beyond end of current local file
 	file_mutex->lock();
 	if(!data_file->open(QIODevice::ReadOnly)){
@@ -46,18 +42,10 @@ void RemoteDataDevice::askData()
     //add it to the command queue
     remoteDeviceCommand(c.readAll());
     
-	// remoteCommand = c.readAll();
-
-	// socket->connectToHost(hostAddress, hostDevicePort);
-	// connection_timer->start();
-	// connect(socket, SIGNAL(readyRead()), this, SLOT(receiveData()));
 }
 
 void RemoteDataDevice::receiveData(QByteArray data)
 {
-	// QByteArray data = socket->readAll();
-	// socket->disconnectFromHost();
-    
     if(data.endsWith(failMessage)){
         emit device_message(QString("REMOTE %1 ERROR: receiveData: fail message received from local").arg(device_name));
 		emit device_fail();

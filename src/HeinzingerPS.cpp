@@ -55,10 +55,6 @@ averages_set(0)
 	setStopBits(1);
 	setFlowControl(0);//SoftwareControl
     
-    //commands from local widgets
-    //connected directly in MainWindow, disconnect now queuing commands
-    // connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(heinzingerCommand(QString)));
-    
     //commands from remote widgets
     connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));
     
@@ -103,6 +99,7 @@ void HeinzingerPS::stop_device()
     connect(this, &HeinzingerPS::voltage_set_zero, this, &SerialDevice::stop_device); 
 }
 
+//!Only put remote commands of the correct type in the serial command queue
 void HeinzingerPS::heinzingerRemoteCommand(QString command)
 {
     QStringList command_list = command.split("_");

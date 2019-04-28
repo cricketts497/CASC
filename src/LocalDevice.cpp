@@ -45,13 +45,13 @@ void LocalDevice::newCon()
 	connection_timer->start();
 }
 
-/*!
-    Slot connected to local \l CascWidget via intermediate \l MainWindow member function. Emits signal newCommand() connected to slots in child classes \sa RemoteDevice::deviceCommand().
-*/
-void LocalDevice::deviceCommand(QString command)
-{
-    emit newLocalCommand(command);
-}
+// /*!
+    // Slot connected to local \l CascWidget via intermediate \l MainWindow member function. Emits signal newCommand() connected to slots in child classes \sa RemoteDevice::deviceCommand().
+// */
+// void LocalDevice::localDeviceCommand(QString command)
+// {
+    // emit newLocalCommand(command);
+// }
 
 /*!
     Run when the \l {QTcpSocket::}readyRead() signal is emitted by socket. Reads the command and emits it through newCommand()

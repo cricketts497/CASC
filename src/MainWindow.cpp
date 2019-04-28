@@ -321,7 +321,7 @@ void MainWindow::toggleDataSaver(bool start)
             QVector<QMutex*> file_mutex_list = {&heinzinger30kFileMutex};
             DataSaver * dataSaverDevice = new DataSaver(temp_path_list, finalBasePath, file_mutex_list, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
-            connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
+            connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(saverCommand(QString)));
         }else{
             RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger30k_started, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
@@ -394,7 +394,7 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
 		if(local){
 			HeinzingerPS * heinzinger30kDevice = new HeinzingerPS(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
 			setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
-            connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
+            connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(localDeviceCommand(QString)));
         }else{
             RemoteDataDevice * heinzinger30kDevice = new RemoteDataDevice(heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
             setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
@@ -419,7 +419,7 @@ void MainWindow::toggleHeinzinger20kDevice(bool start)
 		if(local){
 			HeinzingerPS * heinzinger20kDevice = new HeinzingerPS(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
 			setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
-            connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
+            connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(localDeviceCommand(QString)));
         }else{
             RemoteDataDevice * heinzinger20kDevice = new RemoteDataDevice(heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
             setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
