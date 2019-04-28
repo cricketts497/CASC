@@ -2,7 +2,7 @@
 #include <QtWidgets>
 
 MessageWindow::MessageWindow(QWidget * parent) :
-CascWidget("Messages", parent)
+CascWidget(QString("Messages"), parent)
 {
 	// textEdit = new QPlainTextEdit(this);
 	textEdit = new QPlainTextEdit(this);

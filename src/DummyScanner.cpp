@@ -1,7 +1,7 @@
 #include "include/DummyScanner.h"
 
 DummyScanner::DummyScanner(QWidget * parent) :
-CascWidget("Dummy scanner", parent),
+CascWidget(QString("Dummy scanner"), parent),
 startButton(new QPushButton("Start", this)),
 stopButton(new QPushButton("Stop", this))
 {

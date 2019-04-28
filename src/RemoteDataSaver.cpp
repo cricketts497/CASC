@@ -1,13 +1,13 @@
 #include "include/RemoteDataSaver.h"
 
-RemoteDataSaver::RemoteDataSaver(bool heinzinger_start, CascConfig * config, QObject * parent) :
+RemoteDataSaver::RemoteDataSaver(bool heinzinger30k_start, CascConfig * config, QObject * parent) :
 RemoteDevice(QString("datasaver"),config,parent)
 {
     if(device_failed)
         return;
     
-    if(heinzinger_start){
-        startDevice("heinzingerps");
+    if(heinzinger30k_start){
+        startDevice("heinzingerps30k");
     }
 }
 

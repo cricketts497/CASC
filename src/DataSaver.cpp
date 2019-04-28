@@ -7,6 +7,7 @@ file_mutex_list(file_mutex_list),
 finalBasePath(finalBasePath),
 scan_started(false)
 {
+    //!create the QFile objects
     for(int i=0; i<temp_file_path_list.length(); i++){
         temp_file_list.append(new QFile(temp_file_path_list.at(i)));
     }
@@ -57,6 +58,7 @@ void DataSaver::scanStop()
     QDir().mkdir(QString("%1/scan_%2").arg(finalBasePath).arg(number));
     
     setFilepaths(number);
+    
     for(int i=0; i<temp_file_list.length(); i++){
         QFile * temp_file = temp_file_list.at(i);
         QFile * final_file = final_file_list.at(i);

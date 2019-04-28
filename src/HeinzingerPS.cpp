@@ -36,7 +36,7 @@ averages_set(0)
     //start a new voltage file
 	QMutexLocker file_locker(file_mutex);
 	if(!data_file->open(QIODevice::WriteOnly)){
-		storeMessage(QString("LOCAL SERIAL HEINZINGER ERROR: init: file->open(write)"), true);
+		storeMessage(QString("LOCAL HEINZINGER ERROR: init: file->open(write)"), true);
 		return;
 	}
 	QDataStream out(data_file);
@@ -92,11 +92,11 @@ void HeinzingerPS::stop_device()
     
     if(voltage_set == 0){
         //output already disabled
-        emit device_message(QString("Local Heinzinger: Output disabled"));
+        emit device_message(QString("Local Heinzinger: %1: Output disabled").arg(device_name));
         SerialDevice::stop_device();
         return;
     }else if(voltage_setpoint != 0){
-        emit device_message(QString("LOCAL HEINZINGER ERROR: unable to disable output"));
+        emit device_message(QString("LOCAL HEINZINGER ERROR: %1: unable to disable output").arg(device_name));
         emit device_fail();
     }
     //when the response comes that the output is disabled, close the serial port
@@ -125,14 +125,14 @@ void HeinzingerPS::heinzingerCommand()
     if(command_list.first() == QString("VOLT")){
         uint voltage = command_list.at(1).toUInt(&conv_ok);
         if(!conv_ok){
-            emit device_message(QString("Local Heinzinger: command: Bad voltage"));
+            emit device_message(QString("Local Heinzinger: %1: command: Bad voltage").arg(device_name));
             return;
         }
         setVoltage(voltage);
     }else if(command_list.first() == QString("CURR")){
         qreal current = command_list.at(1).toFloat(&conv_ok);
         if(!conv_ok){
-            emit device_message(QString("Local Heinzinger: command: Bad current"));
+            emit device_message(QString("Local Heinzinger: %1: command: Bad current").arg(device_name));
             return;
         }
         setCurrent(current);
@@ -140,7 +140,7 @@ void HeinzingerPS::heinzingerCommand()
     }else if(command_list.first() == QString("OUTP")){
         uint on = command_list.at(1).toUInt(&conv_ok);
         if(!conv_ok){
-            emit device_message(QString("Local Heinzinger: command: Bad on/off, use 0=off, 1=on"));
+            emit device_message(QString("Local Heinzinger: %1: command: Bad on/off, use 0=off, 1=on").arg(device_name));
             return;
         }
         if(on == 0){
@@ -167,7 +167,7 @@ void HeinzingerPS::queryAfterSet()
             break;
             
         default: {
-            emit device_message(QString("LOCAL HEINZINGER ERROR: Unknown activeSetFunction"));
+            emit device_message(QString("LOCAL HEINZINGER ERROR: %1: Unknown activeSetFunction").arg(device_name));
             emit device_fail();
         }
     }    
@@ -177,7 +177,7 @@ void HeinzingerPS::queryAfterSet()
 //send serial responses to correct function
 void HeinzingerPS::dealWithResponse(QString response)
 {
-    emit device_message(QString("Local Heinzinger: Response: %1").arg(response));
+    emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));
     switch(activeQuery) {
         case 0: return;
         case 1: responseID(response);
@@ -196,7 +196,7 @@ void HeinzingerPS::dealWithResponse(QString response)
             break;
         
         default: {
-            emit device_message(QString("LOCAL HEINZINGER ERROR: Unknown activeQuery"));
+            emit device_message(QString("LOCAL HEINZINGER ERROR: %1: Unknown activeQuery").arg(device_name));
             emit device_fail();
         }
     }
@@ -229,7 +229,7 @@ void HeinzingerPS::setVoltage(uint voltage)
 {
     volts_ok = false;
     if(voltage > voltage_limit){
-        emit device_message(QString("Local Heinzinger: Trying to set voltage %1 V, above maximum value %2 V").arg(voltage).arg(voltage_limit));
+        emit device_message(QString("Local Heinzinger: %3: Trying to set voltage %1 V, above maximum value %2 V").arg(voltage).arg(voltage_limit).arg(device_name));
         return;        
     }
     
@@ -247,7 +247,7 @@ void HeinzingerPS::setCurrent(qreal current)
 {
     amps_ok = false;
     if(current > current_limit || current < 0){
-        emit device_message(QString("Local Heinzinger: Trying to set current %1 mA, above maximum value %2 mA").arg(current).arg(current_limit));
+        emit device_message(QString("Local Heinzinger: %3: Trying to set current %1 mA, above maximum value %2 mA").arg(current).arg(current_limit).arg(device_name));
         return;        
     }
     
@@ -264,7 +264,7 @@ void HeinzingerPS::setCurrent(qreal current)
 void HeinzingerPS::setAverages(uint averages)
 {
     if(!possible_averages.contains(averages)){
-        emit device_message(QString("Local Heinzinger: Unable to set averages to %1").arg(averages));
+        emit device_message(QString("Local Heinzinger: %2: Unable to set averages to %1").arg(averages).arg(device_name));
         return;        
     }
     
@@ -284,7 +284,7 @@ void HeinzingerPS::setAverages(uint averages)
 void HeinzingerPS::queryID()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("*IDN? \n"), true))
@@ -294,7 +294,7 @@ void HeinzingerPS::queryID()
 void HeinzingerPS::queryVersion()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("VERS? \n"), true))
@@ -305,7 +305,7 @@ void HeinzingerPS::queryVersion()
 void HeinzingerPS::querySetVoltage()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("VOLT? \n"), true))
@@ -316,7 +316,7 @@ void HeinzingerPS::querySetVoltage()
 void HeinzingerPS::querySetCurrent()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("CURR? \n"), true))
@@ -332,7 +332,7 @@ void HeinzingerPS::queryAppliedVoltageTimeout()
 void HeinzingerPS::queryAppliedVoltage()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("MEAS:VOLT? \n"), true))
@@ -342,7 +342,7 @@ void HeinzingerPS::queryAppliedVoltage()
 void HeinzingerPS::queryAppliedCurrent()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("MEAS:CURR? \n"), true))
@@ -352,7 +352,7 @@ void HeinzingerPS::queryAppliedCurrent()
 void HeinzingerPS::queryAverages()
 {
     if(activeQuery != 0){
-        emit device_message(QString("Local Heinzinger: Busy waiting for reply"));
+        emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
     if(writeCommand(QString("AVER? \n"), true))
@@ -364,12 +364,12 @@ void HeinzingerPS::queryAverages()
 ////////////////////////////////////////////////////
 void HeinzingerPS::responseID(QString response)
 {
-    emit device_message(QString("Local Heinzinger: Serial number %1").arg(response));
+    emit device_message(QString("Local Heinzinger: %2: Serial number %1").arg(response).arg(device_name));
 }
 
 void HeinzingerPS::responseVersion(QString response)
 {
-    emit device_message(QString("Local Heinzinger: Version number %1").arg(response));
+    emit device_message(QString("Local Heinzinger: %2: Version number %1").arg(response).arg(device_name));
 }
 
 void HeinzingerPS::responseSetVoltage(QString response)
@@ -387,7 +387,7 @@ void HeinzingerPS::responseSetVoltage(QString response)
     
     if(!response_status){
         volts_ok = false;
-		emit device_message(QString("LOCAL HEINZINGER ERROR: Set voltage response invalid: %1").arg(response));
+		emit device_message(QString("LOCAL HEINZINGER ERROR: %2: Set voltage response invalid: %1").arg(response).arg(device_name));
 		emit device_fail();
 		return;
 	}
@@ -396,7 +396,7 @@ void HeinzingerPS::responseSetVoltage(QString response)
     
     if(voltage_set != voltage_setpoint){
         volts_ok = false;
-        emit device_message(QString("LOCAL HEINZINGER ERROR: voltage set query response (%1) not equal to voltage setpoint (%2)").arg(voltage_set).arg(voltage_setpoint));
+        emit device_message(QString("LOCAL HEINZINGER ERROR: %3: voltage set query response (%1) not equal to voltage setpoint (%2)").arg(voltage_set).arg(voltage_setpoint).arg(device_name));
 		emit device_fail();
     }else{
         volts_ok = true;
@@ -421,7 +421,7 @@ void HeinzingerPS::responseSetCurrent(QString response)
     
     if(!response_status){
         amps_ok = false;
-		emit device_message(QString("LOCAL HEINZINGER ERROR: Set current response invalid: %1").arg(response));
+		emit device_message(QString("LOCAL HEINZINGER ERROR: %2: Set current response invalid: %1").arg(response).arg(device_name));
 		emit device_fail();
 		return;
 	}
@@ -431,7 +431,7 @@ void HeinzingerPS::responseSetCurrent(QString response)
     //some padding around the setpoint
     if(current_set > current_setpoint+0.01 || current_set < current_setpoint-0.01){
         amps_ok = false;
-        emit device_message(QString("LOCAL HEINZINGER ERROR: current set query response (%1) not equal to current setpoint (%2)").arg(current_set).arg(current_setpoint));
+        emit device_message(QString("LOCAL HEINZINGER ERROR: %3: current set query response (%1) not equal to current setpoint (%2)").arg(current_set).arg(current_setpoint).arg(device_name));
 		emit device_fail();
     }else{
         amps_ok = true;
@@ -456,7 +456,7 @@ void HeinzingerPS::responseAppliedVoltage(QString response)
         response_decimal = response_list.at(1).toUInt(&response_status);
     
     if(!response_status){
-		emit device_message(QString("LOCAL HEINZINGER ERROR: Applied voltage response invalid: %1").arg(response));
+		emit device_message(QString("LOCAL HEINZINGER ERROR: %2: Applied voltage response invalid: %1").arg(response).arg(device_name));
 		emit device_fail();
 		return;
 	}
@@ -467,7 +467,7 @@ void HeinzingerPS::responseAppliedVoltage(QString response)
     //write the voltage to file witha timestamp
 	QMutexLocker file_locker(file_mutex);
 	if(!data_file->open(QIODevice::Append)){
-		emit device_message(QString("LOCAL HEINZINGER ERROR: voltage_file->open(append)"));
+		emit device_message(QString("LOCAL HEINZINGER ERROR: %1: voltage_file->open(append)").arg(device_name));
 		emit device_fail();
 		return;
 	}
@@ -493,7 +493,7 @@ void HeinzingerPS::responseAppliedCurrent(QString response)
     }
 
     if(!response_status){
-		emit device_message(QString("LOCAL HEINZINGER ERROR: Applied voltage response invalid: %1").arg(response));
+		emit device_message(QString("LOCAL HEINZINGER ERROR: %2: Applied voltage response invalid: %1").arg(response).arg(device_name));
 		emit device_fail();
 		return;
 	}
@@ -506,7 +506,7 @@ void HeinzingerPS::responseAverages(QString response)
     bool response_status;
 	uint response_averages = response.toUInt(&response_status);
     if(!response_status){
-		emit device_message(QString("LOCAL HEINZINGER ERROR: Averages response invalid: %1").arg(response));
+		emit device_message(QString("LOCAL HEINZINGER ERROR: %2: Averages response invalid: %1").arg(response).arg(device_name));
 		emit device_fail();
 		return;
 	}
@@ -514,7 +514,7 @@ void HeinzingerPS::responseAverages(QString response)
     averages_set = response_averages;
     
     if(averages_set != averages_setpoint){
-        emit device_message(QString("LOCAL HEINZINGER ERROR: averages query response (%1) not equal to averages setpoint (%2)").arg(averages_set).arg(averages_setpoint));
+        emit device_message(QString("LOCAL HEINZINGER ERROR: %3: averages query response (%1) not equal to averages setpoint (%2)").arg(averages_set).arg(averages_setpoint).arg(device_name));
 		emit device_fail();
     }
 }

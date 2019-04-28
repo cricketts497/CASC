@@ -6,15 +6,19 @@ MainWindow::MainWindow() :
 config(new CascConfig(config_file_path, this)),
 tofHist_open(false),
 messageWindow_open(false),
-heinzingerWindow_open(false),
-maxHeinzingerVoltage(30000),
-maxHeinzingerCurrent(3),
+heinzinger30kWindow_open(false),
+maxHeinzinger30kVoltage(30000),
+maxHeinzinger30kCurrent(3),
+heinzinger20kWindow_open(false),
+maxHeinzinger20kVoltage(20000),
+maxHeinzinger20kCurrent(3),
 dummyScanner_open(false),
 listener_running(false),
 data_saver_started(false),
 fake_tagger_started(false),
 tagger_started(false),
-heinzinger_started(false)
+heinzinger30k_started(false),
+heinzinger20k_started(false)
 {
 	messages.setString(&messages_string);
 
@@ -29,7 +33,7 @@ heinzinger_started(false)
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v2");
+	setWindowTitle("CASC v2.1");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -70,11 +74,17 @@ void MainWindow::createActions()
 	connect(dummyScannerAct, &QAction::triggered, this, &MainWindow::toggleDummyScanner);
 	taskBar->addAction(dummyScannerAct); 
 	
-	const QIcon heinzingerIcon = QIcon("./resources/heinzinger.png");
-	heinzingerAct = new QAction(heinzingerIcon, "&HEINZINGER", this);
-	heinzingerAct->setStatusTip("Open the heinzinger voltage controller");
-	connect(heinzingerAct, &QAction::triggered, this, &MainWindow::toggleHeinzinger);
-	taskBar->addAction(heinzingerAct);
+	const QIcon heinzinger30kIcon = QIcon("./resources/heinzinger30k.png");
+	heinzinger30kAct = new QAction(heinzinger30kIcon, "&HEINZINGER30K", this);
+	heinzinger30kAct->setStatusTip("Open the 30kV heinzinger voltage controller");
+	connect(heinzinger30kAct, &QAction::triggered, this, &MainWindow::toggleHeinzinger30k);
+	taskBar->addAction(heinzinger30kAct);
+    
+    const QIcon heinzinger20kIcon = QIcon("./resources/heinzinger20k.png");
+	heinzinger20kAct = new QAction(heinzinger20kIcon, "&HEINZINGER20K", this);
+	heinzinger20kAct->setStatusTip("Open the 20kV heinzinger voltage controller");
+	connect(heinzinger20kAct, &QAction::triggered, this, &MainWindow::toggleHeinzinger20k);
+	taskBar->addAction(heinzinger20kAct);
 }
 
 void MainWindow::createStatusBar()
@@ -102,8 +112,11 @@ void MainWindow::createDevicesBar()
 	// taggerDeviceButton = new DeviceButton("Tagger", devicesBar, "Start the tagger device", "Stop the tagger device", "TAGGER FAIL");
 	// connect(taggerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleTaggerDevice(bool)));
 	
-	heinzingerDeviceButton = new DeviceButton("Heinzinger", devicesBar, "Start the heinzinger power supply device", "Stop the heinzinger device", "HEINZINGER FAIL");
-	connect(heinzingerDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzingerDevice(bool)));
+	heinzinger30kDeviceButton = new DeviceButton("Heinzinger 30kV", devicesBar, "Start the heinzinger 30kV power supply device", "Stop the heinzinger 30kV device", "HEINZINGER 30K FAIL");
+	connect(heinzinger30kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger30kDevice(bool)));
+
+    heinzinger20kDeviceButton = new DeviceButton("Heinzinger 20kV", devicesBar, "Start the heinzinger 20kV power supply device", "Stop the heinzinger 20kV device", "HEINZINGER 20K FAIL");
+	connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger20kDevice(bool)));
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
@@ -111,7 +124,8 @@ void MainWindow::createDevicesBar()
 	// devicesBar->addWidget(fakePdlDeviceButton);
 	// devicesBar->addWidget(fakeTaggerDeviceButton);
 	// devicesBar->addWidget(taggerDeviceButton);
-	devicesBar->addWidget(heinzingerDeviceButton);
+	devicesBar->addWidget(heinzinger30kDeviceButton);
+	devicesBar->addWidget(heinzinger20kDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -186,32 +200,60 @@ void MainWindow::keepMessage(QString message)
 }
 
 	
-void MainWindow::toggleHeinzinger()
+void MainWindow::toggleHeinzinger30k()
 {
-	if(heinzingerWindow_open){
-		delete heinzingerWindow;
+	if(heinzinger30kWindow_open){
+		delete heinzinger30kWindow;
 		
-		heinzingerAct->setStatusTip("Open the heinzinger voltage controller");
-		heinzingerWindow_open = false;
+		heinzinger30kAct->setStatusTip("Open the 30kV heinzinger voltage controller");
+		heinzinger30kWindow_open = false;
 	}else{
-		heinzingerWindow = new HeinzingerVoltageWindow(heinzinger_temp_path, &heinzingerFileMutex, maxHeinzingerVoltage, maxHeinzingerCurrent, this);
-		setupWidget(heinzingerWindow, heinzingerAct);
+		heinzinger30kWindow = new HeinzingerVoltageWindow(heinzinger30k_temp_path, &heinzinger30kFileMutex, maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, this);
+		setupWidget(heinzinger30kWindow, heinzinger30kAct);
 		
-		connect(heinzingerWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzingerCommand(QString)));
+		connect(heinzinger30kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger30kCommand(QString)));
 		
-        if(heinzinger_started)
-            heinzingerWindow->heinzingerDeviceOn(true);
+        if(heinzinger30k_started)
+            heinzinger30kWindow->heinzingerDeviceOn(true);
         
-		addDockWidget(Qt::RightDockWidgetArea, heinzingerWindow);
+		addDockWidget(Qt::RightDockWidgetArea, heinzinger30kWindow);
 		
-		heinzingerAct->setStatusTip("Close the heinzinger voltage controller");
-		heinzingerWindow_open = true;
+		heinzinger30kAct->setStatusTip("Close the 30kV heinzinger voltage controller");
+		heinzinger30kWindow_open = true;
 	}
 }
-void MainWindow::heinzingerCommand(QString command)
+void MainWindow::heinzinger30kCommand(QString command)
 {
-    emit newHeinzingerCommand(command);
+    emit newHeinzinger30kCommand(command);
 }
+
+void MainWindow::toggleHeinzinger20k()
+{
+	if(heinzinger20kWindow_open){
+		delete heinzinger20kWindow;
+		
+		heinzinger20kAct->setStatusTip("Open the 20kV heinzinger voltage controller");
+		heinzinger20kWindow_open = false;
+	}else{
+		heinzinger20kWindow = new HeinzingerVoltageWindow(heinzinger20k_temp_path, &heinzinger20kFileMutex, maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, this);
+		setupWidget(heinzinger20kWindow, heinzinger20kAct);
+		
+		connect(heinzinger20kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger20kCommand(QString)));
+		
+        if(heinzinger20k_started)
+            heinzinger20kWindow->heinzingerDeviceOn(true);
+        
+		addDockWidget(Qt::BottomDockWidgetArea, heinzinger20kWindow);
+		
+		heinzinger20kAct->setStatusTip("Close the 20kV heinzinger voltage controller");
+		heinzinger20kWindow_open = true;
+	}
+}
+void MainWindow::heinzinger20kCommand(QString command)
+{
+    emit newHeinzinger20kCommand(command);
+}
+
 
 void MainWindow::toggleDummyScanner()
 {
@@ -269,18 +311,19 @@ void MainWindow::toggleListener(bool start)
 	}
 }
 
+//currently only saving permenant files for 30k heinzinger
 void MainWindow::toggleDataSaver(bool start)
 {
     if(start){
         bool local = config->deviceLocal(QString("datasaver"));
         if(local){
-            QStringList temp_path_list = {heinzinger_temp_path};
-            QVector<QMutex*> file_mutex_list = {&heinzingerFileMutex};
+            QStringList temp_path_list = {heinzinger30k_temp_path};
+            QVector<QMutex*> file_mutex_list = {&heinzinger30kFileMutex};
             DataSaver * dataSaverDevice = new DataSaver(temp_path_list, finalBasePath, file_mutex_list, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
             connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
         }else{
-            RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger_started, config);
+            RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger30k_started, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
             connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
             connect(this, SIGNAL(newDataSaverStart(QString)), dataSaverDevice, SLOT(startDevice(QString)));
@@ -343,29 +386,54 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 	
 }
 
-void MainWindow::toggleHeinzingerDevice(bool start)
+void MainWindow::toggleHeinzinger30kDevice(bool start)
 {
-	bool local = config->deviceLocal(QString("heinzingerps"));
+	bool local = config->deviceLocal(QString("heinzingerps30k"));
 	
 	if(start){
 		if(local){
-			HeinzingerPS * heinzingerDevice = new HeinzingerPS(maxHeinzingerVoltage, maxHeinzingerCurrent, heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
-			setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
-            connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(queueSerialCommand(QString)));
+			HeinzingerPS * heinzinger30kDevice = new HeinzingerPS(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
+			setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
+            connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
         }else{
-            RemoteDataDevice * heinzingerDevice = new RemoteDataDevice(heinzinger_temp_path, &heinzingerFileMutex, QString("heinzingerps"), config);
-            setupDevice(heinzingerDevice, heinzingerDeviceButton, &heinzingerDeviceThread);
-            connect(this, SIGNAL(newHeinzingerCommand(QString)), heinzingerDevice, SLOT(deviceCommand(QString)));
+            RemoteDataDevice * heinzinger30kDevice = new RemoteDataDevice(heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
+            setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
+            connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(deviceCommand(QString)));
 		}
         //tell the data saver PC to start requesting new heinzingerps data
-        dataSaverStart("heinzingerps");
-		heinzinger_started = true;
+        dataSaverStart("heinzingerps30k");
+		heinzinger30k_started = true;
 	}else{
 		//stop_device slot connection in setupDevice() below
-		heinzinger_started = false;
+		heinzinger30k_started = false;
 	}
-    if(heinzingerWindow_open)
-        heinzingerWindow->heinzingerDeviceOn(heinzinger_started);
+    if(heinzinger30kWindow_open)
+        heinzinger30kWindow->heinzingerDeviceOn(heinzinger30k_started);
+}
+
+void MainWindow::toggleHeinzinger20kDevice(bool start)
+{
+	bool local = config->deviceLocal(QString("heinzingerps20k"));
+	
+	if(start){
+		if(local){
+			HeinzingerPS * heinzinger20kDevice = new HeinzingerPS(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
+			setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
+            connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
+        }else{
+            RemoteDataDevice * heinzinger20kDevice = new RemoteDataDevice(heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
+            setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
+            connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(deviceCommand(QString)));
+		}
+        //tell the data saver PC to start requesting new heinzingerps data
+        dataSaverStart("heinzingerps20k");
+		heinzinger20k_started = true;
+	}else{
+		//stop_device slot connection in setupDevice() below
+		heinzinger20k_started = false;
+	}
+    if(heinzinger20kWindow_open)
+        heinzinger20kWindow->heinzingerDeviceOn(heinzinger20k_started);
 }
 
 void MainWindow::toggleTaggerDevice(bool start)
@@ -395,8 +463,10 @@ void MainWindow::toggleDevice(QString device, bool start)
 {
 	if(device == "faketagger" && ((start && !fake_tagger_started && !fakeTaggerDeviceButton->started) || (!start && fake_tagger_started && fakeTaggerDeviceButton->started)))
 		fakeTaggerDeviceButton->click();
-    else if(device == "heinzingerps" && ((start && !heinzinger_started && !heinzingerDeviceButton->started) || (!start && heinzinger_started && heinzingerDeviceButton->started)))
-        heinzingerDeviceButton->click();
+    else if(device == "heinzingerps30k" && ((start && !heinzinger30k_started && !heinzinger30kDeviceButton->started) || (!start && heinzinger30k_started && heinzinger30kDeviceButton->started)))
+        heinzinger30kDeviceButton->click();
+    else if(device == "heinzingerps20k" && ((start && !heinzinger20k_started && !heinzinger20kDeviceButton->started) || (!start && heinzinger20k_started && heinzinger20kDeviceButton->started)))
+        heinzinger20kDeviceButton->click();
     else if(device == "datasaver" && ((start && !data_saver_started && !dataSaverDeviceButton->started) || (!start && data_saver_started && dataSaverDeviceButton->started)))
         dataSaverDeviceButton->click();
 }

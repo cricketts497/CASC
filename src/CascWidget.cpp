@@ -1,6 +1,6 @@
 #include "include/CascWidget.h"
 
-CascWidget::CascWidget(const char * name, QWidget * parent) :
+CascWidget::CascWidget(QString name, QWidget * parent) :
 QDockWidget(name, parent)
 {
 	

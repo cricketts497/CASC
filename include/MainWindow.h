@@ -41,10 +41,12 @@ private slots:
 	
 	void toggleTof();
 	void toggleMessage();
-	void toggleHeinzinger();
+	void toggleHeinzinger30k();
+	void toggleHeinzinger20k();
     void toggleDummyScanner();
     
-    void heinzingerCommand(QString command);
+    void heinzinger30kCommand(QString command);
+    void heinzinger20kCommand(QString command);
     void dummyScannerCommand(QString command);
 	
 
@@ -57,7 +59,8 @@ private slots:
 	void toggleFakePdlDevice(bool start);
 	void toggleFakeTaggerDevice(bool start);
 	void toggleTaggerDevice(bool start);
-	void toggleHeinzingerDevice(bool start);
+	void toggleHeinzinger30kDevice(bool start);
+	void toggleHeinzinger20kDevice(bool start);
 
 	void setStatusValue(qreal value);
 
@@ -65,7 +68,8 @@ signals:
 	void new_message(QString message);
 	void newDataSaverStart(QString device);
     
-	void newHeinzingerCommand(QString command);
+	void newHeinzinger30kCommand(QString command);
+	void newHeinzinger20kCommand(QString command);
     void newDummyScannerCommand(QString command);
 
 private:
@@ -90,14 +94,16 @@ private:
 	const QString fake_tagger_temp_path = "./temp/faketag_temp.dat";
 	const QString tagger_temp_path = "./temp/tagger_temp.dat";
 	const QString fake_pdl_temp_path = "./temp/fakepdl_temp.dat";
-	const QString heinzinger_temp_path = "./temp/heinzinger_temp.dat";
+	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.dat";
+	const QString heinzinger20k_temp_path = "./temp/heinzinger30k_temp.dat";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
 
 	QMutex fakeTaggerFileMutex;
 	QMutex fakePdlFileMutex;
-	QMutex heinzingerFileMutex;
+	QMutex heinzinger30kFileMutex;
+	QMutex heinzinger20kFileMutex;
 
 	//graph widget as central of main window
 	GenericGraph *centralGraph;
@@ -111,11 +117,17 @@ private:
 	MessageWindow * messageWindow;
 	bool messageWindow_open;
 	
-	QAction *heinzingerAct;
-	HeinzingerVoltageWindow * heinzingerWindow;
-	bool heinzingerWindow_open;
-	const uint maxHeinzingerVoltage;
-    const uint maxHeinzingerCurrent;
+	QAction *heinzinger30kAct;
+	HeinzingerVoltageWindow * heinzinger30kWindow;
+	bool heinzinger30kWindow_open;
+	const uint maxHeinzinger30kVoltage;
+    const uint maxHeinzinger30kCurrent;
+    
+    QAction *heinzinger20kAct;
+	HeinzingerVoltageWindow * heinzinger20kWindow;
+	bool heinzinger20kWindow_open;
+    const uint maxHeinzinger20kVoltage;
+    const uint maxHeinzinger20kCurrent;
     
     QAction * dummyScannerAct;
     DummyScanner * dummyScanner;
@@ -144,9 +156,13 @@ private:
 	TaggerDevice * taggerDevice;
 	bool tagger_started;
 	
-	DeviceButton * heinzingerDeviceButton;
-	bool heinzinger_started;
-	QThread heinzingerDeviceThread;
+	DeviceButton * heinzinger30kDeviceButton;
+	bool heinzinger30k_started;
+	QThread heinzinger30kDeviceThread;
+    
+    DeviceButton * heinzinger20kDeviceButton;
+	bool heinzinger20k_started;
+	QThread heinzinger20kDeviceThread;
 
 };
 

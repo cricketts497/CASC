@@ -9,7 +9,7 @@ class CascWidget : public QDockWidget
 	Q_OBJECT
 
 public:
-	CascWidget(const char * name="Casc widget", QWidget * parent=nullptr);
+	CascWidget(QString name, QWidget * parent=nullptr);
 	
 protected:
 	void closeEvent(QCloseEvent *event);
