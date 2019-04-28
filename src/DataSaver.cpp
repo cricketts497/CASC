@@ -11,7 +11,8 @@ scan_started(false)
     for(int i=0; i<temp_file_path_list.length(); i++){
         temp_file_list.append(new QFile(temp_file_path_list.at(i)));
     }
-    connect(this, SIGNAL(newCommand(QString)), this, SLOT(saverCommand(QString)));
+    connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(saverCommand(QString)));
+    connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(saverCommand(QString)));
     
     QStringList device = config->getDevice(QString("datasaver"));
 	if(device.size() < 4){
@@ -26,8 +27,10 @@ void DataSaver::saverCommand(QString command)
 {
     if(command == QString("START") && !scan_started){
         scanStart();
+        socket->write(okMessage);
     }else if(command == QString("STOP") && scan_started){
         scanStop();
+        socket->write(okMessage);
     }
 }
 

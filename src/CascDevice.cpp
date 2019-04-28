@@ -18,7 +18,7 @@ noDataMessage("no data"),
 okMessage("ok"),
 failMessage("fail"),
 device_failed(false),
-connection_timeout(1000)
+connection_timeout(3000)
 {
 	connection_timer->setSingleShot(true);
 	connection_timer->setInterval(connection_timeout);

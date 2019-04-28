@@ -15,12 +15,12 @@ signals:
     void newResponse(QByteArray resp);
     
 public slots:
-    void deviceCommand(QString command);
+    void remoteDeviceCommand(QString command, bool toListener=false);
 	void stop_device();
 
 protected:
     QTcpSocket * socket;
-    QString remoteCommand;
+    QQueue<QString> remoteDeviceCommandQueue;
 
 private slots:
 	void writeCommand();
@@ -30,8 +30,6 @@ private slots:
 	void connectionTimeout();
 	void socketError();
     
-private:
-    QQueue<QString> remoteDeviceCommandQueue;
 };
 
 #endif // REMOTE_DEVICE_H

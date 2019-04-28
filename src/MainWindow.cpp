@@ -325,7 +325,7 @@ void MainWindow::toggleDataSaver(bool start)
         }else{
             RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger30k_started, config);
             setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
-            connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(deviceCommand(QString)));
+            connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(remoteDeviceCommand(QString)));
             connect(this, SIGNAL(newDataSaverStart(QString)), dataSaverDevice, SLOT(startDevice(QString)));
         }
         data_saver_started = true;
@@ -398,7 +398,7 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
         }else{
             RemoteDataDevice * heinzinger30kDevice = new RemoteDataDevice(heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
             setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
-            connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(deviceCommand(QString)));
+            connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
 		}
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps30k");
@@ -423,7 +423,7 @@ void MainWindow::toggleHeinzinger20kDevice(bool start)
         }else{
             RemoteDataDevice * heinzinger20kDevice = new RemoteDataDevice(heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
             setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
-            connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(deviceCommand(QString)));
+            connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
 		}
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps20k");

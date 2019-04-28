@@ -2,7 +2,7 @@
 
 RemoteDataDevice::RemoteDataDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 RemoteDevice(deviceName, config, parent),
-request_interval(200),
+request_interval(5000),
 askDataTimer(new QTimer(this)),
 file_mutex(file_mutex)
 {
@@ -44,7 +44,7 @@ void RemoteDataDevice::askData()
 	c << "data_" << size;
     
     //add it to the command queue
-    deviceCommand(c.readAll());
+    remoteDeviceCommand(c.readAll());
     
 	// remoteCommand = c.readAll();
 

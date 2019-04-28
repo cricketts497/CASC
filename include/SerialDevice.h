@@ -29,6 +29,8 @@ protected:
     void setStopBits(int bits);
     void setFlowControl(int type);
     
+    const int serial_timeout;
+    
     QQueue<QString> serialCommandQueue;
     bool writeCommand(QString command, bool response=false);
 
@@ -42,7 +44,7 @@ private:
     QSerialPort * serial_port = nullptr;
     
     QTimer * serial_timer = nullptr;
-	const int serial_timeout;
+    
     bool expectResponse;
     bool commandInProgress;
 };

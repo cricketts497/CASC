@@ -66,6 +66,14 @@ void LocalDevice::receiveCommand()
 	QByteArray com = socket->readAll();
 	QString command = QString::fromUtf8(com);
     
+    //listener commands
+    if(command.split("_").first() == QString("start") || command.split("_").first() == QString("stop")){
+        socket->write(okMessage);
+        return;
+    }
+    
+    // emit device_message(QString("Local device: %1: received device command %2").arg(device_name).arg(command));
+    
 	//connect the devices to this signal to do something with the command
 	emit newRemoteCommand(command);
 }

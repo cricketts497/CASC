@@ -16,7 +16,7 @@ current_limit(current_limit),
 output_setpoint(false),
 activeSetFunction(0),
 queryAfterSetTimer(new QTimer(this)),
-queryAfterSetTimeout(500),
+queryAfterSetTimeout(serial_timeout+5),
 voltage_setpoint(0),
 current_setpoint(0),
 averages_setpoint(0),
@@ -115,7 +115,7 @@ void HeinzingerPS::heinzingerRemoteCommand(QString command)
 //receive commands from remote device
 void HeinzingerPS::heinzingerCommand()
 {	
-    if(serialCommandQueue.isEmpty())
+    if(serialCommandQueue.isEmpty() || activeSetFunction != 0)
         return;
     
     QString command = serialCommandQueue.dequeue();
@@ -171,6 +171,7 @@ void HeinzingerPS::queryAfterSet()
             emit device_fail();
         }
     }    
+    activeSetFunction = 0;
 }
 
 

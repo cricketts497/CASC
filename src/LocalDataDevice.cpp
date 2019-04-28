@@ -12,7 +12,7 @@ maxPayload(100000)
 
 	data_file = new QFile(file_path);
 
-	connect(this, SIGNAL(newCommand(QString)), this, SLOT(sendData(QString)));
+	connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(sendData(QString)));
 }
 
 //send data command is QString("data_{position in file}")

@@ -95,7 +95,7 @@ private:
 	const QString tagger_temp_path = "./temp/tagger_temp.dat";
 	const QString fake_pdl_temp_path = "./temp/fakepdl_temp.dat";
 	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.dat";
-	const QString heinzinger20k_temp_path = "./temp/heinzinger30k_temp.dat";
+	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.dat";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
