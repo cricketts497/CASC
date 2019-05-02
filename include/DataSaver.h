@@ -13,13 +13,15 @@ public:
     DataSaver(QStringList temp_file_path_list, QString finalBasePath, QVector<QMutex*> file_mutex_list, CascConfig * config, QObject * parent = nullptr);
 
 public slots:
+    void saverCommand(QString command);
+    
+private slots:
+    void remoteSaverCommand(QString command);
+    
+private:
     void scanStart();
     void scanStop();
     
-private slots:
-    void saverCommand(QString command);
-    
-private:
     uint getScanNumber();
     void setFilepaths(uint scan_number);
     

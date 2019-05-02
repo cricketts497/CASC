@@ -28,11 +28,11 @@ voltageFileMutex(voltageFileMutex)
     
     voltageSetButton->setEnabled(false);
     connect(voltageEdit, SIGNAL(valueChanged(int)), this, SLOT(voltageChanged()));
-	connect(voltageSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setVoltage()));
+	connect(voltageSetButton, &QAbstractButton::clicked, this, &HeinzingerVoltageWindow::setVoltage);
     
     currentSetButton->setEnabled(false);
     connect(currentEdit, SIGNAL(valueChanged(double)), this, SLOT(currentChanged()));
-	connect(currentSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setCurrent()));
+	connect(currentSetButton, &QAbstractButton::clicked, this, &HeinzingerVoltageWindow::setCurrent);
     
     outputButton->setEnabled(false);
     connect(outputButton, SIGNAL(toggle_device(bool)), this, SLOT(setOutput(bool)));

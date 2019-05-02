@@ -11,8 +11,8 @@ scan_started(false)
     for(int i=0; i<temp_file_path_list.length(); i++){
         temp_file_list.append(new QFile(temp_file_path_list.at(i)));
     }
-    connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(saverCommand(QString)));
-    connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(saverCommand(QString)));
+    // connect(this, SIGNAL(newLocalCommand(QString)), this, SLOT(saverCommand(QString)));
+    connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(remoteSaverCommand(QString)));
     
     QStringList device = config->getDevice(QString("datasaver"));
 	if(device.size() < 4){
@@ -23,7 +23,7 @@ scan_started(false)
     
 }
 
-void DataSaver::saverCommand(QString command)
+void DataSaver::remoteSaverCommand(QString command)
 {
     if(command == QString("START") && !scan_started){
         scanStart();
@@ -31,6 +31,15 @@ void DataSaver::saverCommand(QString command)
     }else if(command == QString("STOP") && scan_started){
         scanStop();
         socket->write(okMessage);
+    }
+}
+
+void DataSaver::saverCommand(QString command)
+{
+    if(command == QString("START") && !scan_started){
+        scanStart();
+    }else if(command == QString("STOP") && scan_started){
+        scanStop();
     }
 }
 
