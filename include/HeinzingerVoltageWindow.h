@@ -16,8 +16,8 @@ public:
 private slots:
     void voltageChanged();
     void currentChanged();
-	void setVoltage();
-    void setCurrent();
+	void setVoltage(bool set);
+    void setCurrent(bool set);
     void setOutput(bool start);
     
     void readVoltage();
