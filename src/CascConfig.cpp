@@ -24,7 +24,6 @@ QObject(parent)
 		devices.append(device);
 	}
 	configFile->close();
-
 }
 
 QStringList CascConfig::getDevice(QString deviceName)

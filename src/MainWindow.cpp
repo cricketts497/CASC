@@ -33,7 +33,7 @@ heinzinger20k_started(false)
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v2.1");
+	setWindowTitle("CASC v2.2");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -72,7 +72,7 @@ void MainWindow::createActions()
 	dummyScannerAct = new QAction(dummyScannerIcon, "&DUMMY", this);
 	dummyScannerAct->setStatusTip("Open the dummy scanner for saving sets of data as scans");
 	connect(dummyScannerAct, &QAction::triggered, this, &MainWindow::toggleDummyScanner);
-	taskBar->addAction(dummyScannerAct); 
+	taskBar->addAction(dummyScannerAct);
 	
 	const QIcon heinzinger30kIcon = QIcon("./resources/heinzinger30k.png");
 	heinzinger30kAct = new QAction(heinzinger30kIcon, "&HEINZINGER30K", this);
