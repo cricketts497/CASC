@@ -61,6 +61,9 @@ private slots:
 	void toggleTaggerDevice(bool start);
 	void toggleHeinzinger30kDevice(bool start);
 	void toggleHeinzinger20kDevice(bool start);
+    
+    void heinzinger30kStatus(QString status);
+    void heinzinger20kStatus(QString status);
 
 	void setStatusValue(qreal value);
 
@@ -71,6 +74,9 @@ signals:
 	void newHeinzinger30kCommand(QString command);
 	void newHeinzinger20kCommand(QString command);
     void newDummyScannerCommand(QString command);
+    
+    void newHeinzinger30kStatus(QString status);
+    void newHeinzinger20kStatus(QString status);
 
 private:
 	const QString config_file_path = "./config.txt";

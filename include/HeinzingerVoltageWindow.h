@@ -12,6 +12,9 @@ public:
 	HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage=1, qreal maxCurrent=0.01, QWidget * parent=nullptr);
 	
     void heinzingerDeviceOn(bool on);
+    
+public slots:
+    void receiveHeinzingerStatus(QString status);
 	
 private slots:
     void voltageChanged();

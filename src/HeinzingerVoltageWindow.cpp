@@ -169,3 +169,25 @@ void HeinzingerVoltageWindow::readVoltage()
     
     voltageReadback->setText(QString::number(applied_voltage_int)+"."+QString::number(applied_voltage_decimal));
 }
+
+void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
+{
+    //status, voltage setpoint, current setpoint, output setpoint
+    QStringList status_list = status.split("_");
+    
+    int voltage_setpoint = status_list.at(1).toInt();
+    if(voltage_setpoint != voltageEdit->value()){
+        voltageEdit->setValue(voltage_setpoint);
+        voltageSetButton->toggle();
+    }
+    
+    qreal current_setpoint = status_list.at(2).toDouble();
+    if(current_setpoint != currentEdit->value()){
+        currentEdit->setValue(current_setpoint);
+        currentSetButton->toggle();
+    }
+    
+    if((status_list.at(3) == QString("1") && !outputButton->started) || (status_list.at(3) == QString("0") && outputButton->started)){
+        outputButton->toggle();
+    }
+}

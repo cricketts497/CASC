@@ -17,8 +17,12 @@ connection_timer(new QTimer(this)),
 noDataMessage("no data"),
 okMessage("ok"),
 failMessage("fail"),
+askStatusMessage("status?"),
+deviceStatus(QString("status")),
 device_failed(false),
-connection_timeout(3000)
+connection_timeout(3000),
+broadcast_status_timer(new QTimer(this)),
+broadcast_status_timeout(1000)
 {
 	connection_timer->setSingleShot(true);
 	connection_timer->setInterval(connection_timeout);
@@ -43,6 +47,10 @@ connection_timeout(3000)
     connect(this, SIGNAL(deviceFail()), this, SLOT(setFailed()));
     
 	storeMessage(QString("%1: started").arg(deviceName), false);
+    
+    connect(broadcast_status_timer, SIGNAL(timeout()), this, SLOT(broadcastStatus()));
+    broadcast_status_timer->setInterval(broadcast_status_timeout);
+    broadcast_status_timer->start();
 }
 
 /*!
@@ -87,4 +95,9 @@ void CascDevice::sendMessages()
 	emit device_message(messages.readAll());
 	if(device_failed)
 		emit device_fail();
+}
+
+void CascDevice::broadcastStatus()
+{
+    emit device_status(deviceStatus);
 }

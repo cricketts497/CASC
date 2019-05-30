@@ -78,6 +78,8 @@ averages_set(0)
     //reset the power supply
     writeCommand(QString("*RST \n"));
     
+    //voltage setpoint, current setpoint, output on
+    deviceStatus = QString("0_0_0");
 }
 
 //Set the voltage to zero and turn off the output
@@ -220,7 +222,8 @@ void HeinzingerPS::setOutput(bool on)
             //start querying the applied voltage
             voltage_query_timer->start();
         }
-    }        
+    }
+    setHeinzingerStatus();
 }
 
 void HeinzingerPS::setVoltage(uint voltage)
@@ -239,6 +242,7 @@ void HeinzingerPS::setVoltage(uint voltage)
         activeSetFunction = 1;
         queryAfterSetTimer->start();
     }
+    setHeinzingerStatus();
 }
 
 void HeinzingerPS::setCurrent(qreal current)
@@ -256,6 +260,17 @@ void HeinzingerPS::setCurrent(qreal current)
         current_setpoint = current;
         activeSetFunction = 2;
         queryAfterSetTimer->start();
+    }
+    setHeinzingerStatus();
+}
+
+void HeinzingerPS::setHeinzingerStatus()
+{
+    //voltage setpoint, current setpoint, output setpoint
+    if(output_setpoint){
+        deviceStatus = QString("status_%1_%2_1").arg(voltage_setpoint).arg(current_setpoint);
+    }else{
+        deviceStatus = QString("status_%1_%2_0").arg(voltage_setpoint).arg(current_setpoint);
     }
 }
 

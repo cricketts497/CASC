@@ -2,7 +2,9 @@
 
 RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * parent) :
 CascDevice(deviceName, config, parent),
-socket(new QTcpSocket(this))
+socket(new QTcpSocket(this)),
+get_status_timer(new QTimer(this)),
+get_status_timeout(3000)
 {
 	if(device_failed)
 		return;
@@ -22,6 +24,9 @@ socket(new QTcpSocket(this))
 	out << "start_" << deviceName;
 	remoteDeviceCommand(out.readAll(), true);
     
+    connect(get_status_timer, SIGNAL(timeout()), this, SLOT(get_status()));
+    get_status_timer->setInterval(get_status_timeout);
+    get_status_timer->start();
 }
 
 void RemoteDevice::stop_device()
@@ -40,6 +45,12 @@ void RemoteDevice::stop_device()
 	connect(socket, &QTcpSocket::disconnected, this, &CascDevice::stop_device);
 }
 
+void RemoteDevice::get_status()
+{
+    remoteDeviceCommand(QString(askStatusMessage));
+}
+
+//////////////////////////////////////////////////////////
 
 //write device commands from the widgets
 void RemoteDevice::remoteDeviceCommand(QString device_com, bool toListener)
@@ -75,7 +86,11 @@ void RemoteDevice::readResponse()
         return;
     }
     
-    emit newResponse(resp);
+    if(resp.startsWith("status")){
+		deviceStatus = QString(resp);
+    }else{
+        emit newResponse(resp);
+    }
     
     //next pending command
     if(remoteDeviceCommandQueue.isEmpty()){

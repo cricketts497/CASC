@@ -72,6 +72,12 @@ void LocalDevice::receiveCommand()
         return;
     }
     
+    //status command
+    if(command == QString(askStatusMessage)){
+        socket->write(deviceStatus.toUtf8());
+        return;
+    }
+    
     // emit device_message(QString("Local device: %1: received device command %2").arg(device_name).arg(command));
     
 	//connect the devices to this signal to do something with the command

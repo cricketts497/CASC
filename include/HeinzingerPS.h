@@ -32,6 +32,8 @@ private:
     void setOutput(bool on);
     void setAverages(uint averages);
 
+    void setHeinzingerStatus();
+
     void queryID();
     void queryVersion();
     void querySetVoltage();

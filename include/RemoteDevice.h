@@ -23,6 +23,8 @@ protected:
     QQueue<QString> remoteDeviceCommandQueue;
 
 private slots:
+    void get_status();
+
 	void writeCommand();
     
     void readResponse();
@@ -30,6 +32,9 @@ private slots:
 	void connectionTimeout();
 	void socketError();
     
+private:
+    QTimer * get_status_timer = nullptr;
+    const int get_status_timeout;
 };
 
 #endif // REMOTE_DEVICE_H

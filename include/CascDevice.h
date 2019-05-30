@@ -23,6 +23,8 @@ public slots:
 	void stop_device();
 
 signals:
+    void device_status(QString status);
+
 	void device_message(QString message);
 	void device_fail();
 	
@@ -42,14 +44,22 @@ protected:
 	const char * noDataMessage;
     const char * okMessage;
     const char * failMessage;
+    
+    const char * askStatusMessage;
+    
+    QString deviceStatus;
 
 	bool device_failed;
 	
 private slots:
     void setFailed();
+    void broadcastStatus();
     
 private:
     const int connection_timeout;
+    
+    QTimer * broadcast_status_timer = nullptr;
+    const int broadcast_status_timeout;
 
 	QTextStream messages;
 	QString messages_string;

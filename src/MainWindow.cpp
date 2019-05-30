@@ -212,7 +212,8 @@ void MainWindow::toggleHeinzinger30k()
 		setupWidget(heinzinger30kWindow, heinzinger30kAct);
 		
 		connect(heinzinger30kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger30kCommand(QString)));
-		
+		connect(this, SIGNAL(newHeinzinger30kStatus(QString)), heinzinger30kWindow, SLOT(receiveHeinzingerStatus(QString)));
+        
         if(heinzinger30k_started)
             heinzinger30kWindow->heinzingerDeviceOn(true);
         
@@ -239,6 +240,7 @@ void MainWindow::toggleHeinzinger20k()
 		setupWidget(heinzinger20kWindow, heinzinger20kAct);
 		
 		connect(heinzinger20kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger20kCommand(QString)));
+        connect(this, SIGNAL(newHeinzinger20kStatus(QString)), heinzinger20kWindow, SLOT(receiveHeinzingerStatus(QString)));
 		
         if(heinzinger20k_started)
             heinzinger20kWindow->heinzingerDeviceOn(true);
@@ -395,10 +397,12 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
 			HeinzingerPS * heinzinger30kDevice = new HeinzingerPS(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
 			setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
             connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
+            connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
         }else{
             RemoteDataDevice * heinzinger30kDevice = new RemoteDataDevice(heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
             setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
             connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
+            connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
 		}
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps30k");
@@ -411,6 +415,11 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
         heinzinger30kWindow->heinzingerDeviceOn(heinzinger30k_started);
 }
 
+void MainWindow::heinzinger30kStatus(QString status)
+{
+    emit newHeinzinger30kStatus(status);
+}
+
 void MainWindow::toggleHeinzinger20kDevice(bool start)
 {
 	bool local = config->deviceLocal(QString("heinzingerps20k"));
@@ -420,10 +429,12 @@ void MainWindow::toggleHeinzinger20kDevice(bool start)
 			HeinzingerPS * heinzinger20kDevice = new HeinzingerPS(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
 			setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
             connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
+            connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
         }else{
             RemoteDataDevice * heinzinger20kDevice = new RemoteDataDevice(heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
             setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
             connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
+            connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
 		}
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps20k");
@@ -434,6 +445,11 @@ void MainWindow::toggleHeinzinger20kDevice(bool start)
 	}
     if(heinzinger20kWindow_open)
         heinzinger20kWindow->heinzingerDeviceOn(heinzinger20k_started);
+}
+
+void MainWindow::heinzinger20kStatus(QString status)
+{
+    emit newHeinzinger20kStatus(status);
 }
 
 void MainWindow::toggleTaggerDevice(bool start)
