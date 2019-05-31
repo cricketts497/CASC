@@ -1,7 +1,7 @@
 #include "include/GenericGraph.h"
 #include <QtWidgets>
 
-GenericGraph::GenericGraph(const QString tag_path, const QString pdl_path, QMutex * tag_mutex, QMutex * pdl_mutex, QMainWindow *parent) :
+GenericGraph::GenericGraph(const QString tag_path, const QString pdl_path, const QString heinzinger30k_path, const QString heinzinger20k_path, QMutex * tag_mutex, QMutex * pdl_mutex, QMutex * heinzinger30k_mutex, QMutex * heinzinger20k_mutex, QMainWindow *parent) :
 QWidget(parent),
 binWidth(2),
 maxBinWidth(10000),
@@ -14,6 +14,13 @@ pdl_mutex(pdl_mutex),
 pdl_pos(0),
 pdl_started(false),
 pdlUpdateTime(100),
+heinzinger30k_mutex(heinzinger30k_mutex),
+heinzinger30k_pos(0),
+heinzinger30k_started(false),
+heinzinger20k_mutex(heinzinger20k_mutex),
+heinzinger20k_pos(0),
+heinzinger20k_started(false),
+heinzinger_updateTime(100),
 binned_changed(false),
 xStep(4),//as 4 axis divisions
 yStep(4),
@@ -74,6 +81,8 @@ min_tof(0.0)
 	yAxisCombo = new QComboBox(this);
 	yAxisCombo->addItem("Tagger counts");
 	yAxisCombo->addItem("Tagger rate / s^-1");
+	yAxisCombo->addItem("Heinzinger 30k voltage / V");
+	yAxisCombo->addItem("Heinzinger 20k voltage / V");
 	connect(yAxisCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeYAxis(int)));
 
 	QLabel *xAxisLabel = new QLabel("x:", this);
@@ -101,10 +110,17 @@ min_tof(0.0)
 	pdlUpdateTimer = new QTimer(this);
 	connect(pdlUpdateTimer, SIGNAL(timeout()), this, SLOT(updatePdl()));
 
+    heinzinger30k_file = new QFile(heinzinger30k_path, this);
+    heinzinger30k_updateTimer = new QTimer(this);
+    connect(heinzinger30k_updateTimer, SIGNAL(timeout()), this, SLOT(updateHeinzinger30k()));
+    
+    heinzinger20k_file = new QFile(heinzinger20k_path, this);
+    heinzinger20k_updateTimer = new QTimer(this);
+    connect(heinzinger20k_updateTimer, SIGNAL(timeout()), this, SLOT(updateHeinzinger20k()));
+
 	QTimer *graphUpdateTimer = new QTimer(this);
 	connect(graphUpdateTimer, SIGNAL(timeout()), this, SLOT(updateGraph()));
 	graphUpdateTimer->start(graphUpdateTime);
-
 }
 
 void GenericGraph::appendZeros()
@@ -112,8 +128,17 @@ void GenericGraph::appendZeros()
 	tag_times.append(0);
 	counts.append(0);
 	delts.append(0);
+    
 	pdl_wavenumbers.append(0);
 	pdl_counts.append(0);
+    
+    heinzinger30k_times.append(0);
+    heinzinger30k_voltages.append(0);
+    heinzinger30k_counts.append(0);
+    
+    heinzinger20k_times.append(0);
+    heinzinger20k_voltages.append(0);
+    heinzinger20k_counts.append(0);
 }
 
 void GenericGraph::clearAll()
@@ -121,8 +146,17 @@ void GenericGraph::clearAll()
 	tag_times.clear();
 	counts.clear();
 	delts.clear();
+    
 	pdl_wavenumbers.clear();
 	pdl_counts.clear();
+    
+    heinzinger30k_times.clear();
+    heinzinger30k_voltages.clear();
+    heinzinger30k_counts.clear();
+    
+    heinzinger20k_times.clear();
+    heinzinger20k_voltages.clear();
+    heinzinger20k_counts.clear();
 }
 
 //update graph with each new set of packets
@@ -359,6 +393,88 @@ void GenericGraph::binPdl_byPdl(qreal time, quint64 pdl_wavenumber)
 	pdl_counts[bindex]++;	
 }
 
+void GenericGraph::updateHeinzinger30k()
+{
+    qint64 cur_file_pos = heinzinger30k_pos;
+    
+    bool locked = heinzinger30k_mutex->tryLock();
+    if(!locked)
+        return;
+    
+    if(!heinzinger30k_file->open(QIODevice::ReadOnly)){
+        emit graph_message(QString("GRAPH ERROR: heinzinger30k_file->open()"));
+		heinzinger30k_mutex->unlock();
+		return;        
+    }
+    
+    qint64 timestamp;
+    quint64 voltage_applied;
+    quint64 voltage_decimal_applied;
+    qreal time;
+    qreal voltage;
+    
+    heinzinger30k_file->seek(heinzinger30k_pos);
+    QDataStream in(heinzinger30k_file);
+	if(heinzinger30k_pos == 0){
+		qint64 header;
+		in >> header;
+        if(start_time < 1)
+			start_time = qreal(header)/1000;
+	}
+	while(!heinzinger30k_file->atEnd()){
+		in >> timestamp >> voltage_applied >> voltage_decimal_applied;
+
+		//timestamp since epoch in ms
+		time = qreal(timestamp)/1000;
+		time -= start_time;
+        
+        voltage = QString("%1.%2").arg(voltage_applied).arg(voltage_decimal_applied).toDouble();
+
+		if(xAxisIndex != 0)
+            break;
+        
+        binHeinzinger30k_byTime(time, voltage);
+	}
+
+	heinzinger30k_pos = heinzinger30k_file->pos();
+	heinzinger30k_file->close();
+
+	heinzinger30k_mutex->unlock();
+
+	if(heinzinger30k_pos > cur_file_pos){
+		binned_changed = true;
+	}
+}
+
+void GenericGraph::binHeinzinger30k_byTime(qreal time, qreal voltage)
+{
+    //new bin
+	if(binEdges.isEmpty() || time >=binEdges[bindex].last() || time <binEdges[bindex].first()){
+		QVector<qreal> edge(1, int(time) - int(time)%binWidth);
+		edge.append(int(time) - int(time)%binWidth +binWidth);
+		if(binEdges.contains(edge)){
+			bindex = binEdges.indexOf(edge);
+		}else{
+			binEdges.append(edge);
+			appendZeros();
+			bindex = binEdges.size()-1;
+		}
+	}
+    heinzinger30k_times[bindex] += time;
+    heinzinger30k_voltages[bindex] += voltage;
+	heinzinger30k_counts[bindex]++;
+}
+
+void GenericGraph::updateHeinzinger20k()
+{
+    
+}
+
+void GenericGraph::binHeinzinger20k_byTime(qreal time, qreal voltage)
+{
+    
+       
+}
 
 void GenericGraph::checkMinMax(qreal x, qreal y)
 {
@@ -374,7 +490,7 @@ void GenericGraph::checkMinMax(qreal x, qreal y)
 
 void GenericGraph::updateGraph()
 {
-	if(!binned_changed || !tagger_started)
+	if(!binned_changed)
 		return;
 
 	series->clear();
@@ -382,9 +498,23 @@ void GenericGraph::updateGraph()
 	maxValueY = 0;
 	minValueX = 1e10;
 	// minValueY = 1e10;
-
+        
+    //voltages
+    if(yAxisIndex == 2){
+        if(xAxisIndex == 0){
+            for(int i=0; i<binEdges.size(); i++){
+                if(heinzinger30k_counts.at(i) <= 0)
+                    continue;
+                qreal x = heinzinger30k_times.at(i)/heinzinger30k_counts.at(i);
+                qreal y = heinzinger30k_voltages.at(i)/heinzinger30k_counts.at(i);
+                
+                checkMinMax(x,y);
+                
+                series->append(x,y);
+            }
+        }
 	//time
-	if(xAxisIndex == 0){
+	}else if(xAxisIndex == 0){
 		//counts
 		if(yAxisIndex == 0){
 			for(int i=0; i<binEdges.size(); i++){
@@ -492,6 +622,16 @@ void GenericGraph::changeBinWidth()
 		tag_pos = 0;
 		updateTag();
 	}
+    
+    if(heinzinger30k_started){
+        heinzinger30k_pos = 0;
+        updateHeinzinger30k();
+    }
+    
+    if(heinzinger20k_started){
+        heinzinger20k_pos = 0;
+        updateHeinzinger20k();
+    }
 
 	resetAxes();
 }
@@ -524,15 +664,30 @@ void GenericGraph::changeXAxis(int newIndex)
 //When the parameter on the y-axis is changed using the combo box
 void GenericGraph::changeYAxis(int newIndex)
 {
-	yAxisIndex = newIndex;
 	//counts
 	if(newIndex == 0){
+        yAxisIndex = newIndex;
 		yAxis->setTitleText("Counts");
+        resetAxes();
 	//rate
 	}else if(newIndex == 1){
+        yAxisIndex = newIndex;
 		yAxis->setTitleText("Rate / s^-1");
-	}
-	resetAxes();
+        resetAxes();
+	}else if(newIndex == 2){
+        if(heinzinger30k_started && xAxisIndex == 0){
+            yAxisIndex = newIndex;
+            yAxis->setTitleText("Heinzinger 30k voltage / V");
+            changeBinWidth();
+        }
+    }else if(newIndex == 3){
+        if(heinzinger20k_started && xAxisIndex == 0){
+            yAxisIndex = newIndex;
+            yAxis->setTitleText("Heinzinger 20k voltage / V");
+            changeBinWidth();
+        }
+    }
+	
 }
 
 //When tagger device is started
@@ -556,6 +711,20 @@ void GenericGraph::newPdl()
 // 	xAxisCombo->setCurrentIndex(0);
 // 	pdl_started = false;
 // }
+
+void GenericGraph::newHeinzinger30k()
+{
+    heinzinger30k_updateTimer->start(heinzinger_updateTime);
+    heinzinger30k_started = true;
+    changeBinWidth();
+}
+
+void GenericGraph::newHeinzinger20k()
+{
+    heinzinger20k_updateTimer->start(heinzinger_updateTime);
+    heinzinger20k_started = true;
+    changeBinWidth();
+}
 
 //when the reset axes push button is pressed
 void GenericGraph::resetAxes()

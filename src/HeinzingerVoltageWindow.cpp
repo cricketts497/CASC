@@ -161,7 +161,7 @@ void HeinzingerVoltageWindow::readVoltage()
         return;
     }
     
-    if(voltage_file->size() > 16){
+    if(voltage_file->size() > 32){
         //get the final voltage value, two quint64, one for integer, one for numbers after decimal point => 16 bytes back from end
         voltage_file->seek(voltage_file->size()-16);
         QDataStream in(voltage_file);

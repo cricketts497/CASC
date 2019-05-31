@@ -26,14 +26,14 @@ heinzinger20k_started(false)
 	createStatusBar();
 	createDevicesBar();
 
-	centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, this);
+	centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, heinzinger30k_temp_path, heinzinger20k_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, &heinzinger30kFileMutex, &heinzinger20kFileMutex, this);
 	// centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	
 	connect(centralGraph, SIGNAL(newEdge(qreal)), this, SLOT(setStatusValue(qreal)));
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v2.2");
+	setWindowTitle("CASC v2.3");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -407,6 +407,7 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps30k");
 		heinzinger30k_started = true;
+        centralGraph->newHeinzinger30k();
 	}else{
 		//stop_device slot connection in setupDevice() below
 		heinzinger30k_started = false;
@@ -439,6 +440,7 @@ void MainWindow::toggleHeinzinger20kDevice(bool start)
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps20k");
 		heinzinger20k_started = true;
+        centralGraph->newHeinzinger20k();
 	}else{
 		//stop_device slot connection in setupDevice() below
 		heinzinger20k_started = false;

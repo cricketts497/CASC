@@ -9,10 +9,12 @@ class GenericGraph : public QWidget
 	Q_OBJECT
 
 public:
-	GenericGraph(const QString tag_path, const QString pdl_path, QMutex * tag_mutex, QMutex * pdl_mutex, QMainWindow *parent);
+	GenericGraph(const QString tag_path, const QString pdl_path, const QString heinzinger30k_path, const QString heinzinger20k_path, QMutex * tag_mutex, QMutex * pdl_mutex, QMutex * heinzinger30k_mutex, QMutex * heinzinger20k_mutex, QMainWindow *parent);
 	void newTagger();
 	void newPdl();
-	void closedPdl();
+	// void closedPdl();
+    void newHeinzinger30k();
+    void newHeinzinger20k();
 
 signals:
 	void newEdge(qreal edge);
@@ -21,6 +23,9 @@ signals:
 private slots:
 	void updateTag();
 	void updatePdl();
+    void updateHeinzinger30k();
+    void updateHeinzinger20k();
+    
 	void updateGraph();
 	void changeBinWidth();
 	void changeXAxis(int newIndex);
@@ -111,6 +116,32 @@ private:
 	QVector<uint> binEdges_pdl;
 	
 	// uint pdl_wavenumber_edge;
+
+    //heinzinger 30k data
+    void binHeinzinger30k_byTime(qreal time, qreal voltage);
+    QFile * heinzinger30k_file;
+    QMutex * heinzinger30k_mutex;
+    qint64 heinzinger30k_pos;
+    bool heinzinger30k_started;
+    QTimer * heinzinger30k_updateTimer;
+    
+    QVector<qreal> heinzinger30k_times;
+    QVector<qreal> heinzinger30k_voltages;
+	QVector<qreal> heinzinger30k_counts;
+    
+    //heinzinger 20k data
+    void binHeinzinger20k_byTime(qreal time, qreal voltage);
+    QFile * heinzinger20k_file;
+    QMutex * heinzinger20k_mutex;
+    qint64 heinzinger20k_pos;
+    bool heinzinger20k_started;
+    QTimer * heinzinger20k_updateTimer;
+    
+    QVector<qreal> heinzinger20k_times;
+    QVector<qreal> heinzinger20k_voltages;
+	QVector<qreal> heinzinger20k_counts;
+
+    const uint heinzinger_updateTime;
 
 	//debug
 	// int holder = 1e4;
