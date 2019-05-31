@@ -467,13 +467,74 @@ void GenericGraph::binHeinzinger30k_byTime(qreal time, qreal voltage)
 
 void GenericGraph::updateHeinzinger20k()
 {
+    qint64 cur_file_pos = heinzinger20k_pos;
     
+    bool locked = heinzinger20k_mutex->tryLock();
+    if(!locked)
+        return;
+    
+    if(!heinzinger20k_file->open(QIODevice::ReadOnly)){
+        emit graph_message(QString("GRAPH ERROR: heinzinger20k_file->open()"));
+		heinzinger20k_mutex->unlock();
+		return;        
+    }
+    
+    qint64 timestamp;
+    quint64 voltage_applied;
+    quint64 voltage_decimal_applied;
+    qreal time;
+    qreal voltage;
+    
+    heinzinger20k_file->seek(heinzinger20k_pos);
+    QDataStream in(heinzinger20k_file);
+	if(heinzinger20k_pos == 0){
+		qint64 header;
+		in >> header;
+        if(start_time < 1)
+			start_time = qreal(header)/1000;
+	}
+	while(!heinzinger20k_file->atEnd()){
+		in >> timestamp >> voltage_applied >> voltage_decimal_applied;
+
+		//timestamp since epoch in ms
+		time = qreal(timestamp)/1000;
+		time -= start_time;
+        
+        voltage = QString("%1.%2").arg(voltage_applied).arg(voltage_decimal_applied).toDouble();
+
+		if(xAxisIndex != 0)
+            break;
+        
+        binHeinzinger20k_byTime(time, voltage);
+	}
+
+	heinzinger20k_pos = heinzinger20k_file->pos();
+	heinzinger20k_file->close();
+
+	heinzinger20k_mutex->unlock();
+
+	if(heinzinger20k_pos > cur_file_pos){
+		binned_changed = true;
+	}
 }
 
 void GenericGraph::binHeinzinger20k_byTime(qreal time, qreal voltage)
 {
-    
-       
+    //new bin
+	if(binEdges.isEmpty() || time >=binEdges[bindex].last() || time <binEdges[bindex].first()){
+		QVector<qreal> edge(1, int(time) - int(time)%binWidth);
+		edge.append(int(time) - int(time)%binWidth +binWidth);
+		if(binEdges.contains(edge)){
+			bindex = binEdges.indexOf(edge);
+		}else{
+			binEdges.append(edge);
+			appendZeros();
+			bindex = binEdges.size()-1;
+		}
+	}
+    heinzinger20k_times[bindex] += time;
+    heinzinger20k_voltages[bindex] += voltage;
+	heinzinger20k_counts[bindex]++;
 }
 
 void GenericGraph::checkMinMax(qreal x, qreal y)
@@ -499,7 +560,7 @@ void GenericGraph::updateGraph()
 	minValueX = 1e10;
 	// minValueY = 1e10;
         
-    //voltages
+    //30k voltage
     if(yAxisIndex == 2){
         if(xAxisIndex == 0){
             for(int i=0; i<binEdges.size(); i++){
@@ -507,6 +568,20 @@ void GenericGraph::updateGraph()
                     continue;
                 qreal x = heinzinger30k_times.at(i)/heinzinger30k_counts.at(i);
                 qreal y = heinzinger30k_voltages.at(i)/heinzinger30k_counts.at(i);
+                
+                checkMinMax(x,y);
+                
+                series->append(x,y);
+            }
+        }
+    //20k voltage
+    }else if(yAxisIndex == 3){
+        if(xAxisIndex == 0){
+            for(int i=0; i<binEdges.size(); i++){
+                if(heinzinger20k_counts.at(i) <= 0)
+                    continue;
+                qreal x = heinzinger20k_times.at(i)/heinzinger20k_counts.at(i);
+                qreal y = heinzinger20k_voltages.at(i)/heinzinger20k_counts.at(i);
                 
                 checkMinMax(x,y);
                 
@@ -664,6 +739,13 @@ void GenericGraph::changeXAxis(int newIndex)
 //When the parameter on the y-axis is changed using the combo box
 void GenericGraph::changeYAxis(int newIndex)
 {
+    if(heinzinger30k_updateTimer->isActive()){
+        heinzinger30k_updateTimer->stop();
+    }
+    if(heinzinger20k_updateTimer->isActive()){
+        heinzinger20k_updateTimer->stop();
+    }
+    
 	//counts
 	if(newIndex == 0){
         yAxisIndex = newIndex;
@@ -679,12 +761,18 @@ void GenericGraph::changeYAxis(int newIndex)
             yAxisIndex = newIndex;
             yAxis->setTitleText("Heinzinger 30k voltage / V");
             changeBinWidth();
+            heinzinger30k_updateTimer->start(heinzinger_updateTime);
+        }else{
+            yAxisCombo->setCurrentIndex(0);
         }
     }else if(newIndex == 3){
         if(heinzinger20k_started && xAxisIndex == 0){
             yAxisIndex = newIndex;
             yAxis->setTitleText("Heinzinger 20k voltage / V");
             changeBinWidth();
+            heinzinger20k_updateTimer->start(heinzinger_updateTime);
+        }else{
+            yAxisCombo->setCurrentIndex(0);
         }
     }
 	
@@ -714,14 +802,14 @@ void GenericGraph::newPdl()
 
 void GenericGraph::newHeinzinger30k()
 {
-    heinzinger30k_updateTimer->start(heinzinger_updateTime);
+    // heinzinger30k_updateTimer->start(heinzinger_updateTime);
     heinzinger30k_started = true;
     changeBinWidth();
 }
 
 void GenericGraph::newHeinzinger20k()
 {
-    heinzinger20k_updateTimer->start(heinzinger_updateTime);
+    // heinzinger20k_updateTimer->start(heinzinger_updateTime);
     heinzinger20k_started = true;
     changeBinWidth();
 }
