@@ -9,7 +9,7 @@ currentEdit(new QDoubleSpinBox(this)),
 currentSetButton(new DeviceButton("Set amps", this, "Set the current limit on the device", "", "SET AMPS FAIL")),
 outputButton(new DeviceButton("Output off", this, "Turn on the output", "Turn off the output", "OUTPUT FAIL")),
 voltageReadTimer(new QTimer(this)),
-voltageReadTimeout(2399),
+voltageReadTimeout(500),
 voltageFileMutex(voltageFileMutex)
 {
 	QWidget * widget = new QWidget(this);
@@ -183,20 +183,26 @@ void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
     if(status_list.size() != 4)
         return;
     
-    bool voltageSet = false;
+    // bool voltageSet = false;
     int voltage_setpoint = status_list.at(1).toInt();
     if(voltage_setpoint != voltageEdit->value() && !voltageEdit->hasFocus()){
-        voltageEdit->setValue(voltage_setpoint);
+        // voltageEdit->setValue(voltage_setpoint);
+        // voltageSetButton->toggle();
+        // voltageSet = true;
+        voltageChanged();
+    }else if(voltage_setpoint == voltageEdit->value() && !voltageSetButton->started && voltage_setpoint != 0){
         voltageSetButton->toggle();
-        voltageSet = true;
     }
     
     qreal current_setpoint = status_list.at(2).toDouble();
     if(current_setpoint != currentEdit->value() && !currentEdit->hasFocus()){
-        currentEdit->setValue(current_setpoint);
+        // currentEdit->setValue(current_setpoint);
+        // currentSetButton->toggle();
+        // if(voltageSet)
+            // outputButton->setEnabled(true);
+        currentChanged();
+    }else if(current_setpoint == currentEdit->value() && !currentSetButton->started && current_setpoint !=0){
         currentSetButton->toggle();
-        if(voltageSet)
-            outputButton->setEnabled(true);
     }
     
     if(status_list.at(3) == QString("1") && !outputButton->started){

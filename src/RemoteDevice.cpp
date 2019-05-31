@@ -4,7 +4,7 @@ RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * pa
 CascDevice(deviceName, config, parent),
 socket(new QTcpSocket(this)),
 get_status_timer(new QTimer(this)),
-get_status_timeout(3000)
+get_status_timeout(1000)
 {
 	if(device_failed)
 		return;
@@ -61,18 +61,17 @@ void RemoteDevice::remoteDeviceCommand(QString device_com, bool toListener)
     
     if(toListener){
         socket->connectToHost(hostAddress, hostListenPort);
-        connection_timer->start();
     }else if(socket->state() == QAbstractSocket::UnconnectedState){
         socket->connectToHost(hostAddress, hostDevicePort);
-        connection_timer->start();
     }
+    connection_timer->start();
 }
 
 void RemoteDevice::writeCommand()
 {    
     QString remoteCommand = remoteDeviceCommandQueue.dequeue();
     
-    emit device_message(QString("Remote device: %1: writing command %2").arg(device_name).arg(remoteCommand));
+    // emit device_message(QString("Remote device: %1: writing command %2").arg(device_name).arg(remoteCommand));
     
     socket->write(remoteCommand.toUtf8());
 }
