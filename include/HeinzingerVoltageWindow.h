@@ -19,9 +19,9 @@ public slots:
 private slots:
     void voltageChanged();
     void currentChanged();
-	void setVoltage(bool set);
-    void setCurrent(bool set);
-    void setOutput(bool start);
+	void setVoltage();
+    void setCurrent();
+    void setOutput();
     
     void readVoltage();
 	
@@ -43,6 +43,8 @@ private:
     
     quint64 applied_voltage_int;
     quint64 applied_voltage_decimal;
+    
+    bool output_on;
 };
 
 

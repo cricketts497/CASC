@@ -22,7 +22,7 @@ deviceStatus(QString("status")),
 device_failed(false),
 connection_timeout(3000),
 broadcast_status_timer(new QTimer(this)),
-broadcast_status_timeout(1000)
+broadcast_status_timeout(5000)
 {
 	connection_timer->setSingleShot(true);
 	connection_timer->setInterval(connection_timeout);

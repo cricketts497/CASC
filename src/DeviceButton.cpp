@@ -20,7 +20,6 @@ failTip(failTip)
 	setStatusTip(startTip);
 
 	connect(this, &QAbstractButton::clicked, this, &DeviceButton::toggle);
-
 }
 
 // void DeviceButton::setButtonColour(QColor colour)
@@ -48,7 +47,7 @@ void DeviceButton::toggle()
 		setStatusTip(startTip);
 		
 		emit toggle_device(false);
-	} else{
+	}else{
 		setFlat(true);
 		
 		// setButtonColour(ok_colour);

@@ -28,14 +28,14 @@ voltageFileMutex(voltageFileMutex)
     
     voltageSetButton->setEnabled(false);
     connect(voltageEdit, SIGNAL(valueChanged(int)), this, SLOT(voltageChanged()));
-	connect(voltageSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setVoltage(bool)));
+	connect(voltageSetButton, &QAbstractButton::clicked, this, &HeinzingerVoltageWindow::setVoltage);
     
     currentSetButton->setEnabled(false);
     connect(currentEdit, SIGNAL(valueChanged(double)), this, SLOT(currentChanged()));
-	connect(currentSetButton, SIGNAL(toggle_device(bool)), this, SLOT(setCurrent(bool)));
+	connect(currentSetButton, &QAbstractButton::clicked, this, &HeinzingerVoltageWindow::setCurrent);
     
     outputButton->setEnabled(false);
-    connect(outputButton, SIGNAL(toggle_device(bool)), this, SLOT(setOutput(bool)));
+    connect(outputButton, &QAbstractButton::clicked, this, &HeinzingerVoltageWindow::setOutput);
     connect(this, SIGNAL(widget_fail()), outputButton, SLOT(setFail()));
 	
 	QLabel * voltageEditLabel = new QLabel("V", this);
@@ -70,10 +70,16 @@ voltageFileMutex(voltageFileMutex)
 
 void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
 {
-    if(on && !currentSetButton->started && !voltageSetButton->started){
+    if(on){
+        if(currentSetButton->started){
+            currentSetButton->toggle();
+        } 
+        if(voltageSetButton->started){
+            voltageSetButton->toggle();
+        }        
         currentSetButton->setEnabled(true);
         voltageSetButton->setEnabled(true);
-    }else if(!on){
+    }else{
         currentSetButton->setEnabled(false);
         voltageSetButton->setEnabled(false);
         outputButton->setEnabled(false);
@@ -85,7 +91,7 @@ void HeinzingerVoltageWindow::voltageChanged()
     //set the voltageSetButton to off
     if(voltageSetButton->started){
         voltageSetButton->toggle();
-        voltageSetButton->setEnabled(true);
+        // voltageSetButton->setEnabled(true);
     }
 }
 
@@ -94,54 +100,52 @@ void HeinzingerVoltageWindow::currentChanged()
     //set the currentSetButton to off
     if(currentSetButton->started){
         currentSetButton->toggle();
-        currentSetButton->setEnabled(true);
+        // currentSetButton->setEnabled(true);
     }
 }
 
-void HeinzingerVoltageWindow::setVoltage(bool set)
+void HeinzingerVoltageWindow::setVoltage()
 {
-    if(set){
-        uint voltage = uint(voltageEdit->value());
-        
-        QString outString;
-        QTextStream out(&outString);
-        out << "VOLT_" << voltage;
-        
-        emit sendCommand(out.readAll());
-        voltageSetButton->setEnabled(false);
-        
-        if(currentSetButton->started)
-            outputButton->setEnabled(true);
-    }
+    uint voltage = uint(voltageEdit->value());
+    
+    QString outString;
+    QTextStream out(&outString);
+    out << "VOLT_" << voltage;
+    
+    emit sendCommand(out.readAll());
+    // voltageSetButton->setEnabled(false);
+    
+    if(currentSetButton->started)
+        outputButton->setEnabled(true);
 }
 
-void HeinzingerVoltageWindow::setCurrent(bool set)
+void HeinzingerVoltageWindow::setCurrent()
 {
-    if(set){
-        qreal current = currentEdit->value();
-        
-        QString outString;
-        QTextStream out(&outString);
-        out << "CURR_" << current;
-        
-        emit sendCommand(out.readAll());
-        currentSetButton->setEnabled(false);
-        
-        if(voltageSetButton->started)
-            outputButton->setEnabled(true);
-    }
+    qreal current = currentEdit->value();
+    
+    QString outString;
+    QTextStream out(&outString);
+    out << "CURR_" << current;
+    
+    emit sendCommand(out.readAll());
+    // currentSetButton->setEnabled(false);
+    
+    if(voltageSetButton->started)
+        outputButton->setEnabled(true);
 }
 
-void HeinzingerVoltageWindow::setOutput(bool start)
+void HeinzingerVoltageWindow::setOutput()
 {
-    if(start){
+    if(!output_on){
         outputButton->setText("Output on");
         emit sendCommand(QString("OUTP_1"));
         voltageReadTimer->start();
+        output_on = true;
     }else{
         outputButton->setText("Output off");
         emit sendCommand(QString("OUTP_0"));
         voltageReadTimer->stop();
+        output_on = false;
     }
 }
 
@@ -175,19 +179,35 @@ void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
     //status, voltage setpoint, current setpoint, output setpoint
     QStringList status_list = status.split("_");
     
+    //check for the correct format
+    if(status_list.size() != 4)
+        return;
+    
+    bool voltageSet = false;
     int voltage_setpoint = status_list.at(1).toInt();
-    if(voltage_setpoint != voltageEdit->value()){
+    if(voltage_setpoint != voltageEdit->value() && !voltageEdit->hasFocus()){
         voltageEdit->setValue(voltage_setpoint);
         voltageSetButton->toggle();
+        voltageSet = true;
     }
     
     qreal current_setpoint = status_list.at(2).toDouble();
-    if(current_setpoint != currentEdit->value()){
+    if(current_setpoint != currentEdit->value() && !currentEdit->hasFocus()){
         currentEdit->setValue(current_setpoint);
         currentSetButton->toggle();
+        if(voltageSet)
+            outputButton->setEnabled(true);
     }
     
-    if((status_list.at(3) == QString("1") && !outputButton->started) || (status_list.at(3) == QString("0") && outputButton->started)){
+    if(status_list.at(3) == QString("1") && !outputButton->started){
         outputButton->toggle();
+        outputButton->setText("Output on");
+        voltageReadTimer->start();
+        output_on = true;
+    }else if(status_list.at(3) == QString("0") && outputButton->started){
+        outputButton->toggle();
+        outputButton->setText("Output off");
+        voltageReadTimer->stop();
+        output_on = false;
     }
 }

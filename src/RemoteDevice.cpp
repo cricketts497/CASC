@@ -47,7 +47,9 @@ void RemoteDevice::stop_device()
 
 void RemoteDevice::get_status()
 {
-    remoteDeviceCommand(QString(askStatusMessage));
+    //don't ask for the status while sending a command
+    if(!connection_timer->isActive())
+        remoteDeviceCommand(QString(askStatusMessage));
 }
 
 //////////////////////////////////////////////////////////
@@ -70,7 +72,7 @@ void RemoteDevice::writeCommand()
 {    
     QString remoteCommand = remoteDeviceCommandQueue.dequeue();
     
-    // emit device_message(QString("Remote device: %1: writing command %2").arg(device_name).arg(remoteCommand));
+    emit device_message(QString("Remote device: %1: writing command %2").arg(device_name).arg(remoteCommand));
     
     socket->write(remoteCommand.toUtf8());
 }

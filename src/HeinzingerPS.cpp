@@ -79,7 +79,7 @@ averages_set(0)
     writeCommand(QString("*RST \n"));
     
     //voltage setpoint, current setpoint, output on
-    deviceStatus = QString("0_0_0");
+    deviceStatus = QString("status_0_0_0");
 }
 
 //Set the voltage to zero and turn off the output
