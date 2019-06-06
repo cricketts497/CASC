@@ -18,7 +18,8 @@ data_saver_started(false),
 fake_tagger_started(false),
 tagger_started(false),
 heinzinger30k_started(false),
-heinzinger20k_started(false)
+heinzinger20k_started(false),
+wavemeterPdl_started(false)
 {
 	messages.setString(&messages_string);
 
@@ -118,6 +119,9 @@ void MainWindow::createDevicesBar()
     heinzinger20kDeviceButton = new DeviceButton("Heinzinger 20kV", devicesBar, "Start the heinzinger 20kV power supply device", "Stop the heinzinger 20kV device", "HEINZINGER 20K FAIL");
 	connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger20kDevice(bool)));
 
+    wavemeterPdlDeviceButton = new DeviceButton("Wavemeter PDL", devicesBar, "Start the WS6 wavemeter device for the dye lasers", "Stop the WS6 wavemeter device", "WAVEMETER PDL FAIL");
+    connect(wavemeterPdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleWavemeterPdlDevice(bool)));
+
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
     devicesBar->addWidget(dataSaverDeviceButton);
@@ -126,13 +130,14 @@ void MainWindow::createDevicesBar()
 	// devicesBar->addWidget(taggerDeviceButton);
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
+    devicesBar->addWidget(wavemeterPdlDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
 }
 
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //widgets
 void MainWindow::toggleTof()
@@ -454,6 +459,25 @@ void MainWindow::heinzinger20kStatus(QString status)
     emit newHeinzinger20kStatus(status);
 }
 
+void MainWindow::toggleWavemeterPdlDevice(bool start)
+{
+    bool local = config->deviceLocal(QString("wavemeterpdl"));
+	
+	if(start){
+		if(local){
+			WavemeterPdl * wavemeterPdlDevice = new WavemeterPdl(config);
+			setupDevice(wavemeterPdlDevice, wavemeterPdlDeviceButton, &wavemeterPdlDeviceThread);
+        }else{
+            RemoteDevice * wavemeterPdlDevice = new RemoteDevice(QString("wavemeterpdl"), config);
+            setupDevice(wavemeterPdlDevice, wavemeterPdlDeviceButton, &wavemeterPdlDeviceThread);
+		}
+		wavemeterPdl_started = true;
+	}else{
+		//stop_device slot connection in setupDevice() below
+		wavemeterPdl_started = false;
+	}   
+}
+
 void MainWindow::toggleTaggerDevice(bool start)
 {
 	if(start){
@@ -487,6 +511,8 @@ void MainWindow::toggleDevice(QString device, bool start)
         heinzinger20kDeviceButton->click();
     else if(device == "datasaver" && ((start && !data_saver_started && !dataSaverDeviceButton->started) || (!start && data_saver_started && dataSaverDeviceButton->started)))
         dataSaverDeviceButton->click();
+    else if(device == "wavemeterpdl" && ((start && !wavemeterPdl_started && !wavemeterPdlDeviceButton->started) || (!start && wavemeterPdl_started && wavemeterPdlDeviceButton->started)))
+        wavemeterPdlDeviceButton->click();
 }
 
 void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)

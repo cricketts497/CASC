@@ -14,8 +14,9 @@ test_process(new QProcess(this))
 }
 
 void WavemeterPdl::test_process_output()
-{
+{    
     QString output = QString(test_process->readAllStandardOutput());
     
+    storeMessage(QString("Local wavemeterpdl: Test output: %1").arg(output), false);
     emit device_message(QString("Local wavemeterpdl: Test output: %1").arg(output));
 }

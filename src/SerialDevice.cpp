@@ -151,7 +151,7 @@ void SerialDevice::readResponse()
         serial_timer->stop();
     
     //wait for the rest of the response
-    QThread::msleep(500);
+    QThread::msleep(50);
     
 	QByteArray resp = serial_port->readAll();
 	QString response = QString::fromUtf8(resp);

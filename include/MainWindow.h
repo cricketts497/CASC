@@ -18,6 +18,7 @@
 #include "include/DataSaver.h"
 #include "include/DummyScanner.h"
 #include "include/RemoteDataSaver.h"
+#include "include/WavemeterPdl.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -61,6 +62,7 @@ private slots:
 	void toggleTaggerDevice(bool start);
 	void toggleHeinzinger30kDevice(bool start);
 	void toggleHeinzinger20kDevice(bool start);
+    void toggleWavemeterPdlDevice(bool start);
     
     void heinzinger30kStatus(QString status);
     void heinzinger20kStatus(QString status);
@@ -106,6 +108,7 @@ private:
     //base path containing the scan directories
     const QString finalBasePath = "./data";
 
+    //file mutexes to prevent files frombeinig opened concurently in separate threads
 	QMutex fakeTaggerFileMutex;
 	QMutex fakePdlFileMutex;
 	QMutex heinzinger30kFileMutex;
@@ -170,6 +173,9 @@ private:
 	bool heinzinger20k_started;
 	QThread heinzinger20kDeviceThread;
 
+    DeviceButton * wavemeterPdlDeviceButton;
+    bool wavemeterPdl_started;
+    QThread wavemeterPdlDeviceThread;
 };
 
 #endif //MAIN_WINDOW_H
