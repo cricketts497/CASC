@@ -477,7 +477,7 @@ void HeinzingerPS::responseAppliedVoltage(QString response)
     voltage_applied = response_voltage;
     voltage_decimal_applied = response_decimal;
     
-    //write the voltage to file witha timestamp
+    //write the voltage to file with a timestamp
 	QMutexLocker file_locker(file_mutex);
 	if(!data_file->open(QIODevice::Append)){
 		emit device_message(QString("LOCAL HEINZINGER ERROR: %1: voltage_file->open(append)").arg(device_name));

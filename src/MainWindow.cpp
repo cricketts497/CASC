@@ -30,7 +30,6 @@ wavemeterPdl_started(false)
 	centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, heinzinger30k_temp_path, heinzinger20k_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, &heinzinger30kFileMutex, &heinzinger20kFileMutex, this);
 	// centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	
-	connect(centralGraph, SIGNAL(newEdge(qreal)), this, SLOT(setStatusValue(qreal)));
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
@@ -119,8 +118,8 @@ void MainWindow::createDevicesBar()
     heinzinger20kDeviceButton = new DeviceButton("Heinzinger 20kV", devicesBar, "Start the heinzinger 20kV power supply device", "Stop the heinzinger 20kV device", "HEINZINGER 20K FAIL");
 	connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger20kDevice(bool)));
 
-    wavemeterPdlDeviceButton = new DeviceButton("Wavemeter PDL", devicesBar, "Start the WS6 wavemeter device for the dye lasers", "Stop the WS6 wavemeter device", "WAVEMETER PDL FAIL");
-    connect(wavemeterPdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleWavemeterPdlDevice(bool)));
+    // wavemeterPdlDeviceButton = new DeviceButton("Wavemeter PDL", devicesBar, "Start the WS6 wavemeter device for the dye lasers", "Stop the WS6 wavemeter device", "WAVEMETER PDL FAIL");
+    // connect(wavemeterPdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleWavemeterPdlDevice(bool)));
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
@@ -130,7 +129,7 @@ void MainWindow::createDevicesBar()
 	// devicesBar->addWidget(taggerDeviceButton);
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
-    devicesBar->addWidget(wavemeterPdlDeviceButton);
+    // devicesBar->addWidget(wavemeterPdlDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -412,7 +411,7 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps30k");
 		heinzinger30k_started = true;
-        centralGraph->newHeinzinger30k();
+        // centralGraph->newHeinzinger30k();
 	}else{
 		//stop_device slot connection in setupDevice() below
 		heinzinger30k_started = false;
@@ -445,7 +444,7 @@ void MainWindow::toggleHeinzinger20kDevice(bool start)
         //tell the data saver PC to start requesting new heinzingerps data
         dataSaverStart("heinzingerps20k");
 		heinzinger20k_started = true;
-        centralGraph->newHeinzinger20k();
+        // centralGraph->newHeinzinger20k();
 	}else{
 		//stop_device slot connection in setupDevice() below
 		heinzinger20k_started = false;

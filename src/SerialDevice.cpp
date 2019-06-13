@@ -3,6 +3,7 @@
 SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
 serial_timeout(2000),
+serial_response_wait(300),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
 commandInProgress(false)
@@ -147,20 +148,22 @@ bool SerialDevice::writeCommand(QString command, bool response)
 
 void SerialDevice::readResponse()
 {
+    if(!expectResponse)
+        return;
+    
     if(serial_timer->isActive())
         serial_timer->stop();
     
     //wait for the rest of the response
-    QThread::msleep(50);
+    QThread::msleep(serial_response_wait);
     
-	QByteArray resp = serial_port->readAll();
-	QString response = QString::fromUtf8(resp);
-	
+    QByteArray resp = serial_port->readAll();
+    QString response = QString::fromUtf8(resp);
+    
+    emit newSerialResponse(response);
     commandInProgress = false;
-	emit newSerialResponse(response);
     emit serialComFinished();
 }
-
 
 //error handling
 /////////////////////////////////////////////////////////////

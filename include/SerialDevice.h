@@ -30,6 +30,7 @@ protected:
     void setFlowControl(int type);
     
     const int serial_timeout;
+    const int serial_response_wait;
     
     QQueue<QString> serialCommandQueue;
     bool writeCommand(QString command, bool response=false);

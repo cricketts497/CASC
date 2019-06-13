@@ -21,6 +21,7 @@ heinzinger20k_mutex(heinzinger20k_mutex),
 heinzinger20k_pos(0),
 heinzinger20k_started(false),
 heinzinger_updateTime(100),
+max_heinzinger_points(500),
 binned_changed(false),
 xStep(4),//as 4 axis divisions
 yStep(4),
@@ -416,10 +417,13 @@ void GenericGraph::updateHeinzinger30k()
     heinzinger30k_file->seek(heinzinger30k_pos);
     QDataStream in(heinzinger30k_file);
 	if(heinzinger30k_pos == 0){
-		qint64 header;
-		in >> header;
+        qint64 header;
+        in >> header;
         if(start_time < 1)
-			start_time = qreal(header)/1000;
+            start_time = qreal(header)/1000;
+        if(heinzinger30k_file->size() > max_heinzinger_points*24+8){
+            heinzinger30k_file->seek(heinzinger30k_file->size()-max_heinzinger_points*24);
+        }
 	}
 	while(!heinzinger30k_file->atEnd()){
 		in >> timestamp >> voltage_applied >> voltage_decimal_applied;
@@ -492,6 +496,9 @@ void GenericGraph::updateHeinzinger20k()
 		in >> header;
         if(start_time < 1)
 			start_time = qreal(header)/1000;
+        if(heinzinger20k_file->size() > max_heinzinger_points*24+8){
+            heinzinger20k_file->seek(heinzinger20k_file->size()-max_heinzinger_points*24);
+        }
 	}
 	while(!heinzinger20k_file->atEnd()){
 		in >> timestamp >> voltage_applied >> voltage_decimal_applied;

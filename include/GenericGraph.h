@@ -142,6 +142,7 @@ private:
 	QVector<qreal> heinzinger20k_counts;
 
     const uint heinzinger_updateTime;
+    const qint64 max_heinzinger_points;
 
 	//debug
 	// int holder = 1e4;
