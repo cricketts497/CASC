@@ -4,9 +4,12 @@ SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString devic
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
 serial_timeout(2000),
 serial_response_wait(300),
+noResponseMessage(QString("NORESP")),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
-commandInProgress(false)
+commandInProgress(false),
+missing_serial_response_count(0),
+missing_serial_response_limit(3)//failure if miss three responses in a row
 {
 	if(device_failed)
 		return;
@@ -20,9 +23,7 @@ commandInProgress(false)
     //error handling
 	connect(serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialError()));
 	connect(serial_timer, SIGNAL(timeout()), this, SLOT(serialTimeout()));
-    
-    // connect(this, SIGNAL(device_fail()), this, SLOT(stop_device()));
-    
+        
     //response handling
 	connect(serial_port, SIGNAL(readyRead()), serial_timer, SLOT(stop()));
     connect(serial_port, SIGNAL(readyRead()), this, SLOT(readResponse()));
@@ -154,6 +155,8 @@ void SerialDevice::readResponse()
     if(serial_timer->isActive())
         serial_timer->stop();
     
+    missing_serial_response_count = 0;
+    
     //wait for the rest of the response
     QThread::msleep(serial_response_wait);
     
@@ -183,10 +186,14 @@ void SerialDevice::serialTimeout()
     
 	storeMessage(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout").arg(device_name), true);
 	emit device_message(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout").arg(device_name));
-	emit device_fail();
-	
-	if(serial_port->isOpen())
-		serial_port->close();
+    
+    missing_serial_response_count++;
+    if(missing_serial_response_count >= missing_serial_response_limit){
+        emit device_fail();
+    }else{
+        emit newSerialResponse(noResponseMessage);
+        emit serialComFinished();
+    }
 }
 
 
@@ -204,11 +211,3 @@ void SerialDevice::serialError()
         emit device_fail();
     }
 }
-
-
-
-
-
-
-
-

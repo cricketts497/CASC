@@ -34,6 +34,8 @@ protected:
     
     QQueue<QString> serialCommandQueue;
     bool writeCommand(QString command, bool response=false);
+    
+    const QString noResponseMessage;
 
 private slots:
 	void readResponse();
@@ -48,6 +50,9 @@ private:
     
     bool expectResponse;
     bool commandInProgress;
+    
+    int missing_serial_response_count;
+    const int missing_serial_response_limit;
 };
 
 #endif //SERIAL_DEVICE_H

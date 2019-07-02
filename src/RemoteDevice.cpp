@@ -25,6 +25,8 @@ get_status_timeout(1000)
 	remoteDeviceCommand(out.readAll(), true);
     
     connect(get_status_timer, SIGNAL(timeout()), this, SLOT(get_status()));
+    connect(this, SIGNAL(device_fail()), get_status_timer, SLOT(stop()));
+    
     get_status_timer->setInterval(get_status_timeout);
     get_status_timer->start();
 }

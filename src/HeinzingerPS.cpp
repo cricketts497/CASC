@@ -114,7 +114,8 @@ void HeinzingerPS::heinzingerRemoteCommand(QString command)
 //receive commands from remote device
 void HeinzingerPS::heinzingerCommand()
 {	
-    if(serialCommandQueue.isEmpty() || activeSetFunction != 0)
+    //no further commands or current command ongoing
+    if(serialCommandQueue.isEmpty() || activeSetFunction != 0 || activeQuery != 0)
         return;
     
     QString command = serialCommandQueue.dequeue();
@@ -177,6 +178,11 @@ void HeinzingerPS::queryAfterSet()
 //send serial responses to correct function
 void HeinzingerPS::dealWithResponse(QString response)
 {
+    if(response == noResponseMessage){
+        activeQuery = 0;
+        return;
+    }
+    
     emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));
     switch(activeQuery) {
         case 0: return;
