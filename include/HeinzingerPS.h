@@ -23,10 +23,10 @@ private slots:
     void heinzingerRemoteCommand(QString command);
    
     void queryAppliedVoltageTimeout();
+    
+    void heinzingerCommand();
  
 private:
-    void heinzingerCommand();
-
     void setVoltage(uint voltage);
     void setCurrent(qreal current);
     void setOutput(bool on);

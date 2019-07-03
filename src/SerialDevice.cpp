@@ -112,6 +112,8 @@ void SerialDevice::setFlowControl(int type)
 {
     if(type == 0){
         serial_port->setFlowControl(QSerialPort::SoftwareControl);
+    }else if(type == 1){
+        serial_port->setFlowControl(QSerialPort::NoFlowControl);
     }else{
         emit device_message(QString("LOCAL SERIAL ERROR: %1: Invalid flow control setting").arg(device_name));
         emit device_fail();
