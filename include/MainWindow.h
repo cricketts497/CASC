@@ -19,6 +19,7 @@
 #include "include/DummyScanner.h"
 #include "include/RemoteDataSaver.h"
 #include "include/WavemeterPdl.h"
+#include "include/NxdsPump.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -63,6 +64,7 @@ private slots:
 	void toggleHeinzinger30kDevice(bool start);
 	void toggleHeinzinger20kDevice(bool start);
     void toggleWavemeterPdlDevice(bool start);
+    void toggleNxdsPumpDevice(bool start);
     
     void heinzinger30kStatus(QString status);
     void heinzinger20kStatus(QString status);
@@ -104,6 +106,7 @@ private:
 	const QString fake_pdl_temp_path = "./temp/fakepdl_temp.dat";
 	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.dat";
 	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.dat";
+    const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.dat";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
@@ -113,6 +116,7 @@ private:
 	QMutex fakePdlFileMutex;
 	QMutex heinzinger30kFileMutex;
 	QMutex heinzinger20kFileMutex;
+    QMutex nxdsPumpFileMutex;
 
 	//graph widget as central of main window
 	GenericGraph *centralGraph;
@@ -176,6 +180,10 @@ private:
     DeviceButton * wavemeterPdlDeviceButton;
     bool wavemeterPdl_started;
     QThread wavemeterPdlDeviceThread;
+    
+    DeviceButton * nxdsPumpDeviceButton;
+    bool nxdsPump_started;
+    QThread nxdsPumpDeviceThread;
 };
 
 #endif //MAIN_WINDOW_H

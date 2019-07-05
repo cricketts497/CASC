@@ -47,6 +47,7 @@ averages_set(0)
     //set the interval to query the true voltage
 	voltage_query_timer->setInterval(voltage_query_timeout);
 	connect(voltage_query_timer, SIGNAL(timeout()), this, SLOT(queryAppliedVoltageTimeout()));
+    connect(this, SIGNAL(device_fail()), voltage_query_timer, SLOT(stop()));
 
 	//settings for serial communication with the power supplies taken from the manual
 	setBaudRate(9600);
@@ -96,6 +97,7 @@ void HeinzingerPS::stop_device()
     }else if(voltage_setpoint != 0){
         emit device_message(QString("LOCAL HEINZINGER ERROR: %1: unable to disable output").arg(device_name));
         emit device_fail();
+        return;
     }
     //when the response comes that the output is disabled, close the serial port
     connect(this, &HeinzingerPS::voltage_set_zero, this, &SerialDevice::stop_device); 
@@ -183,7 +185,7 @@ void HeinzingerPS::dealWithResponse(QString response)
         return;
     }
     
-    emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));
+    // emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));
     switch(activeQuery) {
         case 0: return;
         case 1: responseID(response);
@@ -417,6 +419,7 @@ void HeinzingerPS::responseSetVoltage(QString response)
         volts_ok = false;
         emit device_message(QString("LOCAL HEINZINGER ERROR: %3: voltage set query response (%1) not equal to voltage setpoint (%2)").arg(voltage_set).arg(voltage_setpoint).arg(device_name));
 		emit device_fail();
+        return;
     }else{
         volts_ok = true;
     }

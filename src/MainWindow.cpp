@@ -19,7 +19,8 @@ fake_tagger_started(false),
 tagger_started(false),
 heinzinger30k_started(false),
 heinzinger20k_started(false),
-wavemeterPdl_started(false)
+wavemeterPdl_started(false),
+nxdsPump_started(false)
 {
 	messages.setString(&messages_string);
 
@@ -33,7 +34,7 @@ wavemeterPdl_started(false)
 	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v2.4");
+	setWindowTitle("CASC v2.5");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -121,6 +122,9 @@ void MainWindow::createDevicesBar()
     // wavemeterPdlDeviceButton = new DeviceButton("Wavemeter PDL", devicesBar, "Start the WS6 wavemeter device for the dye lasers", "Stop the WS6 wavemeter device", "WAVEMETER PDL FAIL");
     // connect(wavemeterPdlDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleWavemeterPdlDevice(bool)));
 
+    nxdsPumpDeviceButton = new DeviceButton("NXDS test", devicesBar, "Start the Edwards NXDS backing pump device", "Stop the NXDS pump device", "NXDS PUMP FAIL");
+    connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleNxdsPumpDevice(bool)));
+
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
     devicesBar->addWidget(dataSaverDeviceButton);
@@ -130,6 +134,7 @@ void MainWindow::createDevicesBar()
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
     // devicesBar->addWidget(wavemeterPdlDeviceButton);
+    devicesBar->addWidget(nxdsPumpDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -392,6 +397,25 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 	
 }
 
+void MainWindow::toggleTaggerDevice(bool start)
+{
+	if(start){
+		taggerDevice = new TaggerDevice(100, tagger_temp_path, this);
+		
+		connect(taggerDevice, SIGNAL(tagger_fail()), taggerDeviceButton, SLOT(setFail()));
+		connect(taggerDevice, SIGNAL(tagger_message(QString)), this, SLOT(keepMessage(QString)));
+
+		tagger_started = taggerDevice->start_card();
+		
+		// if(tagger_started)
+			// centralGraph->newTagger();
+	}else{
+		taggerDevice->stop_card();
+		delete taggerDevice;
+		tagger_started = false;
+	}
+}
+
 void MainWindow::toggleHeinzinger30kDevice(bool start)
 {
 	bool local = config->deviceLocal(QString("heinzingerps30k"));
@@ -477,23 +501,23 @@ void MainWindow::toggleWavemeterPdlDevice(bool start)
 	}   
 }
 
-void MainWindow::toggleTaggerDevice(bool start)
+void MainWindow::toggleNxdsPumpDevice(bool start)
 {
-	if(start){
-		taggerDevice = new TaggerDevice(100, tagger_temp_path, this);
-		
-		connect(taggerDevice, SIGNAL(tagger_fail()), taggerDeviceButton, SLOT(setFail()));
-		connect(taggerDevice, SIGNAL(tagger_message(QString)), this, SLOT(keepMessage(QString)));
-
-		tagger_started = taggerDevice->start_card();
-		
-		// if(tagger_started)
-			// centralGraph->newTagger();
+    bool local = config->deviceLocal(QString("BL_test"));
+    
+    if(start){
+		if(local){
+			NxdsPump * nxdsTest = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,QString("BL_test"),config);
+			setupDevice(nxdsTest, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+        }else{
+            RemoteDevice * nxdsTest = new RemoteDevice(QString("BL_test"), config);
+            setupDevice(nxdsTest, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+		}
+		nxdsPump_started = true;
 	}else{
-		taggerDevice->stop_card();
-		delete taggerDevice;
-		tagger_started = false;
-	}
+		//stop_device slot connection in setupDevice() below
+		nxdsPump_started = false;
+	}      
 }
 
 
@@ -512,6 +536,8 @@ void MainWindow::toggleDevice(QString device, bool start)
         dataSaverDeviceButton->click();
     else if(device == "wavemeterpdl" && ((start && !wavemeterPdl_started && !wavemeterPdlDeviceButton->started) || (!start && wavemeterPdl_started && wavemeterPdlDeviceButton->started)))
         wavemeterPdlDeviceButton->click();
+    else if(device == "BL_test" && ((start && !nxdsPump_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPump_started && nxdsPumpDeviceButton->started)))
+        nxdsPumpDeviceButton->click();
 }
 
 void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)

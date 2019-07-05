@@ -134,8 +134,8 @@ bool SerialDevice::writeCommand(QString command, bool response)
         return false;
     }
     
-    storeMessage(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command), false);
-    emit device_message(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command));
+    // storeMessage(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command), false);
+    // emit device_message(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command));
     
     QByteArray cm = command.toUtf8();
     serial_port->write(cm);
