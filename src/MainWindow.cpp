@@ -30,13 +30,17 @@ nxdsPumpSet_started(false)
 	createStatusBar();
 	createDevicesBar();
 
-	centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, heinzinger30k_temp_path, heinzinger20k_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, &heinzinger30kFileMutex, &heinzinger20kFileMutex, this);
+	// centralGraph = new GenericGraph(fake_tagger_temp_path, fake_pdl_temp_path, heinzinger30k_temp_path, heinzinger20k_temp_path, &fakeTaggerFileMutex, &fakePdlFileMutex, &heinzinger30kFileMutex, &heinzinger20kFileMutex, this);
+    
+    QStringList filePaths = {heinzinger30k_temp_path, heinzinger20k_temp_path, nxdsPump_temp_path};
+    QList<QMutex*> fileMutexes = {&heinzinger30kFileMutex, &heinzinger20kFileMutex, &nxdsPumpFileMutex};
+	centralGraph = new SimpleGraph(filePaths, fileMutexes, this);
 	// centralGraph = new GenericGraph(tagger_temp_path, pdl_temp_path, this);
 	
-	connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
+	// connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v2.5");
+	setWindowTitle("CASC v2.6");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -165,7 +169,7 @@ void MainWindow::toggleTof()
 
 		connect(tofHist, SIGNAL(closing(bool)), this, SLOT(toggleTof()));
 		connect(tofHist, SIGNAL(value(qreal)), this, SLOT(setStatusValue(qreal)));
-		connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
+		// connect(tofHist, SIGNAL(selectionWindow(qreal,qreal)), centralGraph, SLOT(newSelectionWindow(qreal,qreal)));
 		connect(tofHist, SIGNAL(tof_message(QString)), this, SLOT(keepMessage(QString)));
 
 		addDockWidget(Qt::RightDockWidgetArea, tofHist);
@@ -404,7 +408,7 @@ void MainWindow::toggleFakePdlDevice(bool start)
 		connect(&fakeTaggerDeviceThread, SIGNAL(finished()), fakePdlDevice, SLOT(deleteLater()));
 		fakePdlDeviceThread.start();
 
-		centralGraph->newPdl();
+		// centralGraph->newPdl();
 	}else{
 		fakePdlDeviceThread.quit();
 	}
@@ -425,7 +429,7 @@ void MainWindow::toggleFakeTaggerDevice(bool start)
 		}
 
 		//connect to widgets
-		centralGraph->newTagger();
+		// centralGraph->newTagger();
 		if(tofHist_open)
 			tofHist->newTagger();
 		

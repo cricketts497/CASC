@@ -9,11 +9,19 @@ class SimpleGraph : public QWidget
     Q_OBJECT
     
 public:
-    SimpleGraph(QWidget * parent = nullptr);
+    SimpleGraph(QStringList filePaths, QList<QMutex*> fileMutexes, QWidget * parent = nullptr);
+    
+private slots:
+    void chartZoomed();
+    void changeBinWidth();
+    void resetAxes();
+    void changeYAxis();
+    void updateGraph();
+    
     
 private:
     QStringList filePaths;
-    QList<&QMutex> fileMutexes;
+    QList<QMutex*> fileMutexes;
     
     bool zoomed;
     int xStep;
@@ -22,7 +30,9 @@ private:
     const int maxBinWidth;
     qint64 filePos;
     qreal start_time;
-    int totalPoints;
+    int nPoints;
+    
+    int graphUpdateTime;
     
     int minValueX;
     int minValueY;
@@ -33,6 +43,7 @@ private:
 	QScatterSeries * series;
     QValueAxis * xAxis;
 	QValueAxis *yAxis;
+    QSpinBox * binWidthEdit;
   
     QVector<qreal> sumTimes;
     QVector<qreal> sumValues;

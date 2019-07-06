@@ -2,7 +2,7 @@
 
 //indices: heinzinger30k, heinzinger20k, BLTest
 
-SimpleGraph::SimpleGraph(QStringList filePaths, QList<&QMutex> fileMutexes, QWidget * parent) :
+SimpleGraph::SimpleGraph(QStringList filePaths, QList<QMutex*> fileMutexes, QWidget * parent) :
 QWidget(parent),
 filePaths(filePaths),
 fileMutexes(fileMutexes),
@@ -14,10 +14,11 @@ maxBinWidth(10000),
 filePos(0),
 start_time(0),
 nPoints(0),
-maxValueX(-1e20),
-maxValueY(-1e20),
-minValueX(1e20),
-minValueY(1e20)
+maxValueX(-1e8),
+maxValueY(-1e8),
+minValueX(1e8),
+minValueY(1e8),
+graphUpdateTime(1000)
 {
 	QVBoxLayout * layout = new QVBoxLayout(this);
 
@@ -49,7 +50,7 @@ minValueY(1e20)
 	QHBoxLayout * bottomLayout = new QHBoxLayout;
 
 	QLabel * binWidthLabel = new QLabel("Bin width / s:", this);
-	QSpinBox * binWidthEdit = new QSpinBox(this);
+	binWidthEdit = new QSpinBox(this);
 	binWidthEdit->setValue(binWidth);
 	binWidthEdit->setRange(1,maxBinWidth);
 	connect(binWidthEdit, SIGNAL(editingFinished()), this, SLOT(changeBinWidth()));
@@ -82,30 +83,6 @@ void SimpleGraph::chartZoomed()
 	zoomed = true;
 }
 
-void SimpleGraph::changeBinWidth()
-{
-	binWidth = binWidthEdit->value();
-    
-	//clear the current binned data
-	bindex = -1;
-	binEdges.clear();
-	clearAll();
-	start_time = 0;
-    
-	resetAxes();
-}
-
-//when the reset axes push button is pressed
-void SimpleGraph::resetAxes()
-{
-	xAxis->setRange(0,xStep);
-	yAxis->setRange(0,yStep);	
-
-	zoomed = false;
-	binned_changed = true;
-	updateGraph();
-}
-
 //When the parameter on the y-axis is changed using the combo box
 void SimpleGraph::changeYAxis(int newIndex)
 {
@@ -118,6 +95,31 @@ void SimpleGraph::changeYAxis(int newIndex)
     }
     changeBinWidth();
 	yAxisIndex = newIndex;
+}
+
+void SimpleGraph::changeBinWidth()
+{
+	binWidth = binWidthEdit->value();
+    
+	//clear the current binned data
+	sumTimes.clear();
+    sumValues.clear();
+    sumCounts.clear();
+	start_time = 0;
+    
+    filePos = 0;
+    
+	resetAxes();
+}
+
+//when the reset axes push button is pressed
+void SimpleGraph::resetAxes()
+{
+	xAxis->setRange(0,xStep);
+	yAxis->setRange(0,yStep);
+
+	zoomed = false;
+	updateGraph();
 }
 
 void SimpleGraph::updateGraph()

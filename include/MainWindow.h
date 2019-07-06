@@ -21,6 +21,7 @@
 #include "include/WavemeterPdl.h"
 #include "include/NxdsPump.h"
 #include "include/NxdsPumpStatusWindow.h"
+#include "include/SimpleGraph.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -123,7 +124,7 @@ private:
     QMutex nxdsPumpFileMutex;
 
 	//graph widget as central of main window
-	GenericGraph *centralGraph;
+	SimpleGraph *centralGraph;
 
 	//task widgets
 	QAction *tofAct;
