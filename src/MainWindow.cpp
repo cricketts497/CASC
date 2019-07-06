@@ -13,6 +13,7 @@ heinzinger20kWindow_open(false),
 maxHeinzinger20kVoltage(20000),
 maxHeinzinger20kCurrent(3),
 dummyScanner_open(false),
+nxdsPumpWindow_open(false),
 listener_running(false),
 data_saver_started(false),
 fake_tagger_started(false),
@@ -86,6 +87,12 @@ void MainWindow::createActions()
 	heinzinger20kAct->setStatusTip("Open the 20kV heinzinger voltage controller");
 	connect(heinzinger20kAct, &QAction::triggered, this, &MainWindow::toggleHeinzinger20k);
 	taskBar->addAction(heinzinger20kAct);
+    
+    const QIcon nxdsPumpIcon = QIcon("./resources/nxdsPump.png");
+    nxdsPumpAct = new QAction(nxdsPumpIcon, "&NXDSPUMP", this);
+    nxdsPumpAct->setStatusTip("Open the nXDS pump status viewer");
+    connect(nxdsPumpAct, &QAction::triggered, this, &MainWindow::toggleNxdsPumpWindow);
+    taskBar->addAction(nxdsPumpAct);
 }
 
 void MainWindow::createStatusBar()
@@ -291,6 +298,39 @@ void MainWindow::toggleDummyScanner()
 void MainWindow::dummyScannerCommand(QString command)
 {
     emit newDummyScannerCommand(command);
+}
+
+void MainWindow::toggleNxdsPumpWindow()
+{
+    if(nxdsPumpWindow_open){
+        delete nxdsPumpWindow;
+        
+        nxdsPumpAct->setStatusTip("Open the nXDS pump status viewer");
+        nxdsPumpWindow_open = false;
+    }else{
+        QStringList pump_names = {"BLtest"};
+        nxdsPumpWindow = new NxdsPumpStatusWindow(pump_names, this);
+        setupWidget(nxdsPumpWindow, nxdsPumpAct);
+        
+        connect(this, SIGNAL(newNxdsPumpStatus(QString)), nxdsPumpWindow, SLOT(receiveNxdsStatus(QString)));
+        
+        addDockWidget(Qt::TopDockWidgetArea, nxdsPumpWindow);
+        
+        nxdsPumpAct->setStatusTip("Close the nXDS pump status viewer");
+        nxdsPumpWindow_open = true;
+        
+        //tests
+        //pump off
+        // emit newNxdsPumpStatus(QString("Status_BLtest_0;0400;0000;0000;0000_42"));
+        //pump running with service due, ignored
+        // emit newNxdsPumpStatus(QString("Status_BLtest_30;047A;0010;0000;0000_42"));
+        //decel with one of the random higher bits
+        // emit newNxdsPumpStatus(QString("Status_BLtest_24;0441;8000;0000;0000_42"));
+        //decel with high pump controller temperature warning
+        // emit newNxdsPumpStatus(QString("Status_BLtest_24;0441;0040;0400;0000_-200"));
+        //pump off with low pump controller temperature fault
+        // emit newNxdsPumpStatus(QString("Status_BLtest_0;0400;0080;0000;0010_50"));
+    }        
 }
 
 /////////////////////////////////////////
@@ -503,21 +543,28 @@ void MainWindow::toggleWavemeterPdlDevice(bool start)
 
 void MainWindow::toggleNxdsPumpDevice(bool start)
 {
-    bool local = config->deviceLocal(QString("BL_test"));
+    bool local = config->deviceLocal(QString("BLtest"));
     
     if(start){
 		if(local){
-			NxdsPump * nxdsTest = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,QString("BL_test"),config);
+			NxdsPump * nxdsTest = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,QString("BLtest"),config);
 			setupDevice(nxdsTest, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+            connect(nxdsTest, SIGNAL(device_status(QString)), this, SLOT(nxdsPumpStatus(QString)));
         }else{
-            RemoteDevice * nxdsTest = new RemoteDevice(QString("BL_test"), config);
+            RemoteDevice * nxdsTest = new RemoteDevice(QString("BLtest"), config);
             setupDevice(nxdsTest, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+            connect(nxdsTest, SIGNAL(device_status(QString)), this, SLOT(nxdsPumpStatus(QString)));
 		}
 		nxdsPump_started = true;
 	}else{
 		//stop_device slot connection in setupDevice() below
 		nxdsPump_started = false;
 	}      
+}
+
+void MainWindow::nxdsPumpStatus(QString status)
+{
+    emit newNxdsPumpStatus(status);
 }
 
 
@@ -536,7 +583,7 @@ void MainWindow::toggleDevice(QString device, bool start)
         dataSaverDeviceButton->click();
     else if(device == "wavemeterpdl" && ((start && !wavemeterPdl_started && !wavemeterPdlDeviceButton->started) || (!start && wavemeterPdl_started && wavemeterPdlDeviceButton->started)))
         wavemeterPdlDeviceButton->click();
-    else if(device == "BL_test" && ((start && !nxdsPump_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPump_started && nxdsPumpDeviceButton->started)))
+    else if(device == "BLtest" && ((start && !nxdsPump_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPump_started && nxdsPumpDeviceButton->started)))
         nxdsPumpDeviceButton->click();
 }
 

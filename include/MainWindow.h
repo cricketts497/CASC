@@ -20,6 +20,7 @@
 #include "include/RemoteDataSaver.h"
 #include "include/WavemeterPdl.h"
 #include "include/NxdsPump.h"
+#include "include/NxdsPumpStatusWindow.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -46,6 +47,7 @@ private slots:
 	void toggleHeinzinger30k();
 	void toggleHeinzinger20k();
     void toggleDummyScanner();
+    void toggleNxdsPumpWindow();
     
     void heinzinger30kCommand(QString command);
     void heinzinger20kCommand(QString command);
@@ -68,6 +70,7 @@ private slots:
     
     void heinzinger30kStatus(QString status);
     void heinzinger20kStatus(QString status);
+    void nxdsPumpStatus(QString status);
 
 	void setStatusValue(qreal value);
 
@@ -81,6 +84,7 @@ signals:
     
     void newHeinzinger30kStatus(QString status);
     void newHeinzinger20kStatus(QString status);
+    void newNxdsPumpStatus(QString status);
 
 private:
 	const QString config_file_path = "./config.txt";
@@ -145,6 +149,10 @@ private:
     QAction * dummyScannerAct;
     DummyScanner * dummyScanner;
     bool dummyScanner_open;
+    
+    QAction * nxdsPumpAct;
+    NxdsPumpStatusWindow * nxdsPumpWindow;
+    bool nxdsPumpWindow_open;
 
 	//devices
 	DeviceButton * listenerButton;

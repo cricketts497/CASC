@@ -6,7 +6,9 @@ activeQuery(QString("NONE")),
 temperatureTimer(new QTimer(this)),
 temperatureTimeout(1000),
 speedStatusTimer(new QTimer(this)),
-speedStatusTimeout(1010)
+speedStatusTimeout(1010),
+pumpStatus(QString("0")),
+pumpControllerTemperature(QString("0"))
 {
     if(device_failed)
         return;
@@ -41,6 +43,9 @@ speedStatusTimeout(1010)
     
     temperatureTimer->start();
     speedStatusTimer->start();
+    
+    //device_name, speedStatus, controller temperature
+    deviceStatus = QString("Status_%1_0_0").arg(device_name);
 }
 
 void NxdsPump::queryTemperature()
@@ -127,6 +132,7 @@ void NxdsPump::dealWithResponse(QString response)
         emit device_fail();
     }
        
+    deviceStatus = QString("Status_%1_%2_%3").arg(device_name).arg(pumpStatus).arg(pumpControllerTemperature);
     activeQuery = QString("NONE");
 }
 
@@ -146,6 +152,11 @@ void NxdsPump::responsePumpType(QString response)
     
     storeMessage(QString("Local NxdsPump: %4: Pump type: %1, Software: %2, Nominal frequency: %3").arg(type_list[0]).arg(type_list[1]).arg(type_list[2]).arg(device_name), false);
     emit device_message(QString("Local NxdsPump: %4: Pump type: %1, Software: %2, Nominal frequency: %3").arg(type_list[0]).arg(type_list[1]).arg(type_list[2]).arg(device_name));
+
+    if(type_list[0] != QString("nXDS")){
+        emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Response pump type is invalid, should be nXDS").arg(device_name));
+        emit device_fail();
+    }
 }
 
 void NxdsPump::responsePumpTemperature(QString response)
@@ -159,9 +170,19 @@ void NxdsPump::responsePumpTemperature(QString response)
         return;
     }
     
+    //check the temperature is a valid integer
+    bool conv_ok;
+    int temp = temperature_list[1].toInt(&conv_ok);
+    if(!conv_ok){
+        emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Pump response %2 is invalid for PUMPTEMPERATURE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    
     //return value of -200 for either indicates temperature not utilised
     //getting -200 for pump temperature
-    emit device_message(QString("Local NxdsPump: %1: Controller temperature: %2 degrees").arg(device_name).arg(temperature_list[1]));
+    // emit device_message(QString("Local NxdsPump: %1: Controller temperature: %2 degrees").arg(device_name).arg(temperature_list[1]));
+    pumpControllerTemperature = temperature_list[1];
 }
 
 void NxdsPump::responsePumpSpeedStatus(QString response)
@@ -175,9 +196,14 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
         return;
     }
     
-    emit device_message(QString("Local NxdsPump: %1: Rotational speed: %2 Hz, register 1: %3, register 2: %4, warning register: %5, fault register: %6").arg(device_name).arg(speed_status_list[0]).arg(speed_status_list[1]).arg(speed_status_list[2]).arg(speed_status_list[3]).arg(speed_status_list[4]));
-    
+    //check each register and the rotational speed with conversion
     bool conv_ok;
+    int rot_speed = speed_status_list[0].toInt(&conv_ok);
+    if(!conv_ok){
+        emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: rotational speed is invalid: %2").arg(device_name).arg(speed_status_list[0]));
+        emit device_fail();
+        return;
+    }    
     int register1 = speed_status_list[1].toInt(&conv_ok, 16);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: status register 1 is invalid: %2").arg(device_name).arg(speed_status_list[1]));
@@ -203,15 +229,19 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
         return;
     }
     
+    // emit device_message(QString("Local NxdsPump: %1: Rotational speed: %2 Hz, register 1: %3, register 2: %4, warning register: %5, fault register: %6").arg(device_name).arg(speed_status_list[0]).arg(speed_status_list[1]).arg(speed_status_list[2]).arg(speed_status_list[3]).arg(speed_status_list[4]));
+    
+    pumpStatus = response;
+    
     //first register messages
     //decel
     if((register1&0x0001)==0x0001){
         emit device_message(QString("Local NxdsPump: %1: Decelerating").arg(device_name));
     }
     //accel or running
-    if((register1&0x0002)==0x0002){
-        emit device_message(QString("Local NxdsPump: %1: Running").arg(device_name));
-    }
+    // if((register1&0x0002)==0x0002){
+        // emit device_message(QString("Local NxdsPump: %1: Running").arg(device_name));
+    // }
     //Standby
     if((register1&0x0004)==0x0004){
         emit device_message(QString("Local NxdsPump: %1: Standby mode").arg(device_name));
@@ -243,6 +273,7 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     // if((register1&0x0400)==0x0400){
     if((register1&0x0400)!=0x0400){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Serial mode is not enabled in pump status register 1").arg(device_name));
+        emit device_fail();
     }
     
     
@@ -258,7 +289,7 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     
     
     //warning register
-    //Low pump controlled temperature
+    //Low pump controller temperature
     if((warning_register&0x0002)==0x0002){
         emit device_message(QString("Local NxdsPump: %1: WARNING: Low pump-controller temperature: below the measurable range").arg(device_name));
     }

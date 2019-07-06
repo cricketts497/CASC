@@ -32,6 +32,9 @@ private:
     
     QTimer * speedStatusTimer;
     const int speedStatusTimeout;
+    
+    QString pumpStatus;
+    QString pumpControllerTemperature;
 };
 
 #endif // NXDS_PUMP_H
