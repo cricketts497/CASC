@@ -24,15 +24,18 @@ nominal_speed(30)
     QLabel * pump_name_labels[nPumps];
     for(int i=0; i<nPumps; i++){
         pump_name_labels[i] = new QLabel(pump_names.at(i), this);
-        speeds[i] = new ParamReadout("???", this);
-        temperatures[i] = new ParamReadout("???", this);
-        statuses[i] = new ParamReadout("???", this);
+        speeds[i] = new ParamReadout("????", this);
+        temperatures[i] = new ParamReadout("????", this);
+        statuses[i] = new ParamReadout("????", this);
     
         layout->addWidget(pump_name_labels[i],0,i+1);
         layout->addWidget(speeds[i],1,i+1);
         layout->addWidget(temperatures[i],2,i+1);
         layout->addWidget(statuses[i],3,i+1);
     }
+    
+    widget->setFixedSize(widget->minimumSizeHint());
+    
 }
 
 void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
@@ -107,7 +110,7 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     //first register messages
     //decel
     }else if((register1&0x0001)==0x0001){
-        statuses[pump_index]->setText("Decel");
+        statuses[pump_index]->setText("Decelerating");
         statuses[pump_index]->setFail();
     //Standby
     }else if((register1&0x0004)==0x0004){

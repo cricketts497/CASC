@@ -153,6 +153,7 @@ private:
     QAction * nxdsPumpAct;
     NxdsPumpStatusWindow * nxdsPumpWindow;
     bool nxdsPumpWindow_open;
+    QStringList nxdsPumpNames;
 
 	//devices
 	DeviceButton * listenerButton;
@@ -190,7 +191,7 @@ private:
     QThread wavemeterPdlDeviceThread;
     
     DeviceButton * nxdsPumpDeviceButton;
-    bool nxdsPump_started;
+    bool nxdsPumpSet_started;
     QThread nxdsPumpDeviceThread;
 };
 

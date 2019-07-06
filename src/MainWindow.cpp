@@ -14,6 +14,7 @@ maxHeinzinger20kVoltage(20000),
 maxHeinzinger20kCurrent(3),
 dummyScanner_open(false),
 nxdsPumpWindow_open(false),
+nxdsPumpNames({"BLtest"}),
 listener_running(false),
 data_saver_started(false),
 fake_tagger_started(false),
@@ -21,7 +22,7 @@ tagger_started(false),
 heinzinger30k_started(false),
 heinzinger20k_started(false),
 wavemeterPdl_started(false),
-nxdsPump_started(false)
+nxdsPumpSet_started(false)
 {
 	messages.setString(&messages_string);
 
@@ -308,8 +309,7 @@ void MainWindow::toggleNxdsPumpWindow()
         nxdsPumpAct->setStatusTip("Open the nXDS pump status viewer");
         nxdsPumpWindow_open = false;
     }else{
-        QStringList pump_names = {"BLtest"};
-        nxdsPumpWindow = new NxdsPumpStatusWindow(pump_names, this);
+        nxdsPumpWindow = new NxdsPumpStatusWindow(nxdsPumpNames, this);
         setupWidget(nxdsPumpWindow, nxdsPumpAct);
         
         connect(this, SIGNAL(newNxdsPumpStatus(QString)), nxdsPumpWindow, SLOT(receiveNxdsStatus(QString)));
@@ -541,25 +541,31 @@ void MainWindow::toggleWavemeterPdlDevice(bool start)
 	}   
 }
 
+//currently have a single thread for all the backing pumps but should be ok
 void MainWindow::toggleNxdsPumpDevice(bool start)
 {
-    bool local = config->deviceLocal(QString("BLtest"));
+    for(int i=0; i<nxdsPumpNames.size(); i++){
+        QString dev_name = nxdsPumpNames.at(i);
     
-    if(start){
-		if(local){
-			NxdsPump * nxdsTest = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,QString("BLtest"),config);
-			setupDevice(nxdsTest, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
-            connect(nxdsTest, SIGNAL(device_status(QString)), this, SLOT(nxdsPumpStatus(QString)));
+        bool local = config->deviceLocal(dev_name);
+        
+        if(start){
+            if(local){
+                NxdsPump * nxdsDevice = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,dev_name,config);
+                setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+                connect(nxdsDevice, SIGNAL(device_status(QString)), this, SLOT(nxdsPumpStatus(QString)));
+            }else{
+                RemoteDevice * nxdsDevice = new RemoteDevice(dev_name, config);
+                setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+                connect(nxdsDevice, SIGNAL(device_status(QString)), this, SLOT(nxdsPumpStatus(QString)));
+            }
+            nxdsPumpSet_started = true;
         }else{
-            RemoteDevice * nxdsTest = new RemoteDevice(QString("BLtest"), config);
-            setupDevice(nxdsTest, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
-            connect(nxdsTest, SIGNAL(device_status(QString)), this, SLOT(nxdsPumpStatus(QString)));
-		}
-		nxdsPump_started = true;
-	}else{
-		//stop_device slot connection in setupDevice() below
-		nxdsPump_started = false;
-	}      
+            //stop_device slot connection in setupDevice() below
+            nxdsPumpSet_started = false;
+            break;
+        }
+    }
 }
 
 void MainWindow::nxdsPumpStatus(QString status)
@@ -583,7 +589,7 @@ void MainWindow::toggleDevice(QString device, bool start)
         dataSaverDeviceButton->click();
     else if(device == "wavemeterpdl" && ((start && !wavemeterPdl_started && !wavemeterPdlDeviceButton->started) || (!start && wavemeterPdl_started && wavemeterPdlDeviceButton->started)))
         wavemeterPdlDeviceButton->click();
-    else if(device == "BLtest" && ((start && !nxdsPump_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPump_started && nxdsPumpDeviceButton->started)))
+    else if(device == "BLtest" && ((start && !nxdsPumpSet_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPumpSet_started && nxdsPumpDeviceButton->started)))
         nxdsPumpDeviceButton->click();
 }
 

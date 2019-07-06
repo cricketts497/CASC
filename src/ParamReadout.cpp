@@ -5,6 +5,7 @@ QLineEdit(text, parent)
 {
     setReadOnly(true);
     setOff();
+    setMinimumWidth(100);
 }
 
 void ParamReadout::setOff()
