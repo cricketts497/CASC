@@ -18,8 +18,11 @@ maxValueX(-1e8),
 maxValueY(-1e8),
 minValueX(1e8),
 minValueY(1e8),
-graphUpdateTime(1000)
+graphUpdateTime(1000),
+yAxisIndex(0)
 {
+    binEdge = binWidth;
+    
 	QVBoxLayout * layout = new QVBoxLayout(this);
 
 	//main chart
@@ -101,10 +104,11 @@ void SimpleGraph::changeBinWidth()
 {
 	binWidth = binWidthEdit->value();
     
-	//clear the current binned data
+	//clear the current binned data and data points
 	sumTimes.clear();
     sumValues.clear();
     sumCounts.clear();
+    series->clear();
 	start_time = 0;
     
     filePos = 0;
@@ -126,7 +130,7 @@ void SimpleGraph::updateGraph()
 {
     qint64 current_pos = filePos;
     
-    QFile dataFile(filePaths.at(yAxisIndex), this);
+    QFile * dataFile = new QFile(filePaths.at(yAxisIndex), this);
     QMutex * fileMutex = fileMutexes.at(yAxisIndex);
     
     bool locked = fileMutex->tryLock();
@@ -182,7 +186,6 @@ void SimpleGraph::updateGraph()
     
     //new data
     if(filePos > current_pos){
-        int start;
         if(nPoints>0){
             nPoints--;
             series->remove(nPoints);

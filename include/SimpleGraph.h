@@ -15,7 +15,7 @@ private slots:
     void chartZoomed();
     void changeBinWidth();
     void resetAxes();
-    void changeYAxis();
+    void changeYAxis(int newIndex);
     void updateGraph();
     
     
@@ -33,6 +33,8 @@ private:
     int nPoints;
     
     int graphUpdateTime;
+    int yAxisIndex;
+    int binEdge;
     
     int minValueX;
     int minValueY;
