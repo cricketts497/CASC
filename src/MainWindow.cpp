@@ -480,6 +480,7 @@ void MainWindow::toggleHeinzinger30kDevice(bool start)
         dataSaverStart("heinzingerps30k");
 		heinzinger30k_started = true;
         // centralGraph->newHeinzinger30k();
+        centralGraph->newData();
 	}else{
 		//stop_device slot connection in setupDevice() below
 		heinzinger30k_started = false;

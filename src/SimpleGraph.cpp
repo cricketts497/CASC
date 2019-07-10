@@ -12,17 +12,17 @@ yStep(4),
 binWidth(2),
 maxBinWidth(10000),
 filePos(0),
-start_time(0),
+start_time(-1),
 nPoints(0),
 maxValueX(-1e8),
 maxValueY(-1e8),
 minValueX(1e8),
 minValueY(1e8),
-graphUpdateTime(1000),
-yAxisIndex(0)
+graphUpdateTime(100),
+yAxisIndex(0),
+binEdge(0),
+dataResetPos(0)
 {
-    binEdge = binWidth;
-    
 	QVBoxLayout * layout = new QVBoxLayout(this);
 
 	//main chart
@@ -47,6 +47,7 @@ yAxisIndex(0)
 	// yAxis->setTitleText("Counts");
 	yAxis->setRange(0,yStep);
 	yAxis->setLabelFormat("%.3f");
+    yAxis->setTitleText("Heinzinger 30k voltage / V");
 	chartView->chart()->setAxisY(yAxis, series);
 
 	//bin width edit box, a combo box to change the y-axis and a reset button for zoom
@@ -60,6 +61,9 @@ yAxisIndex(0)
 
 	QPushButton * resetButton = new QPushButton("Reset axes", this);
 	connect(resetButton, SIGNAL(clicked()), this, SLOT(resetAxes()));
+    
+    QPushButton * resetDataButton = new QPushButton("Reset data", this);
+	connect(resetDataButton, SIGNAL(clicked()), this, SLOT(resetData()));
 
 	QLabel * yAxisLabel = new QLabel("y:", this);
 	QComboBox * yAxisCombo = new QComboBox(this);
@@ -69,6 +73,7 @@ yAxisIndex(0)
 	connect(yAxisCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeYAxis(int)));
 
 	bottomLayout->addWidget(resetButton);
+	bottomLayout->addWidget(resetDataButton);
 	bottomLayout->addWidget(yAxisLabel);
 	bottomLayout->addWidget(yAxisCombo);
 	bottomLayout->addStretch();
@@ -76,9 +81,15 @@ yAxisIndex(0)
 	bottomLayout->addWidget(binWidthEdit);
 	layout->addLayout(bottomLayout);
     
-	QTimer * graphUpdateTimer = new QTimer(this);
+	graphUpdateTimer = new QTimer(this);
 	connect(graphUpdateTimer, SIGNAL(timeout()), this, SLOT(updateGraph()));
-	graphUpdateTimer->start(graphUpdateTime);
+}
+
+void SimpleGraph::newData()
+{
+    dataResetPos = 0;
+    changeBinWidth();   
+    graphUpdateTimer->start(graphUpdateTime);
 }
 
 void SimpleGraph::chartZoomed()
@@ -96,8 +107,9 @@ void SimpleGraph::changeYAxis(int newIndex)
     }else if(newIndex == 2){
         yAxis->setTitleText("BLTest pump temperature / C");
     }
+    dataResetPos = 0;
+    yAxisIndex = newIndex;
     changeBinWidth();
-	yAxisIndex = newIndex;
 }
 
 void SimpleGraph::changeBinWidth()
@@ -108,10 +120,12 @@ void SimpleGraph::changeBinWidth()
 	sumTimes.clear();
     sumValues.clear();
     sumCounts.clear();
-    series->clear();
-	start_time = 0;
+	start_time = -1;
+    binEdge = 0;
+    filePos = dataResetPos;
     
-    filePos = 0;
+    series->clear();
+    nPoints = 0;
     
 	resetAxes();
 }
@@ -121,9 +135,21 @@ void SimpleGraph::resetAxes()
 {
 	xAxis->setRange(0,xStep);
 	yAxis->setRange(0,yStep);
+    
+    maxValueX = -1e8;
+    maxValueY = -1e8;
+    minValueX = 1e8;
+    minValueY = 1e8;
 
 	zoomed = false;
-	updateGraph();
+    if(graphUpdateTimer->isActive())
+        updateGraph();
+}
+
+void SimpleGraph::resetData()
+{
+    dataResetPos = filePos;
+    changeBinWidth();
 }
 
 void SimpleGraph::updateGraph()
@@ -150,31 +176,34 @@ void SimpleGraph::updateGraph()
         if(filePos == 0){
             qint64 header;
             in >> header;
-            if(start_time < 1)
-                start_time = qreal(header)/1000;
         }
         qint64 timestamp;
         quint64 voltage_applied;
         quint64 voltage_decimal_applied;
         while(!dataFile->atEnd()){
             in >> timestamp >> voltage_applied >> voltage_decimal_applied;
-
+            
             //timestamp since epoch in ms
             qreal time = qreal(timestamp)/1000;
+            if(start_time < 0){
+                start_time = time;
+            }
             time -= start_time;
             
             qreal voltage = QString("%1.%2").arg(voltage_applied).arg(voltage_decimal_applied).toDouble();
             
-            if(time > binEdge){
-                sumTimes.append(time);
-                sumValues.append(voltage);
-                sumCounts.append(1);
+            if(sumTimes.isEmpty() || time > binEdge){
+                sumTimes.append(0);
+                sumValues.append(0);
+                sumCounts.append(0);
                 binEdge += binWidth;
-            }else{
-                sumTimes.last() += time;
-                sumValues.last() += voltage;
-                sumCounts.last()++;
             }
+            while(time > binEdge){
+                binEdge += binWidth;
+            }
+            sumTimes.last() += time;
+            sumValues.last() += voltage;
+            sumCounts.last()++;
         }
     }else{
         return;
