@@ -550,7 +550,7 @@ void MainWindow::toggleNxdsPumpDevice(bool start)
 {
     for(int i=0; i<nxdsPumpNames.size(); i++){
         QString dev_name = nxdsPumpNames.at(i);
-    
+
         bool local = config->deviceLocal(dev_name);
         
         if(start){

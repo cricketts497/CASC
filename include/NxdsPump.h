@@ -23,6 +23,7 @@ private:
     
     //responses
     void responsePumpType(QString response);
+    void responsePumpServiceStatus(QString response);
     void responsePumpTemperature(QString response);
     void responsePumpSpeedStatus(QString response);
     
@@ -35,6 +36,7 @@ private:
     
     QString pumpStatus;
     QString pumpControllerTemperature;
+    QString pumpServiceStatus;
 };
 
 #endif // NXDS_PUMP_H

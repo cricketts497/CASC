@@ -8,7 +8,8 @@ temperatureTimeout(1000),
 speedStatusTimer(new QTimer(this)),
 speedStatusTimeout(1010),
 pumpStatus(QString("0")),
-pumpControllerTemperature(QString("0"))
+pumpControllerTemperature(QString("0")),
+pumpServiceStatus(QString("0"))
 {
     if(device_failed)
         return;
@@ -40,12 +41,13 @@ pumpControllerTemperature(QString("0"))
         return;
     
     queueSerialCommand(QString("PUMPTYPE"));
+    queueSerialCommand(QString("PUMPSERVICESTATUS"));
     
     temperatureTimer->start();
     speedStatusTimer->start();
     
-    //device_name, speedStatus, controller temperature
-    deviceStatus = QString("Status_%1_0_0").arg(device_name);
+    //device_name, speedStatus, controller temperature, service status
+    deviceStatus = QString("Status_%1_0_0_0").arg(device_name);
 }
 
 void NxdsPump::queryTemperature()
@@ -70,6 +72,8 @@ void NxdsPump::pumpCommand()
     QString toQuery;
     if(command_list.first() == QString("PUMPTYPE")){
         toQuery = QString("?S801\r");
+    }else if(command_list.first() == QString("PUMPSERVICESTATUS")){
+        toQuery = QString("?V826\r");
     }else if(command_list.first() == QString("PUMPTEMPERATURE")){
         toQuery = QString("?V808\r");
     }else if(command_list.first() == QString("PUMPSPEEDSTATUS")){
@@ -117,12 +121,15 @@ void NxdsPump::dealWithResponse(QString response)
         return;
     }
     
-    //all characters from the 6th slot and after
+    //all characters from the 6th slot and after, removing the /cr at the end
     QString outResponse = response.mid(6);
+    outResponse.remove(outResponse.length()-1,1);
     
     //send to functions
     if(activeQuery == QString("?S801\r")){
         responsePumpType(outResponse);
+    }else if(activeQuery == QString("?V826\r")){
+        responsePumpServiceStatus(outResponse);
     }else if(activeQuery == QString("?V808\r")){
         responsePumpTemperature(outResponse);
     }else if(activeQuery == QString("?V802\r")){
@@ -132,7 +139,9 @@ void NxdsPump::dealWithResponse(QString response)
         emit device_fail();
     }
        
-    deviceStatus = QString("Status_%1_%2_%3").arg(device_name).arg(pumpStatus).arg(pumpControllerTemperature);
+    deviceStatus = QString("Status_%1_%2_%3_%4").arg(device_name).arg(pumpStatus).arg(pumpControllerTemperature).arg(pumpServiceStatus);
+    // emit device_message(QString("Local NxdsPump: %1").arg(deviceStatus));
+    
     activeQuery = QString("NONE");
 }
 
@@ -159,6 +168,45 @@ void NxdsPump::responsePumpType(QString response)
     }
 }
 
+void NxdsPump::responsePumpServiceStatus(QString response)
+{
+    QStringList service_status_list = response.split(";");
+    
+    //check for valid service status response
+    if(service_status_list.length() != 1){
+        emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Pump response %2 is invalid for PUMPSERVICESTATUS query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    
+    bool conv_ok;
+    int serviceStatus = service_status_list.at(0).toInt(&conv_ok, 16);
+    if(!conv_ok){
+        emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: service status is invalid: %2").arg(device_name).arg(service_status_list[0]));
+        emit device_fail();
+        return;
+    }
+    
+    pumpServiceStatus = service_status_list.at(0);
+    
+    //General service message, comes with the other service messages
+    if((serviceStatus&0x0080)==0x0080){
+        emit device_message(QString("Local NxdsPump: %1: Service is due, part to be serviced should be given below").arg(device_name));
+    }   
+    //tip seal service
+    if((serviceStatus&0x0001)==0x0001){
+        emit device_message(QString("Local NxdsPump: %1: Tip seal service is due").arg(device_name));
+    }
+    //bearing service
+    if((serviceStatus&0x0002)==0x0002){
+        emit device_message(QString("Local NxdsPump: %1: Bearing service is due").arg(device_name));
+    }
+    //controller service
+    if((serviceStatus&0x0008)==0x0008){
+        emit device_message(QString("Local NxdsPump: %1: Controller service is due").arg(device_name));
+    }    
+}
+
 void NxdsPump::responsePumpTemperature(QString response)
 {
     QStringList temperature_list = response.split(";");
@@ -172,7 +220,7 @@ void NxdsPump::responsePumpTemperature(QString response)
     
     //check the temperature is a valid integer
     bool conv_ok;
-    int temp = temperature_list[1].toInt(&conv_ok);
+    int temp = temperature_list.at(1).toInt(&conv_ok);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Pump response %2 is invalid for PUMPTEMPERATURE query").arg(device_name).arg(response));
         emit device_fail();
@@ -198,31 +246,31 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     
     //check each register and the rotational speed with conversion
     bool conv_ok;
-    int rot_speed = speed_status_list[0].toInt(&conv_ok);
+    int rot_speed = speed_status_list.at(0).toInt(&conv_ok);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: rotational speed is invalid: %2").arg(device_name).arg(speed_status_list[0]));
         emit device_fail();
         return;
     }    
-    int register1 = speed_status_list[1].toInt(&conv_ok, 16);
+    int register1 = speed_status_list.at(1).toInt(&conv_ok, 16);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: status register 1 is invalid: %2").arg(device_name).arg(speed_status_list[1]));
         emit device_fail();
         return;
     }
-    int register2 = speed_status_list[2].toInt(&conv_ok, 16);
+    int register2 = speed_status_list.at(2).toInt(&conv_ok, 16);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: status register 2 is invalid: %2").arg(device_name).arg(speed_status_list[2]));
         emit device_fail();
         return;
     }
-    int warning_register = speed_status_list[3].toInt(&conv_ok, 16);
+    int warning_register = speed_status_list.at(3).toInt(&conv_ok, 16);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: status warning register is invalid: %2").arg(device_name).arg(speed_status_list[3]));
         emit device_fail();
         return;
     }
-    int fault_register = speed_status_list[4].toInt(&conv_ok, 16);
+    int fault_register = speed_status_list.at(4).toInt(&conv_ok, 16);
     if(!conv_ok){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: status fault register is invalid: %2").arg(device_name).arg(speed_status_list[4]));
         emit device_fail();

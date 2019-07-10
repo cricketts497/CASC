@@ -15,11 +15,13 @@ nominal_speed(30)
     QLabel * rotationLabel = new QLabel("Speed / Hz", this);
     QLabel * temperatureLabel = new QLabel("Temp / C", this);
     QLabel * statusLabel = new QLabel("Status", this);
+    QLabel * serviceLabel = new QLabel("Service", this);
     
     layout->addWidget(pumpLabel,0,0);
     layout->addWidget(rotationLabel,1,0);
     layout->addWidget(temperatureLabel,2,0);
     layout->addWidget(statusLabel,3,0);
+    layout->addWidget(serviceLabel,4,0);
     
     QLabel * pump_name_labels[nPumps];
     for(int i=0; i<nPumps; i++){
@@ -27,11 +29,13 @@ nominal_speed(30)
         speeds[i] = new ParamReadout("????", this);
         temperatures[i] = new ParamReadout("????", this);
         statuses[i] = new ParamReadout("????", this);
+        serviceStatuses[i] = new ParamReadout("????", this);
     
         layout->addWidget(pump_name_labels[i],0,i+1);
         layout->addWidget(speeds[i],1,i+1);
         layout->addWidget(temperatures[i],2,i+1);
         layout->addWidget(statuses[i],3,i+1);
+        layout->addWidget(serviceStatuses[i],4,i+1);
     }
     
     widget->setFixedSize(widget->minimumSizeHint());
@@ -43,7 +47,7 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     QStringList status_list = status.split("_");
     
     //check for correct format
-    if(status_list.length() != 4 || status_list.first() != QString("Status"))
+    if(status_list.length() != 5 || status_list.first() != QString("Status"))
         return;
     
     //find the pump this status is for
@@ -61,18 +65,18 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     //pump speed status, see NxdsPump.h or nXDS serial comms manual for details
     QStringList speed_status_list = status_list.at(2).split(";");
     
-    speeds[pump_index]->setText(speed_status_list[0]);
-    int rot_speed = speed_status_list[0].toInt();
+    speeds[pump_index]->setText(speed_status_list.at(0));
+    int rot_speed = speed_status_list.at(0).toInt();
     if(rot_speed == nominal_speed){
         speeds[pump_index]->setOK();
     }else{
         speeds[pump_index]->setOff();
     }
     
-    int register1 = speed_status_list[1].toInt(nullptr, 16);
-    int register2 = speed_status_list[2].toInt(nullptr, 16);
-    int warning_register = speed_status_list[3].toInt(nullptr, 16);
-    int fault_register = speed_status_list[4].toInt(nullptr, 16);
+    int register1 = speed_status_list.at(1).toInt(nullptr, 16);
+    int register2 = speed_status_list.at(2).toInt(nullptr, 16);
+    int warning_register = speed_status_list.at(3).toInt(nullptr, 16);
+    int fault_register = speed_status_list.at(4).toInt(nullptr, 16);
     
     //pump controller temperature
     temperatures[pump_index]->setText(status_list.at(3));
@@ -124,7 +128,30 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     }else{
         statuses[pump_index]->setText("Pump off");
         statuses[pump_index]->setFail();
-    }      
+    }
     
+    
+    //service status
+    int serviceStatus = status_list.at(4).toInt(nullptr, 16);
+    //controller service
+    if((serviceStatus&0x0008)==0x0008){
+        serviceStatuses[pump_index]->setText("Controller");
+        serviceStatuses[pump_index]->setFail();
+    //bearing service
+    }else if((serviceStatus&0x0002)==0x0002){
+        serviceStatuses[pump_index]->setText("Bearings");
+        serviceStatuses[pump_index]->setFail();
+    //tip seal service
+    }else if((serviceStatus&0x0001)==0x0001){
+        serviceStatuses[pump_index]->setText("Tip seal");
+        serviceStatuses[pump_index]->setFail();
+    //general service
+    }else if((serviceStatus&0x0080)==0x0080){
+        serviceStatuses[pump_index]->setText("Service");
+        serviceStatuses[pump_index]->setFail();
+    }else{
+        serviceStatuses[pump_index]->setText("OK");
+        serviceStatuses[pump_index]->setOK();
+    }
     
 }

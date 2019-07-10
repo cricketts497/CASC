@@ -22,6 +22,7 @@ private:
     ParamReadout * speeds[nPumps];
     ParamReadout * temperatures[nPumps];
     ParamReadout * statuses[nPumps];
+    ParamReadout * serviceStatuses[nPumps];
 };
 
 
