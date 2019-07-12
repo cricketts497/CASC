@@ -87,6 +87,7 @@ averages_set(0)
 //stopping device or failure mode
 void HeinzingerPS::stop_device()
 {
+    activeQuery = 0;
     setVoltage(0);
     
     if(voltage_set == 0){
