@@ -8,7 +8,7 @@ noResponseMessage(QString("NORESP")),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
 commandInProgress(false),
-missing_serial_response_count(0),
+missing_serial_response_count(2),
 missing_serial_response_limit(3)//failure if miss three responses in a row
 {
 	if(device_failed)
@@ -186,10 +186,11 @@ void SerialDevice::serialTimeout()
         return;
     }
     
-	storeMessage(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout").arg(device_name), true);
-	emit device_message(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout").arg(device_name));
-    
     missing_serial_response_count++;
+    
+	storeMessage(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout, missing %2").arg(device_name).arg(missing_serial_response_count), true);
+	emit device_message(QString("LOCAL SERIAL ERROR: %1: Serial connection timeout, missing %2").arg(device_name).arg(missing_serial_response_count));
+   
     if(missing_serial_response_count >= missing_serial_response_limit){
         emit device_fail();
     }else{
