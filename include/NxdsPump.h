@@ -26,6 +26,7 @@ private:
     void responsePumpServiceStatus(QString response);
     void responsePumpTemperature(QString response);
     void responsePumpSpeedStatus(QString response);
+    void responsePumpResetTipSeal(QString response);
     
     //query timers
     QTimer * temperatureTimer;

@@ -43,6 +43,11 @@ pumpServiceStatus(QString("0"))
     queueSerialCommand(QString("PUMPTYPE"));
     queueSerialCommand(QString("PUMPSERVICESTATUS"));
     
+    //uncomment and recompile to reset the tip seal service indicator
+    //////////////////////////////////////////////////
+    // queueSerialCommand(QString("TIPSEALRESET"));
+    /////////////////////////////////////////////////
+    
     temperatureTimer->start();
     speedStatusTimer->start();
     
@@ -78,6 +83,8 @@ void NxdsPump::pumpCommand()
         toQuery = QString("?V808\r");
     }else if(command_list.first() == QString("PUMPSPEEDSTATUS")){
         toQuery = QString("?V802\r");
+    }else if(command_list.first() == QString("TIPSEALRESET")){
+        toQuery = QString("!C814 1\r");
     }
     
     //send the query
@@ -134,6 +141,8 @@ void NxdsPump::dealWithResponse(QString response)
         responsePumpTemperature(outResponse);
     }else if(activeQuery == QString("?V802\r")){
         responsePumpSpeedStatus(outResponse);
+    }else if(activeQuery == QString("!C814 1\r")){
+        responsePumpResetTipSeal(outResponse);
     }else{
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Unknown activeQuery").arg(device_name));
         emit device_fail();
@@ -387,5 +396,22 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     //acceleration timeout
     if((fault_register&0x8000)==0x8000){
         emit device_message(QString("Local NxdsPump: %1: FAULT: Acceleration timeout: output frequency didnt reach threshold in allowable time").arg(device_name));
+    }
+}
+
+void NxdsPump::responsePumpResetTipSeal(QString response)
+{
+    bool conv_ok;
+    int return_code = response.toInt(&conv_ok);
+    if(!conv_ok){
+        emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: reset tip seal timer response is invalid").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    
+    if(return_code == 0){
+        emit device_message(QString("Local NxdsPump: %1: Successful reset of tip seal service timer").arg(device_name));
+    }else{
+        emit device_message(QString("Local NxdsPump: %1: FAULT: reset tip seal service timer command returned an error code: %2").arg(device_name).arg(return_code));
     }
 }
