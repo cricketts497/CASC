@@ -85,6 +85,8 @@ void NxdsPump::pumpCommand()
         toQuery = QString("?V802\r");
     }else if(command_list.first() == QString("TIPSEALRESET")){
         toQuery = QString("!C814 1\r");
+    }else{
+        return;
     }
     
     //send the query

@@ -15,7 +15,12 @@ private slots:
 
 private:
     QString activeQuery;
-
+    
+    void responsePumpStatusCode(QString response);
+    void responsePumpErrorCode(QString response);
+    
+    uint pumpStatusCode;
+    uint pumpErrorCode;
 };
 
 
