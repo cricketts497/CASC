@@ -22,6 +22,7 @@
 #include "include/NxdsPump.h"
 #include "include/NxdsPumpStatusWindow.h"
 #include "include/SimpleGraph.h"
+#include "include/AgilentTV301Pump.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -50,6 +51,7 @@ private slots:
     void toggleDummyScanner();
     void toggleNxdsPumpWindow();
     
+    //command re-emission functions
     void heinzinger30kCommand(QString command);
     void heinzinger20kCommand(QString command);
     void dummyScannerCommand(QString command);
@@ -68,10 +70,13 @@ private slots:
 	void toggleHeinzinger20kDevice(bool start);
     void toggleWavemeterPdlDevice(bool start);
     void toggleNxdsPumpDevice(bool start);
+    void toggleAgilentTV301Device(bool start);
     
+    //status re-emission functions
     void heinzinger30kStatus(QString status);
     void heinzinger20kStatus(QString status);
     void nxdsPumpStatus(QString status);
+    void agilentTV301Status(QString status);
 
 	void setStatusValue(qreal value);
 
@@ -79,13 +84,16 @@ signals:
 	void new_message(QString message);
 	void newDataSaverStart(QString device);
     
+    //command signals to devices
 	void newHeinzinger30kCommand(QString command);
 	void newHeinzinger20kCommand(QString command);
     void newDummyScannerCommand(QString command);
     
+    //status reemission signals
     void newHeinzinger30kStatus(QString status);
     void newHeinzinger20kStatus(QString status);
     void newNxdsPumpStatus(QString status);
+    void newAgilentTV301Status(QString status);
 
 private:
 	const QString config_file_path = "./config.txt";
@@ -112,6 +120,7 @@ private:
 	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.dat";
 	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.dat";
     const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.dat";
+    const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.dat";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
@@ -122,11 +131,13 @@ private:
 	QMutex heinzinger30kFileMutex;
 	QMutex heinzinger20kFileMutex;
     QMutex nxdsPumpFileMutex;
+    QMutex agilentTV301FileMutex;
 
 	//graph widget as central of main window
 	SimpleGraph *centralGraph;
 
 	//task widgets
+    ////////////////////////////////////////////////////////////////////////
 	QAction *tofAct;
 	TofHistogram *tofHist;
 	bool tofHist_open;
@@ -157,6 +168,7 @@ private:
     QStringList nxdsPumpNames;
 
 	//devices
+    ////////////////////////////////////////////////////////////////////////////
 	DeviceButton * listenerButton;
 	Listener * listener;
 	bool listener_running;
@@ -194,6 +206,10 @@ private:
     DeviceButton * nxdsPumpDeviceButton;
     bool nxdsPumpSet_started;
     QThread nxdsPumpDeviceThread;
+    
+    DeviceButton * agilentTV301DeviceButton;
+    bool agilentTV301_started;
+    QThread agilentTV301DeviceThread;
 };
 
 #endif //MAIN_WINDOW_H

@@ -22,7 +22,8 @@ tagger_started(false),
 heinzinger30k_started(false),
 heinzinger20k_started(false),
 wavemeterPdl_started(false),
-nxdsPumpSet_started(false)
+nxdsPumpSet_started(false),
+agilentTV301_started(false)
 {
 	messages.setString(&messages_string);
 
@@ -40,7 +41,7 @@ nxdsPumpSet_started(false)
 	// connect(centralGraph, SIGNAL(graph_message(QString)), this, SLOT(keepMessage(QString)));
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v2.6");
+	setWindowTitle("CASC v3.0");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -137,6 +138,9 @@ void MainWindow::createDevicesBar()
     nxdsPumpDeviceButton = new DeviceButton("NXDS test", devicesBar, "Start the Edwards NXDS backing pump device", "Stop the NXDS pump device", "NXDS PUMP FAIL");
     connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleNxdsPumpDevice(bool)));
 
+    agilentTV301DeviceButton = new DeviceButton("Agilent test", devicesBar, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL");
+    connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleAgilentTV301Device(bool)));
+
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
     devicesBar->addWidget(dataSaverDeviceButton);
@@ -147,6 +151,7 @@ void MainWindow::createDevicesBar()
 	devicesBar->addWidget(heinzinger20kDeviceButton);
     // devicesBar->addWidget(wavemeterPdlDeviceButton);
     devicesBar->addWidget(nxdsPumpDeviceButton);
+    devicesBar->addWidget(agilentTV301DeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -578,6 +583,36 @@ void MainWindow::nxdsPumpStatus(QString status)
     emit newNxdsPumpStatus(status);
 }
 
+void MainWindow::toggleAgilentTV301Device(bool start)
+{
+    for(int i=0; i<agilentTV301PumpNames.size(); i++){
+        QString dev_name = agilentTV301PumpNames.at(i);
+
+        bool local = config->deviceLocal(dev_name);
+        
+        if(start){
+            if(local){
+                AgilentTV301Pump * agilentTV301Device = new AgilentTV301Pump(agilentTV301_temp_path,&agilentTV301FileMutex,dev_name,config);
+                setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
+                connect(agilentTV301Device, SIGNAL(device_status(QString)), this, SLOT(agilentTV301Status(QString)));
+            }else{
+                RemoteDevice * agilentTV301Device = new RemoteDevice(dev_name, config);
+                setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
+                connect(agilentTV301Device, SIGNAL(device_status(QString)), this, SLOT(agilentTV301Status(QString)));
+            }
+            agilentTV301_started = true;
+        }else{
+            //stop_device slot connection in setupDevice() below
+            agilentTV301_started = false;
+            break;
+        }
+    }
+}
+
+void MainWindow::agilentTV301Status(QString status)
+{
+    emit newAgilentTV301Status(QString status);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -594,8 +629,11 @@ void MainWindow::toggleDevice(QString device, bool start)
         dataSaverDeviceButton->click();
     else if(device == "wavemeterpdl" && ((start && !wavemeterPdl_started && !wavemeterPdlDeviceButton->started) || (!start && wavemeterPdl_started && wavemeterPdlDeviceButton->started)))
         wavemeterPdlDeviceButton->click();
+    //using BLTest here!! may cause problems later
     else if(device == "BLtest" && ((start && !nxdsPumpSet_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPumpSet_started && nxdsPumpDeviceButton->started)))
         nxdsPumpDeviceButton->click();
+    else if(device == something && ((start && !agilentTV301_started && !agilentTV301DeviceButton->started) || (!start && agilentTV301_started && agilentTV301DeviceButton->started)))
+        agilentTV301DeviceButton->click();
 }
 
 void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)

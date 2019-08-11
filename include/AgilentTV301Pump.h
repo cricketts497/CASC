@@ -18,9 +18,11 @@ private:
     
     void responsePumpStatusCode(QString response);
     void responsePumpErrorCode(QString response);
+    void responsePumpTemperature(QString response);
     
     uint pumpStatusCode;
     uint pumpErrorCode;
+    uint pumpTemperature;
 };
 
 
