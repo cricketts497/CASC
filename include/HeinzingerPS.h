@@ -17,7 +17,7 @@ public slots:
     void stop_device();
     
 private slots:
-    void dealWithResponse(QString response);
+    void dealWithResponse(QByteArray response);
     void queryAfterSet();
     
     void heinzingerRemoteCommand(QString command);

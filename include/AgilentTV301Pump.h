@@ -11,7 +11,7 @@ public:
     
 private slots:
     void pumpCommand();
-    void dealWithResponse(QString response);
+    void dealWithResponse(QByteArray response);
 
 private:
     QString activeQuery;
@@ -19,10 +19,12 @@ private:
     void responsePumpStatusCode(QString response);
     void responsePumpErrorCode(QString response);
     void responsePumpTemperature(QString response);
+    void responsePumpDrive(QString response);
     
     uint pumpStatusCode;
     uint pumpErrorCode;
     uint pumpTemperature;
+    uint pumpDrive;
 };
 
 

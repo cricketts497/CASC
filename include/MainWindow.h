@@ -23,6 +23,7 @@
 #include "include/NxdsPumpStatusWindow.h"
 #include "include/SimpleGraph.h"
 #include "include/AgilentTV301Pump.h"
+#include "include/AgilentTV301StatusWindow.h"
 
 class QToolBar;
 class QHBoxLayout;
@@ -50,6 +51,7 @@ private slots:
 	void toggleHeinzinger20k();
     void toggleDummyScanner();
     void toggleNxdsPumpWindow();
+    void toggleAgilentTV301Window();
     
     //command re-emission functions
     void heinzinger30kCommand(QString command);
@@ -165,7 +167,12 @@ private:
     QAction * nxdsPumpAct;
     NxdsPumpStatusWindow * nxdsPumpWindow;
     bool nxdsPumpWindow_open;
-    QStringList nxdsPumpNames;
+    const QStringList nxdsPumpNames;
+
+    QAction * agilentTV301Act;
+    AgilentTV301StatusWindow * agilentTV301Window;
+    bool agilentTV301Window_open;
+    const QStringList agilentTV301Names;
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////

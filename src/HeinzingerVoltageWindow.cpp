@@ -180,7 +180,7 @@ void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
     QStringList status_list = status.split("_");
     
     //check for the correct format
-    if(status_list.size() != 4)
+    if(status_list.size() != 4 || status_list.first() != QString("Status"))
         return;
     
     // bool voltageSet = false;

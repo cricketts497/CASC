@@ -1,10 +1,12 @@
 #include "include/NxdsPumpStatusWindow.h"
 
 NxdsPumpStatusWindow::NxdsPumpStatusWindow(QStringList pump_names, QWidget * parent) :
-CascWidget(QString("nXDS pumps"), parent),
+CascWidget(QString("nXDS Pumps"), parent),
 pump_names(pump_names),
 nominal_speed(30)
 {
+    
+    
     QWidget * widget = new QWidget(this);
 	setWidget(widget);
     
@@ -23,8 +25,13 @@ nominal_speed(30)
     layout->addWidget(statusLabel,3,0);
     layout->addWidget(serviceLabel,4,0);
     
-    QLabel * pump_name_labels[nPumps];
-    for(int i=0; i<nPumps; i++){
+    if(pump_names.length() != nNxdsPumps){
+        emit widget_message("NXDSPUMPSTATUSWINDOW ERROR: Incorrect number of pumps in pump_names");
+        return;
+    }
+    
+    QLabel * pump_name_labels[nNxdsPumps];
+    for(int i=0; i<nNxdsPumps; i++){
         pump_name_labels[i] = new QLabel(pump_names.at(i), this);
         speeds[i] = new ParamReadout("????", this);
         temperatures[i] = new ParamReadout("????", this);
@@ -39,7 +46,6 @@ nominal_speed(30)
     }
     
     widget->setFixedSize(widget->minimumSizeHint());
-    
 }
 
 void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
@@ -52,7 +58,7 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     
     //find the pump this status is for
     int pump_index=-1;
-    for(int i=0; i<nPumps; i++){
+    for(int i=0; i<nNxdsPumps; i++){
         if(status_list.at(1) == pump_names.at(i)){
             pump_index = i;
             break;

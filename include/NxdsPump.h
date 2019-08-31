@@ -16,7 +16,7 @@ private slots:
 
     void pumpCommand();
     
-    void dealWithResponse(QString response);
+    void dealWithResponse(QByteArray response);
 
 private:
     QString activeQuery;

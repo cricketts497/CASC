@@ -4,7 +4,7 @@ SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString devic
 LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
 serial_timeout(2000),
 serial_response_wait(300),
-noResponseMessage(QString("NORESP")),
+noResponseMessage(QByteArray("NORESP")),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
 commandInProgress(false),
@@ -34,7 +34,12 @@ missing_serial_response_limit(3)//failure if miss three responses in a row
 		storeMessage(QString("LOCAL SERIAL ERROR: %1: Device not found in config").arg(deviceName), true);
 		return;
 	}
-	serial_port->setPortName(device.at(3));
+    QString portName = device.at(3);
+    if(portName.isEmpty()){
+        storeMessage(QString("LOCAL SERIAL ERROR: %1: serial port name is empty in config").arg(deviceName), true);
+		return;
+	}
+	serial_port->setPortName(portName);
 }
 
 bool SerialDevice::openSerialPort()
@@ -49,12 +54,12 @@ void SerialDevice::stop_device()
 {
     //Don't delete the device until the serial connection is closed
 	if(serial_port->isOpen()){
-		connect(serial_port, &QSerialPort::aboutToClose, this, &LocalDevice::stop_device);
+		connect(serial_port, &QSerialPort::aboutToClose, this, &CascDevice::stop_device);
 		serial_port->close();
 	}else{
 		emit stopped();
 	}
-    emit device_message(QString("Local serial: %1: Serial port closed").arg(device_name));
+    emit device_message(QString("Local serial: %1: Serial port is closed").arg(device_name));
 }
 
 void SerialDevice::queueSerialCommand(QString command)
@@ -123,7 +128,7 @@ void SerialDevice::setFlowControl(int type)
 
 //read write operations
 ///////////////////////////////////////////////////////
-bool SerialDevice::writeCommand(QString command, bool response)
+bool SerialDevice::writeCommand(QByteArray command, bool response)
 {
     if(!serial_port->isOpen())
         return false;
@@ -137,8 +142,9 @@ bool SerialDevice::writeCommand(QString command, bool response)
     // storeMessage(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command), false);
     // emit device_message(QString("Local serial: %1: Writing command: %2").arg(device_name).arg(command));
     
-    QByteArray cm = command.toUtf8();
-    serial_port->write(cm);
+    //do the conversion to QByteArray before sending to this function
+    // QByteArray cm = command.toUtf8();
+    serial_port->write(command);
         
     expectResponse = response;
         
@@ -163,9 +169,11 @@ void SerialDevice::readResponse()
     QThread::msleep(serial_response_wait);
     
     QByteArray resp = serial_port->readAll();
-    QString response = QString::fromUtf8(resp);
+    // QString response = QString::fromUtf8(resp);
     
-    emit newSerialResponse(response);
+    // emit newSerialResponse(response);
+    emit newSerialResponse(resp);
+    
     commandInProgress = false;
     emit serialComFinished();
 }

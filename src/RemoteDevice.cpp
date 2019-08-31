@@ -89,7 +89,7 @@ void RemoteDevice::readResponse()
         return;
     }
     
-    if(resp.startsWith("status")){
+    if(resp.startsWith("Status")){
 		deviceStatus = QString(resp);
     }else{
         emit newResponse(resp);

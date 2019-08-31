@@ -17,8 +17,8 @@ connection_timer(new QTimer(this)),
 noDataMessage("no data"),
 okMessage("ok"),
 failMessage("fail"),
-askStatusMessage("status?"),
-deviceStatus(QString("status")),
+askStatusMessage("Status?"),
+deviceStatus(QString("Status")),
 device_failed(false),
 connection_timeout(3000),
 broadcast_status_timer(new QTimer(this)),
@@ -31,18 +31,34 @@ broadcast_status_timeout(20)
 	
 	QStringList listener = config->getDevice(QString("listener"));
 	if(listener.isEmpty() || listener.size() != 2){
-		storeMessage(QString("%1 ERROR: Listener not found in config").arg(deviceName), true);
+		storeMessage(QString("DEVICE ERROR: %1: Listener not found in config").arg(deviceName), true);
 		return;
 	}
-	hostListenPort = listener.at(1).toUShort();
+    
+    bool conv_ok;
+	hostListenPort = listener.at(1).toUShort(&conv_ok);
+    if(hostListenPort == 0 || !conv_ok){
+        storeMessage(QString("DEVICE ERROR: %1: TCP listener port is invalid in config").arg(deviceName), true);
+		return;
+	}
 
 	QStringList device = config->getDevice(deviceName);
 	if(device.size() < 3){
-		storeMessage(QString("%1 ERROR: Device not found in config").arg(deviceName), true);
+		storeMessage(QString("DEVICE ERROR: %1: Device not found in config").arg(deviceName), true);
 		return;
 	}
+    
 	hostAddress = device.at(1);
-	hostDevicePort = device.at(2).toUShort();
+    if(hostAddress.isEmpty()){
+        storeMessage(QString("DEVICE ERROR: %1: TCP host address is empty in config").arg(deviceName), true);
+		return;
+	}
+    
+	hostDevicePort = device.at(2).toUShort(&conv_ok);
+    if(hostDevicePort == 0 || !conv_ok){
+        storeMessage(QString("DEVICE ERROR: %1: TCP device port is invalid in config").arg(deviceName), true);
+		return;
+	}
 	
     connect(this, SIGNAL(deviceFail()), this, SLOT(setFailed()));
     

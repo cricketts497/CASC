@@ -23,7 +23,7 @@ pumpServiceStatus(QString("0"))
     
     
     //response from device
-    connect(this, SIGNAL(newSerialResponse(QString)), this, SLOT(dealWithResponse(QString)));
+    connect(this, SIGNAL(newSerialResponse(QByteArray)), this, SLOT(dealWithResponse(QByteArray)));
     
     //communication finished, take next command
     connect(this, &SerialDevice::serialComFinished, this, &NxdsPump::pumpCommand);
@@ -94,17 +94,19 @@ void NxdsPump::pumpCommand()
         emit device_message(QString("Local NxdsPump: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(toQuery, true))
+    if(writeCommand(toQuery.toUtf8(), true))
         activeQuery = toQuery;
 }
 
-void NxdsPump::dealWithResponse(QString response)
+void NxdsPump::dealWithResponse(QByteArray resp)
 {
     //no response was received before the timeout, do nothing
-    if(response == noResponseMessage){
+    if(resp == noResponseMessage){
         activeQuery = QString("NONE");
         return;
     }
+    
+    QString response = QString::fromUtf8(resp);
     
     // emit device_message(QString("Local NxdsPump: %1: Response: %2").arg(device_name).arg(response));
     

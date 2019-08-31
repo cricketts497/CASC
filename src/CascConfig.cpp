@@ -11,7 +11,6 @@ QObject(parent)
 	QFile * configFile = new QFile(config_file_path);
 	if(!configFile->open(QIODevice::ReadOnly)){
 		emit config_message(QString("CONFIG ERROR: configFile->open(read)"));
-		emit config_fail();
 		return;
 	}
 	
@@ -28,12 +27,17 @@ QObject(parent)
 
 QStringList CascConfig::getDevice(QString deviceName)
 {
-	QStringList device;
+	QStringList device = {};
 	for(int i=0; i<devices.size(); i++){
 		if(devices.at(i).first() == deviceName){
 			device = devices.at(i);
 		}
 	}
+    
+    if(device.isEmpty()){
+        emit config_message(QString("CONFIG ERROR: device %1 not found").arg(deviceName));
+    }
+    
 	return device;
 }
 
@@ -44,6 +48,11 @@ bool CascConfig::deviceLocal(QString deviceName)
 	
 	QStringList device = getDevice(deviceName);
 	
+    //device not in config
+    if(device.isEmpty()){
+        return true;
+    }
+    
 	//debug config file, 5th argument for local/remote
 	// //////////////////////
     if(device.length() >=5){
@@ -69,32 +78,6 @@ bool CascConfig::deviceLocal(QString deviceName)
 	
 	return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

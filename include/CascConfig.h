@@ -16,7 +16,6 @@ public:
 
 signals:
 	void config_message(QString message);
-	void config_fail();
 
 private:
 	//device has structure: deviceName, hostName, hostListenPort, hostDevicePort

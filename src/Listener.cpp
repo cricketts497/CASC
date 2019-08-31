@@ -27,8 +27,15 @@ void Listener::start()
 		emit listener_fail();
 		return;
 	}
-	listenPort = listen_config.at(1).toUShort();
-	
+    
+    bool conv_ok;
+	listenPort = listen_config.at(1).toUShort(&conv_ok);
+	if(listenPort == 0 || !conv_ok){
+        emit listener_message(QString("LISTENER ERROR: TCP listener port is invalid in config"));
+		emit listener_fail();
+		return;
+	}    
+    
 	//check if the system requires a network session before network operations can be performed
 	QNetworkConfigurationManager manager;
 	if(manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired){

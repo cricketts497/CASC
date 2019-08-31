@@ -60,7 +60,7 @@ averages_set(0)
     connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));
     
     //response from device
-    connect(this, SIGNAL(newSerialResponse(QString)), this, SLOT(dealWithResponse(QString)));
+    connect(this, SIGNAL(newSerialResponse(QByteArray)), this, SLOT(dealWithResponse(QByteArray)));
     
     //communication finished, take next command
     connect(this, &SerialDevice::serialComFinished, this, &HeinzingerPS::heinzingerCommand);
@@ -77,10 +77,10 @@ averages_set(0)
         return;
     
     //reset the power supply
-    writeCommand(QString("*RST \n"));
+    writeCommand(QString("*RST \n").toUtf8());
     
     //voltage setpoint, current setpoint, output on
-    deviceStatus = QString("status_0_0_0");
+    deviceStatus = QString("Status_0_0_0");
 }
 
 //Set the voltage to zero and turn off the output
@@ -179,12 +179,14 @@ void HeinzingerPS::queryAfterSet()
 
 
 //send serial responses to correct function
-void HeinzingerPS::dealWithResponse(QString response)
+void HeinzingerPS::dealWithResponse(QByteArray resp)
 {
-    if(response == noResponseMessage){
+    if(resp == noResponseMessage){
         activeQuery = 0;
         return;
     }
+    
+    QString response = QString::fromUtf8(resp);
     
     // emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));
     switch(activeQuery) {
@@ -218,14 +220,14 @@ void HeinzingerPS::dealWithResponse(QString response)
 void HeinzingerPS::setOutput(bool on)
 {
     if(!volts_ok || !amps_ok || !on){
-        if(writeCommand(QString("OUTP OFF\n"))){
+        if(writeCommand(QString("OUTP OFF\n").toUtf8())){
             output_setpoint = false;
             
             if(voltage_query_timer->isActive())
                 voltage_query_timer->stop();
         }
     }else{
-        if(writeCommand(QString("OUTP ON\n"))){
+        if(writeCommand(QString("OUTP ON\n").toUtf8())){
             output_setpoint = true;
             
             //start querying the applied voltage
@@ -246,7 +248,7 @@ void HeinzingerPS::setVoltage(uint voltage)
     QString outString;
 	QTextStream out(&outString);
 	out << "VOLT " << voltage << "\n";
-    if(writeCommand(out.readAll())){
+    if(writeCommand(out.readAll().toUtf8())){
         voltage_setpoint = voltage;
         activeSetFunction = 1;
         queryAfterSetTimer->start();
@@ -265,7 +267,7 @@ void HeinzingerPS::setCurrent(qreal current)
     QString outString;
 	QTextStream out(&outString);
 	out << "CURR " << current << "\n";
-    if(writeCommand(out.readAll())){
+    if(writeCommand(out.readAll().toUtf8())){
         current_setpoint = current;
         activeSetFunction = 2;
         queryAfterSetTimer->start();
@@ -277,9 +279,9 @@ void HeinzingerPS::setHeinzingerStatus()
 {
     //voltage setpoint, current setpoint, output setpoint
     if(output_setpoint){
-        deviceStatus = QString("status_%1_%2_1").arg(voltage_setpoint).arg(current_setpoint);
+        deviceStatus = QString("Status_%1_%2_1").arg(voltage_setpoint).arg(current_setpoint);
     }else{
-        deviceStatus = QString("status_%1_%2_0").arg(voltage_setpoint).arg(current_setpoint);
+        deviceStatus = QString("Status_%1_%2_0").arg(voltage_setpoint).arg(current_setpoint);
     }
 }
 
@@ -293,7 +295,7 @@ void HeinzingerPS::setAverages(uint averages)
     QString outString;
 	QTextStream out(&outString);
 	out << "AVER " << averages << "\n";
-    if(writeCommand(out.readAll())){
+    if(writeCommand(out.readAll().toUtf8())){
         averages_setpoint = averages;
         activeSetFunction = 3;
         queryAfterSetTimer->start();
@@ -309,7 +311,7 @@ void HeinzingerPS::queryID()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("*IDN? \n"), true))
+    if(writeCommand(QString("*IDN? \n").toUtf8(), true))
         activeQuery = 1;
 }
 
@@ -319,7 +321,7 @@ void HeinzingerPS::queryVersion()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("VERS? \n"), true))
+    if(writeCommand(QString("VERS? \n").toUtf8(), true))
         activeQuery = 2;
 }
 
@@ -330,7 +332,7 @@ void HeinzingerPS::querySetVoltage()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("VOLT? \n"), true))
+    if(writeCommand(QString("VOLT? \n").toUtf8(), true))
         activeQuery = 3;
 }
 
@@ -341,7 +343,7 @@ void HeinzingerPS::querySetCurrent()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("CURR? \n"), true))
+    if(writeCommand(QString("CURR? \n").toUtf8(), true))
         activeQuery = 4;
 }
 
@@ -357,7 +359,7 @@ void HeinzingerPS::queryAppliedVoltage()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("MEAS:VOLT? \n"), true))
+    if(writeCommand(QString("MEAS:VOLT? \n").toUtf8(), true))
         activeQuery = 5;
 }
 
@@ -367,7 +369,7 @@ void HeinzingerPS::queryAppliedCurrent()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("MEAS:CURR? \n"), true))
+    if(writeCommand(QString("MEAS:CURR? \n").toUtf8(), true))
         activeQuery = 6;
 }
 
@@ -377,7 +379,7 @@ void HeinzingerPS::queryAverages()
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
     }
-    if(writeCommand(QString("AVER? \n"), true))
+    if(writeCommand(QString("AVER? \n").toUtf8(), true))
         activeQuery = 7;
 }
 

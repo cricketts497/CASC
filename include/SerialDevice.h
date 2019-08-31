@@ -17,7 +17,7 @@ public slots:
 	void stop_device();
 	
 signals:
-	void newSerialResponse(QString response);
+	void newSerialResponse(QByteArray response);
     void serialComFinished();
 		
 protected:
@@ -33,9 +33,9 @@ protected:
     const int serial_response_wait;
     
     QQueue<QString> serialCommandQueue;
-    bool writeCommand(QString command, bool response=false);
+    bool writeCommand(QByteArray command, bool response=false);
     
-    const QString noResponseMessage;
+    const QByteArray noResponseMessage;
 
 private slots:
 	void readResponse();

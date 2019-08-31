@@ -4,7 +4,7 @@
 #include "include/CascWidget.h"
 #include "include/ParamReadout.h"
 
-const int nPumps = 1;
+const int nNxdsPumps = 1;
 
 class NxdsPumpStatusWindow : public CascWidget
 {
@@ -19,10 +19,10 @@ private:
     const QStringList pump_names;
     const int nominal_speed;
 
-    ParamReadout * speeds[nPumps];
-    ParamReadout * temperatures[nPumps];
-    ParamReadout * statuses[nPumps];
-    ParamReadout * serviceStatuses[nPumps];
+    ParamReadout * speeds[nNxdsPumps];
+    ParamReadout * temperatures[nNxdsPumps];
+    ParamReadout * statuses[nNxdsPumps];
+    ParamReadout * serviceStatuses[nNxdsPumps];
 };
 
 

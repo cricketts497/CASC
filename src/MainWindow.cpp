@@ -14,7 +14,9 @@ maxHeinzinger20kVoltage(20000),
 maxHeinzinger20kCurrent(3),
 dummyScanner_open(false),
 nxdsPumpWindow_open(false),
+agilentTV301Window_open(false),
 nxdsPumpNames({"BLtest"}),
+agilentTV301Names({"TurboTest"}),
 listener_running(false),
 data_saver_started(false),
 fake_tagger_started(false),
@@ -99,6 +101,12 @@ void MainWindow::createActions()
     nxdsPumpAct->setStatusTip("Open the nXDS pump status viewer");
     connect(nxdsPumpAct, &QAction::triggered, this, &MainWindow::toggleNxdsPumpWindow);
     taskBar->addAction(nxdsPumpAct);
+    
+    const QIcon agilentTV301Icon = QIcon("./resources/agilentTV301.png");
+    agilentTV301Act = new QAction(agilentTV301Icon, "&AGILENTV301", this);
+    agilentTV301Act->setStatusTip("Open the Agilent TV301 turbo status viewer");
+    connect(agilentTV301Act, &QAction::triggered, this, &MainWindow::toggleAgilentTV301Window);
+    taskBar->addAction(agilentTV301Act);
 }
 
 void MainWindow::createStatusBar()
@@ -207,6 +215,7 @@ void MainWindow::toggleMessage()
 			messages.seek(messages.pos()-max_message_chars);
 			messageWindow->addMessage(messages.read(max_message_chars));
 		}else{
+            messages.seek(0);
 			messageWindow->addMessage(messages.readAll());
 		}
 		connect(this, SIGNAL(new_message(QString)), messageWindow, SLOT(addMessage(QString)));
@@ -223,6 +232,7 @@ void MainWindow::keepMessage(QString message)
 	messages << message;
 	messages << endl;
 	emit new_message(message);
+    messages.seek(messages.pos()+message.length()+1);
 }
 
 	
@@ -341,6 +351,37 @@ void MainWindow::toggleNxdsPumpWindow()
         // emit newNxdsPumpStatus(QString("Status_BLtest_0;0400;0080;0000;0010_50"));
     }        
 }
+
+void MainWindow::toggleAgilentTV301Window()
+{
+    if(agilentTV301Window_open){
+        delete agilentTV301Window;
+        
+        agilentTV301Act->setStatusTip("Open the Agilent TV301 turbo status viewer");
+        agilentTV301Window_open = false;
+    }else{
+        agilentTV301Window = new AgilentTV301StatusWindow(agilentTV301Names, this);
+        setupWidget(agilentTV301Window, agilentTV301Act);
+        
+        connect(this, SIGNAL(newAgilentTV301Status(QString)), agilentTV301Window, SLOT(receiveAgilentTV301Status(QString)));
+        
+        addDockWidget(Qt::LeftDockWidgetArea, agilentTV301Window);
+        
+        agilentTV301Act->setStatusTip("Close the Agilent TV301 turbo status viewer");
+        agilentTV301Window_open = true;
+    }    
+    
+    //tests
+    //pump off
+    // emit newAgilentTV301Status(QString("Status_TurboTest_0_0_40_0"));
+    //Normal
+    // emit newAgilentTV301Status(QString("Status_TurboTest_5_0_30.4_963"));
+    //high pump temperature fault
+    // emit newAgilentTV301Status(QString("Status_TurboTest_6_2_30.4_900"));
+    //Too high load fault
+    // emit newAgilentTV301Status(QString("Status_TurboTest_6_128_30.4_850"));
+}
+
 
 /////////////////////////////////////////
 
@@ -585,8 +626,8 @@ void MainWindow::nxdsPumpStatus(QString status)
 
 void MainWindow::toggleAgilentTV301Device(bool start)
 {
-    for(int i=0; i<agilentTV301PumpNames.size(); i++){
-        QString dev_name = agilentTV301PumpNames.at(i);
+    for(int i=0; i<agilentTV301Names.size(); i++){
+        QString dev_name = agilentTV301Names.at(i);
 
         bool local = config->deviceLocal(dev_name);
         
@@ -611,7 +652,7 @@ void MainWindow::toggleAgilentTV301Device(bool start)
 
 void MainWindow::agilentTV301Status(QString status)
 {
-    emit newAgilentTV301Status(QString status);
+    emit newAgilentTV301Status(status);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -629,10 +670,9 @@ void MainWindow::toggleDevice(QString device, bool start)
         dataSaverDeviceButton->click();
     else if(device == "wavemeterpdl" && ((start && !wavemeterPdl_started && !wavemeterPdlDeviceButton->started) || (!start && wavemeterPdl_started && wavemeterPdlDeviceButton->started)))
         wavemeterPdlDeviceButton->click();
-    //using BLTest here!! may cause problems later
-    else if(device == "BLtest" && ((start && !nxdsPumpSet_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPumpSet_started && nxdsPumpDeviceButton->started)))
+    else if(device == nxdsPumpNames[0] && ((start && !nxdsPumpSet_started && !nxdsPumpDeviceButton->started) || (!start && nxdsPumpSet_started && nxdsPumpDeviceButton->started)))
         nxdsPumpDeviceButton->click();
-    else if(device == something && ((start && !agilentTV301_started && !agilentTV301DeviceButton->started) || (!start && agilentTV301_started && agilentTV301DeviceButton->started)))
+    else if(device == agilentTV301Names[0] && ((start && !agilentTV301_started && !agilentTV301DeviceButton->started) || (!start && agilentTV301_started && agilentTV301DeviceButton->started)))
         agilentTV301DeviceButton->click();
 }
 
