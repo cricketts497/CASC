@@ -50,7 +50,7 @@ protected:
     QString deviceStatus;
 
 	bool device_failed;
-	
+    	
 private slots:
     void setFailed();
     void broadcastStatus();

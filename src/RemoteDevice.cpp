@@ -33,18 +33,23 @@ get_status_timeout(1000)
 
 void RemoteDevice::stop_device()
 {
+    if(socket->state() != QAbstractSocket::UnconnectedState){
+        socket->abort();
+    }
+    
 	if(device_failed){
 		emit stopped();
 		return;
 	}
-
-	//send the remote command to stop the device
-	QString outString;
-	QTextStream out(&outString);
-	out << "stop_" << device_name;
-	remoteDeviceCommand(out.readAll(), true);
-
-	connect(socket, &QTcpSocket::disconnected, this, &CascDevice::stop_device);
+    
+    connect(socket, &QTcpSocket::disconnected, this, &CascDevice::stop_device);
+    connect(this, &CascDevice::device_fail, this, &CascDevice::stop_device);
+    
+    //send the remote command to stop the device
+    QString outString;
+    QTextStream out(&outString);
+    out << "stop_" << device_name;
+    remoteDeviceCommand(out.readAll(), true);
 }
 
 void RemoteDevice::get_status()
@@ -61,11 +66,15 @@ void RemoteDevice::remoteDeviceCommand(QString device_com, bool toListener)
 {
     remoteDeviceCommandQueue.enqueue(device_com);
     
-    if(toListener){
+    if(toListener && socket->state() == QAbstractSocket::UnconnectedState){
         socket->connectToHost(hostAddress, hostListenPort);
+    }else if(toListener){
+        emit device_message("REMOTE DEVICE ERROR: %1: Trying to send start/ stop command while still connected");
+        socket->abort();
     }else if(socket->state() == QAbstractSocket::UnconnectedState){
         socket->connectToHost(hostAddress, hostDevicePort);
     }
+    //start or restart the timer
     connection_timer->start();
 }
 
@@ -108,12 +117,13 @@ void RemoteDevice::readResponse()
 /////////////////////////////////////////////////////////////////
 void RemoteDevice::connectionTimeout()
 {
-	storeMessage(QString("REMOTE %1 ERROR: Connection timeout").arg(device_name), true);
-	emit device_message(QString("REMOTE %1 ERROR: Connection timeout").arg(device_name));
-	emit device_fail();
-	
+	storeMessage(QString("REMOTE ERROR: %1: Connection timeout").arg(device_name), true);
+	emit device_message(QString("REMOTE ERROR: %1: Connection timeout").arg(device_name));
+
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
-		socket->disconnectFromHost();
+		socket->abort();
+    
+    emit device_fail();
 }
 
 //including if remote host closes the connection
@@ -124,14 +134,11 @@ void RemoteDevice::socketError()
         return;
     }
     
-	storeMessage(QString("REMOTE %1 ERROR: %2").arg(device_name).arg(socket->errorString()), true);
-	emit device_message(QString("REMOTE %1 ERROR: %2").arg(device_name).arg(socket->errorString()));
-	emit device_fail();
+	storeMessage(QString("REMOTE ERROR: %1: %2").arg(device_name).arg(socket->errorString()), true);
+	emit device_message(QString("REMOTE ERROR: %1: %2").arg(device_name).arg(socket->errorString()));
 	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
-		socket->disconnectFromHost();
+		socket->abort();
+    
+    emit device_fail();
 }
-
-
-
-

@@ -71,11 +71,11 @@ voltageFileMutex(voltageFileMutex)
 void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
 {
     if(on){
-        if(currentSetButton->started){
-            currentSetButton->toggle();
+        if(currentSetButton->deviceIsRunning()){
+            currentSetButton->deviceToggle();
         } 
-        if(voltageSetButton->started){
-            voltageSetButton->toggle();
+        if(voltageSetButton->deviceIsRunning()){
+            voltageSetButton->deviceToggle();
         }        
         currentSetButton->setEnabled(true);
         voltageSetButton->setEnabled(true);
@@ -89,8 +89,8 @@ void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
 void HeinzingerVoltageWindow::voltageChanged()
 {
     //set the voltageSetButton to off
-    if(voltageSetButton->started){
-        voltageSetButton->toggle();
+    if(voltageSetButton->deviceIsRunning()){
+        voltageSetButton->deviceToggle();
         // voltageSetButton->setEnabled(true);
     }
 }
@@ -98,8 +98,8 @@ void HeinzingerVoltageWindow::voltageChanged()
 void HeinzingerVoltageWindow::currentChanged()
 {
     //set the currentSetButton to off
-    if(currentSetButton->started){
-        currentSetButton->toggle();
+    if(currentSetButton->deviceIsRunning()){
+        currentSetButton->deviceToggle();
         // currentSetButton->setEnabled(true);
     }
 }
@@ -115,8 +115,9 @@ void HeinzingerVoltageWindow::setVoltage()
     emit sendCommand(out.readAll());
     // voltageSetButton->setEnabled(false);
     
-    if(currentSetButton->started)
+    if(currentSetButton->deviceIsRunning()){
         outputButton->setEnabled(true);
+    }
 }
 
 void HeinzingerVoltageWindow::setCurrent()
@@ -130,8 +131,9 @@ void HeinzingerVoltageWindow::setCurrent()
     emit sendCommand(out.readAll());
     // currentSetButton->setEnabled(false);
     
-    if(voltageSetButton->started)
+    if(voltageSetButton->deviceIsRunning()){
         outputButton->setEnabled(true);
+    }
 }
 
 void HeinzingerVoltageWindow::setOutput()
@@ -190,8 +192,8 @@ void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
         // voltageSetButton->toggle();
         // voltageSet = true;
         voltageChanged();
-    }else if(voltage_setpoint == voltageEdit->value() && !voltageSetButton->started && voltage_setpoint != 0){
-        voltageSetButton->toggle();
+    }else if(voltage_setpoint == voltageEdit->value() && !voltageSetButton->deviceIsRunning() && voltage_setpoint != 0){
+        voltageSetButton->deviceToggle();
     }
     
     qreal current_setpoint = status_list.at(2).toDouble();
@@ -201,17 +203,17 @@ void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
         // if(voltageSet)
             // outputButton->setEnabled(true);
         currentChanged();
-    }else if(current_setpoint == currentEdit->value() && !currentSetButton->started && current_setpoint !=0){
-        currentSetButton->toggle();
+    }else if(current_setpoint == currentEdit->value() && !currentSetButton->deviceIsRunning() && current_setpoint !=0){
+        currentSetButton->deviceToggle();
     }
     
-    if(status_list.at(3) == QString("1") && !outputButton->started){
-        outputButton->toggle();
+    if(status_list.at(3) == QString("1") && !outputButton->deviceIsRunning()){
+        outputButton->deviceToggle();
         outputButton->setText("Output on");
         voltageReadTimer->start();
         output_on = true;
-    }else if(status_list.at(3) == QString("0") && outputButton->started){
-        outputButton->toggle();
+    }else if(status_list.at(3) == QString("0") && outputButton->deviceIsRunning()){
+        outputButton->deviceToggle();
         outputButton->setText("Output off");
         voltageReadTimer->stop();
         output_on = false;

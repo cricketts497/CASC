@@ -2,14 +2,10 @@
 #define MAIN_WINDOW_H
 
 #include <QMainWindow>
+#include <QtWidgets>
 
 #include "include/DeviceButton.h"
-#include "include/PdlDevice.h"
-#include "include/GenericGraph.h"
-#include "include/fakeTagger.h"
-#include "include/TofHistogram.h"
 #include "include/MessageWindow.h"
-#include "include/TaggerDevice.h"
 #include "include/Listener.h"
 #include "include/CascConfig.h"
 #include "include/RemoteDataDevice.h"
@@ -18,19 +14,12 @@
 #include "include/DataSaver.h"
 #include "include/DummyScanner.h"
 #include "include/RemoteDataSaver.h"
-#include "include/WavemeterPdl.h"
 #include "include/NxdsPump.h"
 #include "include/NxdsPumpStatusWindow.h"
 #include "include/SimpleGraph.h"
 #include "include/AgilentTV301Pump.h"
 #include "include/AgilentTV301StatusWindow.h"
-
-class QToolBar;
-class QHBoxLayout;
-class QAction;
-class QWidgetAction;
-class QLabel;
-class QPushButton;
+#include "include/CascAction.h"
 
 class MainWindow: public QMainWindow
 {
@@ -40,13 +29,12 @@ public:
 	MainWindow();
 
 private slots:
-	void keepMessage(QString message);
-
 	//widgets
-	void setupWidget(CascWidget * widget, QAction * action);
+	void setupWidget(CascWidget * widget, CascAction * action);
 	
-	void toggleTof();
 	void toggleMessage();
+    void keepMessage(QString message);
+    
 	void toggleHeinzinger30k();
 	void toggleHeinzinger20k();
     void toggleDummyScanner();
@@ -54,48 +42,42 @@ private slots:
     void toggleAgilentTV301Window();
     
     //command re-emission functions
-    void heinzinger30kCommand(QString command);
-    void heinzinger20kCommand(QString command);
-    void dummyScannerCommand(QString command);
+    // void heinzinger30kCommand(QString command);
+    // void heinzinger20kCommand(QString command);
+    // void dummyScannerCommand(QString command);
 	
 
 	//devices
 	void toggleDevice(QString device, bool start);
 	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
 	
-	void toggleListener(bool start);
-    void toggleDataSaver(bool start);
-	void toggleFakePdlDevice(bool start);
-	void toggleFakeTaggerDevice(bool start);
-	void toggleTaggerDevice(bool start);
-	void toggleHeinzinger30kDevice(bool start);
-	void toggleHeinzinger20kDevice(bool start);
-    void toggleWavemeterPdlDevice(bool start);
-    void toggleNxdsPumpDevice(bool start);
-    void toggleAgilentTV301Device(bool start);
+	void toggleListener();
+    void toggleDataSaver();
+	void toggleHeinzinger30kDevice();
+	void toggleHeinzinger20kDevice();
+    void toggleNxdsPumpDevice();
+    void toggleAgilentTV301Device();
     
     //status re-emission functions
-    void heinzinger30kStatus(QString status);
-    void heinzinger20kStatus(QString status);
-    void nxdsPumpStatus(QString status);
-    void agilentTV301Status(QString status);
-
-	void setStatusValue(qreal value);
+    // void heinzinger30kStatus(QString status);
+    // void heinzinger20kStatus(QString status);
+    // void nxdsPumpStatus(QString status);
+    // void agilentTV301Status(QString status);
 
 signals:
 	void new_message(QString message);
 	void newDataSaverStart(QString device);
     
     //command signals to devices
-	void newHeinzinger30kCommand(QString command);
-	void newHeinzinger20kCommand(QString command);
-    void newDummyScannerCommand(QString command);
+	// void newHeinzinger30kCommand(QString command);
+	// void newHeinzinger20kCommand(QString command);
+    // void newDummyScannerCommand(QString command);
     
     //status reemission signals
-    void newHeinzinger30kStatus(QString status);
-    void newHeinzinger20kStatus(QString status);
-    void newNxdsPumpStatus(QString status);
-    void newAgilentTV301Status(QString status);
+    // void newHeinzinger30kStatus(QString status);
+    // void newHeinzinger20kStatus(QString status);
+    // void newNxdsPumpStatus(QString status);
+    // void newAgilentTV301Status(QString status);
 
 private:
 	const QString config_file_path = "./config.txt";
@@ -116,9 +98,6 @@ private:
 	QTextStream messages;
 
 	//file paths
-	const QString fake_tagger_temp_path = "./temp/faketag_temp.dat";
-	const QString tagger_temp_path = "./temp/tagger_temp.dat";
-	const QString fake_pdl_temp_path = "./temp/fakepdl_temp.dat";
 	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.dat";
 	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.dat";
     const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.dat";
@@ -127,9 +106,7 @@ private:
     //base path containing the scan directories
     const QString finalBasePath = "./data";
 
-    //file mutexes to prevent files frombeinig opened concurently in separate threads
-	QMutex fakeTaggerFileMutex;
-	QMutex fakePdlFileMutex;
+    //file mutexes to prevent files from being opened concurently in separate threads
 	QMutex heinzinger30kFileMutex;
 	QMutex heinzinger20kFileMutex;
     QMutex nxdsPumpFileMutex;
@@ -140,82 +117,66 @@ private:
 
 	//task widgets
     ////////////////////////////////////////////////////////////////////////
-	QAction *tofAct;
-	TofHistogram *tofHist;
-	bool tofHist_open;
-
-	QAction *messageAct;
+	CascAction * messageAct;
+	// QAction *messageAct;
 	MessageWindow * messageWindow;
-	bool messageWindow_open;
+	// bool messageWindow_open;
 	
-	QAction *heinzinger30kAct;
+	CascAction *heinzinger30kAct;
+	// QAction *heinzinger30kAct;
 	HeinzingerVoltageWindow * heinzinger30kWindow;
-	bool heinzinger30kWindow_open;
+	// bool heinzinger30kWindow_open;
 	const uint maxHeinzinger30kVoltage;
     const uint maxHeinzinger30kCurrent;
     
-    QAction *heinzinger20kAct;
+    CascAction *heinzinger20kAct;
+    // QAction *heinzinger20kAct;
 	HeinzingerVoltageWindow * heinzinger20kWindow;
-	bool heinzinger20kWindow_open;
+	// bool heinzinger20kWindow_open;
     const uint maxHeinzinger20kVoltage;
     const uint maxHeinzinger20kCurrent;
     
-    QAction * dummyScannerAct;
+    CascAction * dummyScannerAct;
     DummyScanner * dummyScanner;
-    bool dummyScanner_open;
+    // bool dummyScanner_open;
     
-    QAction * nxdsPumpAct;
+    CascAction * nxdsPumpAct;
+    // QAction * nxdsPumpAct;
     NxdsPumpStatusWindow * nxdsPumpWindow;
-    bool nxdsPumpWindow_open;
+    // bool nxdsPumpWindow_open;
     const QStringList nxdsPumpNames;
 
-    QAction * agilentTV301Act;
+    CascAction * agilentTV301Act;
+    // QAction * agilentTV301Act;
     AgilentTV301StatusWindow * agilentTV301Window;
-    bool agilentTV301Window_open;
+    // bool agilentTV301Window_open;
     const QStringList agilentTV301Names;
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////
 	DeviceButton * listenerButton;
 	Listener * listener;
-	bool listener_running;
+	// bool listener_running;
     
     DeviceButton * dataSaverDeviceButton;
-    bool data_saver_started;
+    // bool data_saver_started;
     QThread dataSaverDeviceThread;
     void dataSaverStart(QString device);
 
-	DeviceButton *fakePdlDeviceButton;
-	PdlDevice *fakePdlDevice;
-	QThread fakePdlDeviceThread;
-
-	DeviceButton * fakeTaggerDeviceButton;
-	// FakeTagger * fakeTaggerDevice;
-	bool fake_tagger_started;
-	QThread fakeTaggerDeviceThread;
-
-	DeviceButton * taggerDeviceButton;
-	TaggerDevice * taggerDevice;
-	bool tagger_started;
-	
 	DeviceButton * heinzinger30kDeviceButton;
-	bool heinzinger30k_started;
+	// bool heinzinger30k_started;
 	QThread heinzinger30kDeviceThread;
     
     DeviceButton * heinzinger20kDeviceButton;
-	bool heinzinger20k_started;
+	// bool heinzinger20k_started;
 	QThread heinzinger20kDeviceThread;
-
-    DeviceButton * wavemeterPdlDeviceButton;
-    bool wavemeterPdl_started;
-    QThread wavemeterPdlDeviceThread;
     
     DeviceButton * nxdsPumpDeviceButton;
-    bool nxdsPumpSet_started;
+    // bool nxdsPumpSet_started;
     QThread nxdsPumpDeviceThread;
     
     DeviceButton * agilentTV301DeviceButton;
-    bool agilentTV301_started;
+    // bool agilentTV301_started;
     QThread agilentTV301DeviceThread;
 };
 

@@ -12,20 +12,20 @@ class DeviceButton : public QPushButton
 public:
 	DeviceButton(const char *name, QWidget *parent=nullptr, const char *startTip="Start", const char *stopTip="Stop", const char *failTip="FAIL");
 
-	void toggle();
-
-	bool started;
-
+    bool deviceIsRunning();
+	bool deviceToggle();
+    
 signals:
-	void button_message(QString message);
-
-	void toggle_device(bool start);
+    void newDeviceStatus(QString status);
+    void stop_device();
 
 public slots:
+    void device_status(QString status);
 	void setFail();
+    void deviceHasStopped();
 
 private:
-	// void setButtonColour(QColor colour);
+    bool started;
 
 	//button colours
 	const QColor closed_colour = QColor(Qt::white);

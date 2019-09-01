@@ -21,14 +21,14 @@ public slots:
 protected:
     QTcpSocket * socket;
     QQueue<QString> remoteDeviceCommandQueue;
-
+    
 private slots:
     void get_status();
 
 	void writeCommand();
     
     void readResponse();
-	
+    	
 	void connectionTimeout();
 	void socketError();
     

@@ -65,9 +65,6 @@ averages_set(0)
     //communication finished, take next command
     connect(this, &SerialDevice::serialComFinished, this, &HeinzingerPS::heinzingerCommand);
     
-    //disable the output on fail
-    connect(this, SIGNAL(device_fail()), this, SLOT(stop_device()));
-    
     //allow time after setting value before query
     queryAfterSetTimer->setInterval(queryAfterSetTimeout);
     queryAfterSetTimer->setSingleShot(true);
@@ -97,11 +94,11 @@ void HeinzingerPS::stop_device()
         return;
     }else if(voltage_setpoint != 0){
         emit device_message(QString("LOCAL HEINZINGER ERROR: %1: unable to disable output").arg(device_name));
-        emit device_fail();
+        SerialDevice::stop_device();
         return;
     }
     //when the response comes that the output is disabled, close the serial port
-    connect(this, &HeinzingerPS::voltage_set_zero, this, &SerialDevice::stop_device); 
+    connect(this, &HeinzingerPS::voltage_set_zero, this, &SerialDevice::stop_device);
 }
 
 //!Only put remote commands of the correct type in the serial command queue

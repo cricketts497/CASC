@@ -1,15 +1,13 @@
 #include <QtWidgets>
 #include "include/DeviceButton.h"
 
-DeviceButton::DeviceButton(const char *name, QWidget *parent, const char *startTip, const char *stopTip, const char * failTip) :
+DeviceButton::DeviceButton(const char *name, QWidget * parent, const char *startTip, const char *stopTip, const char * failTip) :
 QPushButton(name, parent),
 started(false),
 startTip(startTip),
 stopTip(stopTip),
 failTip(failTip)
-{
-	emit button_message(QString("Button: init"));
-	
+{	
 	// setButtonColour(closed_colour);
 	QPalette pal = palette();
 	pal.setColor(QPalette::Button, closed_colour);
@@ -19,21 +17,12 @@ failTip(failTip)
 	setAutoFillBackground(true);
 	setStatusTip(startTip);
 
-	connect(this, &QAbstractButton::clicked, this, &DeviceButton::toggle);
+	// connect(this, &QAbstractButton::clicked, this, &DeviceButton::toggle);
 }
 
-// void DeviceButton::setButtonColour(QColor colour)
-// {
-	// emit button_message(QString("Button: setButtonColour"));
-	// QPalette pal = palette();
-	// pal.setColor(QPalette::Button, colour);
-	// setPalette(pal);
-	// update();
-// }
-
-void DeviceButton::toggle()
+//returns whether the device was open or closed before the toggle
+bool DeviceButton::deviceToggle()
 {
-	emit button_message(QString("Button: toggle"));
 	if(started){
 		setFlat(false);
 		
@@ -46,7 +35,12 @@ void DeviceButton::toggle()
 		started = false;
 		setStatusTip(startTip);
 		
-		emit toggle_device(false);
+        //disable the button until the device has stopped
+        // setEnabled(false);
+        
+		// emit toggle_device(false);
+        emit stop_device();
+        return true;
 	}else{
 		setFlat(true);
 		
@@ -59,13 +53,16 @@ void DeviceButton::toggle()
 		started = true;
 		setStatusTip(stopTip);
 		
-		emit toggle_device(true);
+		// emit toggle_device(true);
+        return false;
 	}
 }
 
 void DeviceButton::setFail()
 {
-	emit button_message(QString("Button: setFail"));
+    if(!started){
+        return;
+    }        
 	setFlat(true);
 	
 	// setButtonColour(fail_colour);
@@ -76,3 +73,21 @@ void DeviceButton::setFail()
 	
 	setStatusTip(failTip);
 }
+
+void DeviceButton::device_status(QString status)
+{
+    emit newDeviceStatus(status);
+}
+
+bool DeviceButton::deviceIsRunning()
+{
+    return started;
+}
+
+void DeviceButton::deviceHasStopped()
+{
+    setEnabled(true);
+}
+
+
+
