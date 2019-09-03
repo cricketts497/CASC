@@ -1,4 +1,4 @@
-#include "include/NxdsPump.h"
+ #include "include/NxdsPump.h"
 
 NxdsPump::NxdsPump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 SerialDevice(file_path, file_mutex, deviceName, config, parent),

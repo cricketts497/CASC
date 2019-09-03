@@ -5,8 +5,6 @@ CascWidget(QString("nXDS Pumps"), parent),
 pump_names(pump_names),
 nominal_speed(30)
 {
-    
-    
     QWidget * widget = new QWidget(this);
 	setWidget(widget);
     
@@ -56,6 +54,13 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     if(status_list.length() != 5 || status_list.first() != QString("Status"))
         return;
     
+    //pump speed status, see NxdsPump.h or nXDS serial comms manual for details
+    QStringList speed_status_list = status_list.at(2).split(";");
+    
+    //check for correct format
+    if(speed_status_list.length() != 5)
+        return;
+    
     //find the pump this status is for
     int pump_index=-1;
     for(int i=0; i<nNxdsPumps; i++){
@@ -67,10 +72,7 @@ void NxdsPumpStatusWindow::receiveNxdsStatus(QString status)
     if(pump_index < 0){
         return;
     }
-    
-    //pump speed status, see NxdsPump.h or nXDS serial comms manual for details
-    QStringList speed_status_list = status_list.at(2).split(";");
-    
+   
     speeds[pump_index]->setText(speed_status_list.at(0));
     int rot_speed = speed_status_list.at(0).toInt();
     if(rot_speed == nominal_speed){

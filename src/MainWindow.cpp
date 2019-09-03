@@ -12,7 +12,7 @@ maxHeinzinger20kCurrent(3),
 // dummyScanner_open(false),
 // nxdsPumpWindow_open(false),
 // agilentTV301Window_open(false),
-nxdsPumpNames({"BLtest"}),
+nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP"}),
 agilentTV301Names({"TurboTest"})
 // listener_running(false)
 // data_saver_started(false),
@@ -117,7 +117,7 @@ void MainWindow::createDevicesBar()
 	// connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger20kDevice(bool)));
 	connect(heinzinger20kDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleHeinzinger20kDevice);
 
-    nxdsPumpDeviceButton = new DeviceButton("NXDS test", devicesBar, "Start the Edwards NXDS backing pump device", "Stop the NXDS pump device", "NXDS PUMP FAIL");
+    nxdsPumpDeviceButton = new DeviceButton("nXDS pumps", devicesBar, "Start the Edwards nXDS backing pump device", "Stop the nXDS pump device", "NXDS PUMP FAIL");
     // connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleNxdsPumpDevice(bool)));
     connect(nxdsPumpDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleNxdsPumpDevice);
 
