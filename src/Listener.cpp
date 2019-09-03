@@ -96,6 +96,7 @@ void Listener::sessionOpened()
 void Listener::newCom()
 {
     if(listenerBusy){
+        emit listener_message(QString("Listener: New connection attempt received while busy"));
         return;
     }
     

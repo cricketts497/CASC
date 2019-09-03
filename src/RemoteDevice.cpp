@@ -36,8 +36,9 @@ askListener(askListener)
 
 void RemoteDevice::stop_device()
 {
+    get_status_timer->stop();
     if(socket->state() != QAbstractSocket::UnconnectedState){
-        socket->abort();
+        socket->disconnectFromHost();
     }
     
 	if(device_failed || !askListener){
@@ -67,12 +68,18 @@ void RemoteDevice::get_status()
 //write device commands from the widgets
 void RemoteDevice::remoteDeviceCommand(QString device_com, bool toListener)
 {
+    if(toListener){
+        remoteDeviceCommandQueue.clear();
+    }
+    
     remoteDeviceCommandQueue.enqueue(device_com);
     
     if(toListener && socket->state() == QAbstractSocket::UnconnectedState){
+        storeMessage(QString("Remote device: %1: Sending listener command %2").arg(device_name).arg(device_com), false);
+        emit device_message(QString("Remote device: %1: Sending listener command %2").arg(device_name).arg(device_com));
         socket->connectToHost(hostAddress, hostListenPort);
     }else if(toListener){
-        emit device_message("REMOTE DEVICE ERROR: %1: Trying to send start/ stop command while still connected");
+        emit device_message(QString("REMOTE DEVICE ERROR: %1: Trying to send start/ stop command while still connected"));
         socket->abort();
     }else if(socket->state() == QAbstractSocket::UnconnectedState){
         socket->connectToHost(hostAddress, hostDevicePort);
