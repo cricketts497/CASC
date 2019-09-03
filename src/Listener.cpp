@@ -8,7 +8,8 @@ Listener::Listener(CascConfig * config, QObject * parent) :
 QObject(parent),
 casc_config(config),
 timeout(3000),
-connection_timer(new QTimer(this))
+connection_timer(new QTimer(this)),
+listenerBusy(false)
 {
 	connection_timer->setSingleShot(true);
 	connection_timer->setInterval(timeout);
@@ -90,17 +91,24 @@ void Listener::sessionOpened()
 	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
 
 	emit listener_message(QString("Listener: Running, port: %1").arg(tcpServer->serverPort()));
-
 }
 
 void Listener::newCom()
 {
+    if(listenerBusy){
+        return;
+    }
+    
 	socket = tcpServer->nextPendingConnection();
-	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
+    listenerBusy = true;
+    
+	connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));    
+    
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
+    
 	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
-	
 	connect(socket, SIGNAL(readyRead()), connection_timer, SLOT(stop()));
+    
 	connection_timer->start();
 }
 
@@ -127,6 +135,15 @@ void Listener::receiveCommand()
             emit toggle_device_command(command_list.at(i), false);
         }
     }
+    freeListener();
+}
+
+void Listener::freeListener()
+{
+    listenerBusy = false;
+    if(tcpServer->hasPendingConnections()){
+        newCom();
+    }
 }
 
 //Error handling
@@ -137,7 +154,7 @@ void Listener::connectionTimeout()
 	emit listener_fail();
 	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
-		socket->disconnectFromHost();
+		socket->abort();
 }
 
 void Listener::socketError()
@@ -150,5 +167,5 @@ void Listener::socketError()
 	emit listener_fail();
 	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
-		socket->disconnectFromHost();
+		socket->abort();
 }

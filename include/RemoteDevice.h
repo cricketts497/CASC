@@ -9,7 +9,7 @@ class RemoteDevice : public CascDevice
 {
 	Q_OBJECT
 public:
-	RemoteDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr);
+	RemoteDevice(QString deviceName, CascConfig * config, QObject * parent=nullptr, bool askListener=false);
 	
 signals:
     void newResponse(QByteArray resp);
@@ -35,6 +35,7 @@ private slots:
 private:
     QTimer * get_status_timer = nullptr;
     const int get_status_timeout;
+    bool askListener;
 };
 
 #endif // REMOTE_DEVICE_H

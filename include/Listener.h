@@ -47,6 +47,9 @@ private:
 	QTcpServer * tcpServer = nullptr;
 	quint16 listenPort;
 	QTcpSocket * socket = nullptr;
+    
+    bool listenerBusy;
+    void freeListener();
 
 };
 

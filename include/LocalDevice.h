@@ -32,6 +32,7 @@ private slots:
 
 private:
 	QTcpServer * deviceServer = nullptr;
+    bool deviceBusy;
 
 };
 

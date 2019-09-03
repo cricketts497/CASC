@@ -11,13 +11,15 @@
   
 LocalDevice::LocalDevice(QString deviceName, CascConfig * config, QObject * parent) :
 CascDevice(deviceName, config, parent),
-deviceServer(new QTcpServer(this))
+deviceServer(new QTcpServer(this)),
+deviceBusy(false)
 {
-	if(device_failed)
+	if(device_failed){
 		return;
+    }
 
 	if(!deviceServer->listen(QHostAddress::Any, hostDevicePort)){
-		storeMessage(QString("LOCAL %1 ERROR: deviceServer->listen()").arg(deviceName), true);
+		storeMessage(QString("LOCAL DEVICE ERROR: %1: deviceServer->listen()").arg(deviceName), true);
 		return;
 	}
 	connect(deviceServer, SIGNAL(newConnection()), this, SLOT(newCon()));
@@ -32,8 +34,13 @@ Run when deviceServer emits \l QTcpServer::newConnection() upon receiving a conn
 */
 void LocalDevice::newCon()
 {
+    if(deviceBusy){
+        return;
+    }
+    
 	socket = deviceServer->nextPendingConnection();
-	// deviceServer->pauseAccepting();//one connection at a time
+    deviceBusy = true;
+    
 	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError()));
 	
 	connect(socket, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
@@ -86,7 +93,7 @@ void LocalDevice::receiveCommand()
 
 void LocalDevice::messageReceived()
 {
-	// deviceServer->resumeAccepting();
+    deviceBusy = false;
     if(deviceServer->hasPendingConnections())
         newCon();
 }
@@ -114,5 +121,5 @@ void LocalDevice::socketError()
 	emit device_fail();
 	
 	if(socket->state() != QAbstractSocket::UnconnectedState && socket->state() != QAbstractSocket::ClosingState)
-		socket->disconnectFromHost();
+		socket->abort();
 }

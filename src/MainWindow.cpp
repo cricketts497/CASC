@@ -494,7 +494,8 @@ void MainWindow::toggleNxdsPumpDevice()
             NxdsPump * nxdsDevice = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,dev_name,config);
             setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
         }else{
-            RemoteDevice * nxdsDevice = new RemoteDevice(dev_name, config);
+            //only send listener commands with the first device in the group
+            RemoteDevice * nxdsDevice = new RemoteDevice(dev_name, config, nullptr, i==0);
             setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
         }
     }
@@ -521,7 +522,8 @@ void MainWindow::toggleAgilentTV301Device()
             AgilentTV301Pump * agilentTV301Device = new AgilentTV301Pump(agilentTV301_temp_path,&agilentTV301FileMutex,dev_name,config);
             setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
         }else{
-            RemoteDevice * agilentTV301Device = new RemoteDevice(dev_name, config);
+            //only send listener commands with the first device in the group
+            RemoteDevice * agilentTV301Device = new RemoteDevice(dev_name, config, nullptr, i==0);
             setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
         }
     }

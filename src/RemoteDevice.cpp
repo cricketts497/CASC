@@ -1,10 +1,11 @@
 #include "include/RemoteDevice.h"
 
-RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * parent) :
+RemoteDevice::RemoteDevice(QString deviceName, CascConfig * config, QObject * parent, bool askListener) :
 CascDevice(deviceName, config, parent),
 socket(new QTcpSocket(this)),
 get_status_timer(new QTimer(this)),
-get_status_timeout(1000)
+get_status_timeout(1000),
+askListener(askListener)
 {
 	if(device_failed)
 		return;
@@ -18,11 +19,13 @@ get_status_timeout(1000)
 	connect(connection_timer, SIGNAL(timeout()), this, SLOT(connectionTimeout()));
 	connect(socket, SIGNAL(disconnected()), connection_timer, SLOT(stop()));
     
-	//send the remote command to start the device
-	QString outString;
-	QTextStream out(&outString);
-	out << "start_" << deviceName;
-	remoteDeviceCommand(out.readAll(), true);
+    if(askListener){
+        //send the remote command to start the device
+        QString outString;
+        QTextStream out(&outString);
+        out << "start_" << deviceName;
+        remoteDeviceCommand(out.readAll(), true);
+    }
     
     connect(get_status_timer, SIGNAL(timeout()), this, SLOT(get_status()));
     connect(this, SIGNAL(device_fail()), get_status_timer, SLOT(stop()));
@@ -37,7 +40,7 @@ void RemoteDevice::stop_device()
         socket->abort();
     }
     
-	if(device_failed){
+	if(device_failed || !askListener){
 		emit stopped();
 		return;
 	}
@@ -95,6 +98,7 @@ void RemoteDevice::readResponse()
     if(resp.endsWith(failMessage)){
         emit device_message(QString("REMOTE %1 ERROR: fail message received from local").arg(device_name));
 		emit device_fail();
+        socket->disconnectFromHost();
         return;
     }
     
