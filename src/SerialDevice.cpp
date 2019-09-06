@@ -25,7 +25,8 @@ missing_serial_response_limit(3)//failure if miss three responses in a row
 	connect(serial_timer, SIGNAL(timeout()), this, SLOT(serialTimeout()));
         
     //response handling
-	connect(serial_port, SIGNAL(readyRead()), serial_timer, SLOT(stop()));
+	// connect(serial_port, SIGNAL(readyRead()), serial_timer, SLOT(stop()));
+	connect(this, SIGNAL(serialComFinished()), serial_timer, SLOT(stop()));
     connect(serial_port, SIGNAL(readyRead()), this, SLOT(readResponse()));
 	
 	//get the serial port name from the config file, 4th argument in line
@@ -174,6 +175,12 @@ void SerialDevice::readResponse()
     // emit newSerialResponse(response);
     emit newSerialResponse(resp);
     
+    // commandInProgress = false;
+    // emit serialComFinished();
+}
+
+void SerialDevice::fullResponseReceived()
+{
     commandInProgress = false;
     emit serialComFinished();
 }

@@ -4,7 +4,7 @@
 #include "include/CascWidget.h"
 #include "include/ParamReadout.h"
 
-const int nNxdsPumps = 4;
+const int nNxdsPumps = 5;
 
 class NxdsPumpStatusWindow : public CascWidget
 {

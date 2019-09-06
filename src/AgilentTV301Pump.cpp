@@ -3,6 +3,14 @@
 AgilentTV301Pump::AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 SerialDevice(file_path, file_mutex, deviceName, config, parent),
 activeQuery(QString("NONE")),
+statusTimer(new QTimer(this)),
+statusTimeout(1000),
+errorCodeTimer(new QTimer(this)),
+errorCodeTimeout(1010),
+temperatureTimer(new QTimer(this)),
+temperatureTimeout(1020),
+driveTimer(new QTimer(this)),
+driveTimeout(1030),
 pumpStatusCode(7),
 pumpErrorCode(0),
 pumpTemperature(0),
@@ -18,7 +26,6 @@ pumpDrive(0)
 	setStopBits(1);
 	setFlowControl(1);//NoFlowControl
     
-    
     //response from device
     connect(this, SIGNAL(newSerialResponse(QByteArray)), this, SLOT(dealWithResponse(QByteArray)));
     
@@ -26,15 +33,22 @@ pumpDrive(0)
     connect(this, &SerialDevice::serialComFinished, this, &AgilentTV301Pump::pumpCommand);
     
     //setup the query timers
-    // temperatureTimer->setInterval(temperatureTimeout);
-    // connect(temperatureTimer, SIGNAL(timeout()), this, SLOT(queryTemperature()));
-    // connect(this, SIGNAL(device_fail()), temperatureTimer, SLOT(stop()));
+    statusTimer->setInterval(statusTimeout);
+    connect(statusTimer, SIGNAL(timeout()), this, SLOT(queryStatus()));
+    connect(this, SIGNAL(device_fail()), statusTimer, SLOT(stop()));
     
-    // speedStatusTimer->setInterval(speedStatusTimeout);
-    // connect(speedStatusTimer, SIGNAL(timeout()), this, SLOT(querySpeedStatus()));
-    // connect(this, SIGNAL(device_fail()), speedStatusTimer, SLOT(stop()));
+    errorCodeTimer->setInterval(errorCodeTimeout);
+    connect(errorCodeTimer, SIGNAL(timeout()), this, SLOT(queryErrorCode()));
+    connect(this, SIGNAL(device_fail()), errorCodeTimer, SLOT(stop()));
     
+    temperatureTimer->setInterval(temperatureTimeout);
+    connect(temperatureTimer, SIGNAL(timeout()), this, SLOT(queryTemperature()));
+    connect(this, SIGNAL(device_fail()), temperatureTimer, SLOT(stop()));
     
+    driveTimer->setInterval(driveTimeout);
+    connect(driveTimer, SIGNAL(timeout()), this, SLOT(queryDrive()));
+    connect(this, SIGNAL(device_fail()), driveTimer, SLOT(stop()));
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     if(!openSerialPort())
         return;
@@ -43,13 +57,37 @@ pumpDrive(0)
     //initial commands
     // queueSerialCommand(QString("PUMPSTATUSCODE"));
     // queueSerialCommand(QString("PUMPERRORCODE"));
+    // queueSerialCommand(QString("PUMPTEMPERATURE"));
+    // queueSerialCommand(QString("PUMPDRIVE"));
 
     //periodic commands timers
-    // temperatureTimer->start();
-    // speedStatusTimer->start();
+    statusTimer->start();
+    errorCodeTimer->start();
+    temperatureTimer->start();
+    driveTimer->start();
     
     //intial device status: device_name, statusCode, errorCode, temperature
     deviceStatus = QString("Status_%1_%2_%3_%4_%5").arg(device_name).arg(pumpStatusCode).arg(pumpErrorCode).arg(pumpTemperature).arg(pumpDrive); 
+}
+
+void AgilentTV301Pump::queryStatus()
+{
+    queueSerialCommand(QString("PUMPSTATUSCODE"));
+}
+
+void AgilentTV301Pump::queryErrorCode()
+{
+    queueSerialCommand(QString("PUMPERRORCODE"));
+}
+
+void AgilentTV301Pump::queryTemperature()
+{
+    queueSerialCommand(QString("PUMPTEMPERATURE"));
+}
+
+void AgilentTV301Pump::queryDrive()
+{
+    queueSerialCommand(QString("PUMPDRIVE"));
 }
 
 void AgilentTV301Pump::pumpCommand()
@@ -63,7 +101,7 @@ void AgilentTV301Pump::pumpCommand()
     
     QByteArray toQuery;
     toQuery.resize(9);
-    //crc is 0xB4 => ascii 0x42, 0x34
+    //crc is 0x84 => ascii 0x38, 0x34
     if(command_list.first() == QString("PUMPSTATUSCODE")){
         toQuery[0] = 0x02;
         toQuery[1] = 0x80;
@@ -72,9 +110,9 @@ void AgilentTV301Pump::pumpCommand()
         toQuery[4] = 0x35;
         toQuery[5] = 0x30;
         toQuery[6] = 0x03;
-        toQuery[7] = 0x42;
+        toQuery[7] = 0x38;
         toQuery[8] = 0x34;       
-    //crc is 0xB7 => ascii 0x42, 0x37
+    //crc is 0x87 => ascii 0x38, 0x37
     }else if(command_list.first() == QString("PUMPERRORCODE")){
         toQuery[0] = 0x02;
         toQuery[1] = 0x80;
@@ -83,7 +121,7 @@ void AgilentTV301Pump::pumpCommand()
         toQuery[4] = 0x36;
         toQuery[5] = 0x30;
         toQuery[6] = 0x03;
-        toQuery[7] = 0x42;
+        toQuery[7] = 0x38;
         toQuery[8] = 0x37;
     //crc is 0x85 => ascii 0x38, 0x35
     }else if(command_list.first() == QString("PUMPTEMPERATURE")){
@@ -117,17 +155,25 @@ void AgilentTV301Pump::pumpCommand()
         return;
     }
     
-    QString hexValues = "";
-    for(int i=0; i<toQuery.length(); i++){
-        ushort charac = ushort(uchar(toQuery.at(i)));
-        hexValues.append(QString("0x%1,").arg(charac,0,16));
-    }
+    QString hexValues = getHexValues(toQuery);
     storeMessage(QString("Local AgilentTV301Pump: %1: Sending query %2").arg(device_name).arg(hexValues), false);
     
-    if(writeCommand(toQuery, true))
+    if(writeCommand(toQuery, true)){
         activeQuery = command_list.first();
+    }
 }
 
+QString AgilentTV301Pump::getHexValues(QByteArray values)
+{
+    QString hexValues = "";
+    for(int i=0; i<values.length(); i++){
+        ushort charac = ushort(uchar(values.at(i)));
+        hexValues.append(QString("0x%1,").arg(charac,0,16));
+    }
+    return hexValues;
+}
+
+//need to deal with multiple parts of response coming at different times
 void AgilentTV301Pump::dealWithResponse(QByteArray response)
 {
     //no response was received before the timeout, do nothing
@@ -136,22 +182,44 @@ void AgilentTV301Pump::dealWithResponse(QByteArray response)
         return;
     }
     
-    emit device_message(QString("Local AgilentTV301Pump: %1: Response: %2").arg(device_name).arg(QString::fromUtf8(response)));
+    // emit device_message(QString("Local AgilentTV301Pump: %1: Response: %2").arg(device_name).arg(getHexValues(response)));
     
     if(activeQuery == QString("NONE")){
         return;
     }
     
-    //check the length
-    if(response.length() < 6 || !response.contains(char(0x03)) || !response.startsWith(char(0x02))){
-        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for query %3").arg(device_name).arg(QString::fromUtf8(response)).arg(activeQuery));
-        emit device_fail();
-        activeQuery = QString("NONE");
+    fullResponse.append(response);
+    
+    //check not left over bit from last query
+    if(!fullResponse.startsWith(char(0x02))){
+        fullResponse.clear();
         return;
     }
     
+    //check the whole response has been received
+    if(fullResponse.length() < 6 || !fullResponse.contains(char(0x03))){
+        // emit device_message(QString("Local AgilentTV301Pump: %1: Pump response %2 is invalid for query %3").arg(device_name).arg(getHexValues(fullResponse)).arg(activeQuery));
+        return;
+    }
+    
+    response = fullResponse;
+    fullResponse.clear();
+
     int endIndex = response.indexOf(char(0x03));
-    QString outResponse = QString::fromUtf8(response.mid(2, endIndex-2));
+    
+    //NAK response
+    QByteArray interestingResponse = response.mid(2, endIndex-2);
+    if(interestingResponse == QByteArray(1, 0x15)){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: The execution of a %2 command failed").arg(device_name).arg(activeQuery));
+        emit device_fail();
+        return;
+    }else if(interestingResponse == QByteArray(1, 0x32)){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: The window for %2 command is not valid").arg(device_name).arg(activeQuery));
+        emit device_fail();
+        return;
+    }
+    
+    QString outResponse = QString::fromUtf8(interestingResponse);
     
     //send to functions
     if(activeQuery == QString("PUMPSTATUSCODE")){
@@ -168,9 +236,11 @@ void AgilentTV301Pump::dealWithResponse(QByteArray response)
     }
        
     deviceStatus = QString("Status_%1_%2_%3_%4_%5").arg(device_name).arg(pumpStatusCode).arg(pumpErrorCode).arg(pumpTemperature).arg(pumpDrive);
-    emit device_message(QString("Local AgilentTV301Pump: %1: device status %2").arg(device_name).arg(deviceStatus));
+    // emit device_message(QString("Local AgilentTV301Pump: %1: device status %2").arg(device_name).arg(deviceStatus));
     
     activeQuery = QString("NONE");
+    //free up the serial device
+    fullResponseReceived();    
 }
 
 
@@ -178,6 +248,20 @@ void AgilentTV301Pump::dealWithResponse(QByteArray response)
 /////////////////////////////////////////////////////////////////////////////
 void AgilentTV301Pump::responsePumpStatusCode(QString response)
 {
+    //check length
+    if(response.length() != 10){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPSTATUSCODE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }    
+    //response starts with the window accessed
+    if(!response.startsWith("205")){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPSTATUSCODE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    response = response.mid(3);
+    
     bool conv_ok;
     uint code = response.toUInt(&conv_ok);
     
@@ -190,22 +274,38 @@ void AgilentTV301Pump::responsePumpStatusCode(QString response)
     
     pumpStatusCode = code;
     
-    emit device_message(QString("Local AgilentTV301Pump: %1: Pump status code: %2").arg(device_name).arg(pumpStatusCode));
+    // emit device_message(QString("Local AgilentTV301Pump: %1: Pump status code: %2").arg(device_name).arg(pumpStatusCode));
 }
 
 void AgilentTV301Pump::responsePumpErrorCode(QString response)
 {
+    //check length
+    if(response.length() != 10){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPERRORCODE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }    
+    //response starts with the window accessed
+    if(!response.startsWith("206")){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPERRORCODE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    response = response.mid(3);
+    
     bool conv_ok;
     uint code = response.toUInt(&conv_ok);
     
     //check the code
     if(!conv_ok || code > 255){
-        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPSTATUSCODE query").arg(device_name).arg(response));
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump numeric response %2 is invalid for PUMPERRORCODE query").arg(device_name).arg(response));
         emit device_fail();
         return;
     }
     
     pumpErrorCode = code;
+    
+    // emit device_message(QString("Local AgilentTV301Pump: %1: Pump error code: %2").arg(device_name).arg(pumpErrorCode));
     
     if(pumpErrorCode == 0){
         return;
@@ -240,6 +340,19 @@ void AgilentTV301Pump::responsePumpErrorCode(QString response)
 
 void AgilentTV301Pump::responsePumpTemperature(QString response)
 {
+    if(response.length() != 10){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPTEMPERATURE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }    
+    //response starts with the window accessed
+    if(!response.startsWith("204")){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPTEMPERATURE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    response = response.mid(3);
+    
     bool conv_ok;
     uint temperature = response.toUInt(&conv_ok);
     
@@ -252,11 +365,25 @@ void AgilentTV301Pump::responsePumpTemperature(QString response)
     
     pumpTemperature = temperature;
     
-    emit device_message(QString("Local AgilentTV301Pump: %1: Pump temperature: %2").arg(device_name).arg(pumpTemperature));
+    // emit device_message(QString("Local AgilentTV301Pump: %1: Pump temperature: %2").arg(device_name).arg(pumpTemperature));
 }
 
 void AgilentTV301Pump::responsePumpDrive(QString response)
 {
+    //check length
+    if(response.length() != 10){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPDRIVE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }    
+    //response starts with the window accessed
+    if(!response.startsWith("203")){
+        emit device_message(QString("LOCAL AGILENTTV301PUMP ERROR: %1: Pump response %2 is invalid for PUMPDRIVE query").arg(device_name).arg(response));
+        emit device_fail();
+        return;
+    }
+    response = response.mid(3);
+    
     bool conv_ok;
     uint drive = response.toUInt(&conv_ok);
     
@@ -269,5 +396,5 @@ void AgilentTV301Pump::responsePumpDrive(QString response)
     
     pumpDrive = drive;
     
-    emit device_message(QString("Local AgilentTV301Pump: %1: Pump drive: %2").arg(device_name).arg(pumpDrive));
+    // emit device_message(QString("Local AgilentTV301Pump: %1: Pump drive: %2").arg(device_name).arg(pumpDrive));
 }

@@ -36,6 +36,8 @@ protected:
     bool writeCommand(QByteArray command, bool response=false);
     
     const QByteArray noResponseMessage;
+    
+    void fullResponseReceived();
 
 private slots:
 	void readResponse();

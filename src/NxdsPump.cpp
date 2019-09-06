@@ -113,7 +113,7 @@ void NxdsPump::dealWithResponse(QByteArray resp)
     if(activeQuery == QString("NONE")){
         return;
     }
-    
+        
     //check the length
     if(response.length() < 6){
         emit device_message(QString("LOCAL NXDSPUMP ERROR: %1: Pump response %2 is invalid for query %3").arg(device_name).arg(response).arg(activeQuery));
@@ -156,6 +156,7 @@ void NxdsPump::dealWithResponse(QByteArray resp)
     // emit device_message(QString("Local NxdsPump: %1").arg(deviceStatus));
     
     activeQuery = QString("NONE");
+    fullResponseReceived();
 }
 
 

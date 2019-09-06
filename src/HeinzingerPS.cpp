@@ -183,6 +183,7 @@ void HeinzingerPS::dealWithResponse(QByteArray resp)
         return;
     }
     
+    fullResponseReceived();
     QString response = QString::fromUtf8(resp);
     
     // emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));

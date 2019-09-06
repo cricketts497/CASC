@@ -4,7 +4,7 @@
 #include "include/CascWidget.h"
 #include "include/ParamReadout.h"
 
-const int nAgilentTV301Pumps = 1;
+const int nAgilentTV301Pumps = 3;
 
 class AgilentTV301StatusWindow : public CascWidget
 {

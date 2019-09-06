@@ -36,7 +36,7 @@ bool DeviceButton::deviceToggle()
 		setStatusTip(startTip);
 		
         //disable the button until the device has stopped
-        // setEnabled(false);
+        setEnabled(false);
         
 		// emit toggle_device(false);
         emit stop_device();

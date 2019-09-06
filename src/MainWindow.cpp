@@ -12,8 +12,8 @@ maxHeinzinger20kCurrent(3),
 // dummyScanner_open(false),
 // nxdsPumpWindow_open(false),
 // agilentTV301Window_open(false),
-nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP"}),
-agilentTV301Names({"TurboTest"})
+nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP","BLQT"}),
+agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"})
 // listener_running(false)
 // data_saver_started(false),
 // heinzinger30k_started(false),
@@ -33,7 +33,7 @@ agilentTV301Names({"TurboTest"})
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v3.0");
+	setWindowTitle("CASC v3.1");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -121,7 +121,7 @@ void MainWindow::createDevicesBar()
     // connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleNxdsPumpDevice(bool)));
     connect(nxdsPumpDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleNxdsPumpDevice);
 
-    agilentTV301DeviceButton = new DeviceButton("Agilent test", devicesBar, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL");
+    agilentTV301DeviceButton = new DeviceButton("Agilent turbos", devicesBar, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL");
     // connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleAgilentTV301Device(bool)));
     connect(agilentTV301DeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleAgilentTV301Device);
 

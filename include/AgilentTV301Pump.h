@@ -10,6 +10,11 @@ public:
     AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent=nullptr);
     
 private slots:
+    void queryStatus();
+    void queryErrorCode();
+    void queryTemperature();
+    void queryDrive();
+
     void pumpCommand();
     void dealWithResponse(QByteArray response);
 
@@ -21,10 +26,27 @@ private:
     void responsePumpTemperature(QString response);
     void responsePumpDrive(QString response);
     
+    //query timers
+    QTimer * statusTimer;
+    const int statusTimeout;
+   
+    QTimer * errorCodeTimer;
+    const int errorCodeTimeout;
+    
+    QTimer * temperatureTimer;
+    const int temperatureTimeout;
+    
+    QTimer * driveTimer;
+    const int driveTimeout;
+    
     uint pumpStatusCode;
     uint pumpErrorCode;
     uint pumpTemperature;
     uint pumpDrive;
+    
+    QString getHexValues(QByteArray response);
+    
+    QByteArray fullResponse;
 };
 
 
