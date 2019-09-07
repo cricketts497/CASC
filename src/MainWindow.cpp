@@ -89,6 +89,10 @@ void MainWindow::createActions()
     // agilentTV301Act->setStatusTip("Open the Agilent TV301 turbo status viewer");
     connect(agilentTV301Act, &QAction::triggered, this, &MainWindow::toggleAgilentTV301Window);
     taskBar->addAction(agilentTV301Act);
+    
+    laseLockAct = new CascAction("./resources/laselock.png", "TEM LaseLock box monitor", "Open the TEM LaseLock status viewer", "Close the TEM LaseLock status viewer", taskBar);
+    connect(laseLockAct, &QAction::triggered, this, &MainWindow::toggleLaseLockWindow);
+    taskBar->addAction(laseLockAct);
 }
 
 void MainWindow::createStatusBar()
@@ -125,6 +129,9 @@ void MainWindow::createDevicesBar()
     // connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleAgilentTV301Device(bool)));
     connect(agilentTV301DeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleAgilentTV301Device);
 
+    laseLockDeviceButton = new DeviceButton("LaseLock test", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
+    connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleLaseLockDevice);
+
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
     devicesBar->addWidget(dataSaverDeviceButton);
@@ -132,6 +139,7 @@ void MainWindow::createDevicesBar()
 	devicesBar->addWidget(heinzinger20kDeviceButton);
     devicesBar->addWidget(nxdsPumpDeviceButton);
     devicesBar->addWidget(agilentTV301DeviceButton);
+    devicesBar->addWidget(laseLockDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -326,19 +334,41 @@ void MainWindow::toggleAgilentTV301Window()
         
         // agilentTV301Act->setStatusTip("Close the Agilent TV301 turbo status viewer");
         // agilentTV301Window_open = true;
-    }    
+       
     
-    //tests
-    //pump off
-    // emit newAgilentTV301Status(QString("Status_TurboTest_0_0_40_0"));
-    //Normal
-    // emit newAgilentTV301Status(QString("Status_TurboTest_5_0_30.4_963"));
-    //high pump temperature fault
-    // emit newAgilentTV301Status(QString("Status_TurboTest_6_2_30.4_900"));
-    //Too high load fault
-    // emit newAgilentTV301Status(QString("Status_TurboTest_6_128_30.4_850"));
+        //tests
+        //pump off
+        // emit newAgilentTV301Status(QString("Status_TurboTest_0_0_40_0"));
+        //Normal
+        // emit newAgilentTV301Status(QString("Status_TurboTest_5_0_30.4_963"));
+        //high pump temperature fault
+        // emit newAgilentTV301Status(QString("Status_TurboTest_6_2_30.4_900"));
+        //Too high load fault
+        // emit newAgilentTV301Status(QString("Status_TurboTest_6_128_30.4_850"));
+    }
 }
 
+void MainWindow::toggleLaseLockWindow()
+{
+    if(laseLockAct->widgetToggle()){
+        delete laseLockWindow;
+    }else{
+        laseLockWindow = new LaseLockStatusWindow(this);
+        setupWidget(laseLockWindow, laseLockAct);
+        
+        connect(laseLockDeviceButton, SIGNAL(newDeviceStatus(QString)), laseLockWindow, SLOT(receiveLaseLockStatus(QString)));
+        
+        addDockWidget(Qt::RightDockWidgetArea, laseLockWindow);
+    
+        //tests
+        //not locked
+        // laseLockWindow->receiveLaseLockStatus(QString("Status_laselock_0_2_0_2_0_2_0_2"));
+        //locked
+        // laseLockWindow->receiveLaseLockStatus(QString("Status_laselock_1_1_1_1_1_1_1_1"));
+        //not started
+        // laseLockWindow->receiveLaseLockStatus(QString("Status_laselock_2"));
+    }
+}
 
 /////////////////////////////////////////
 
@@ -534,6 +564,24 @@ void MainWindow::toggleAgilentTV301Device()
     // emit newAgilentTV301Status(status);
 // }
 
+void MainWindow::toggleLaseLockDevice()
+{
+    //stop device slot connected in setupDevice() below
+    if(laseLockDeviceButton->deviceToggle()){
+        return;
+    }
+    
+    bool local = config->deviceLocal(QString("laselock"));
+    
+    if(local){
+        LaseLock * laseLockDevice = new LaseLock(laseLock_temp_path,&laseLockFileMutex,QString("laselock"),config);
+        setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
+    }else{
+        RemoteDevice * laseLockDevice = new RemoteDevice(QString("laselock"), config);
+        setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
+    }    
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 //deal with start stop signals received by listener
@@ -549,6 +597,8 @@ void MainWindow::toggleDevice(QString device, bool start)
         nxdsPumpDeviceButton->click();
     else if(device == agilentTV301Names[0] && ((start && !agilentTV301DeviceButton->deviceIsRunning()) || (!start && agilentTV301DeviceButton->deviceIsRunning())))
         agilentTV301DeviceButton->click();
+    else if(device == "laselock" && ((start && !laseLockDeviceButton->deviceIsRunning()) || (!start && laseLockDeviceButton->deviceIsRunning())))
+        laseLockDeviceButton->click();
 }
 
 void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)

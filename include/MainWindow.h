@@ -20,6 +20,8 @@
 #include "include/AgilentTV301Pump.h"
 #include "include/AgilentTV301StatusWindow.h"
 #include "include/CascAction.h"
+#include "include/LaseLock.h"
+#include "include/LaseLockStatusWindow.h"
 
 class MainWindow: public QMainWindow
 {
@@ -40,6 +42,7 @@ private slots:
     void toggleDummyScanner();
     void toggleNxdsPumpWindow();
     void toggleAgilentTV301Window();
+    void toggleLaseLockWindow();
     
     //command re-emission functions
     // void heinzinger30kCommand(QString command);
@@ -57,6 +60,7 @@ private slots:
 	void toggleHeinzinger20kDevice();
     void toggleNxdsPumpDevice();
     void toggleAgilentTV301Device();
+    void toggleLaseLockDevice();
     
     //status re-emission functions
     // void heinzinger30kStatus(QString status);
@@ -102,6 +106,7 @@ private:
 	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.dat";
     const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.dat";
     const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.dat";
+    const QString laseLock_temp_path = "./temp/laseLock_temp.dat";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
@@ -111,6 +116,7 @@ private:
 	QMutex heinzinger20kFileMutex;
     QMutex nxdsPumpFileMutex;
     QMutex agilentTV301FileMutex;
+    QMutex laseLockFileMutex;
 
 	//graph widget as central of main window
 	SimpleGraph *centralGraph;
@@ -151,6 +157,9 @@ private:
     AgilentTV301StatusWindow * agilentTV301Window;
     // bool agilentTV301Window_open;
     const QStringList agilentTV301Names;
+    
+    CascAction * laseLockAct;
+    LaseLockStatusWindow * laseLockWindow;    
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////
@@ -178,6 +187,9 @@ private:
     DeviceButton * agilentTV301DeviceButton;
     // bool agilentTV301_started;
     QThread agilentTV301DeviceThread;
+    
+    DeviceButton * laseLockDeviceButton;
+    QThread laseLockDeviceThread;
 };
 
 #endif //MAIN_WINDOW_H
