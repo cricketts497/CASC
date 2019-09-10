@@ -181,8 +181,9 @@ void SerialDevice::readResponse()
     // emit serialComFinished();
 }
 
+//free up the serial device for the next command
 void SerialDevice::fullResponseReceived()
-{
+{    
     commandInProgress = false;
     emit serialComFinished();
 }

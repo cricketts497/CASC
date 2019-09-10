@@ -16,30 +16,13 @@ private slots:
     void dealWithResponse(QByteArray response);
     
 private:
-    // const int queryTimeout;
+    // QString getHexValues(QByteArray values);
+
     int queryNumber;
+        
+    const QStringList windows;
+    QVector<uint> boolValues;
     
-    QString activeQuery;
-    
-    void responseRegLocked(QString response, bool regA);
-    void checkBoolResponse(QString response, uint * flag);
-    
-    uint regALocked;
-    uint regBLocked;
-    
-    uint regASearch;
-    uint regBSearch;
-    
-    uint regARelock;
-    uint regBRelock;
-    
-    uint regAInClip;
-    uint regBInClip;
-    
-    uint regAHold;
-    uint regBHold;
-    
-    QString fullResponse;
 };
 
 #endif // LASE_LOCK_H
