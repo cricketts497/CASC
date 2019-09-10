@@ -18,8 +18,8 @@ noDataMessage("no data"),
 okMessage("ok"),
 failMessage("fail"),
 askStatusMessage("Status?"),
-deviceStatus(QString("Status")),
 device_failed(false),
+deviceStatus(QString("Status")),
 connection_timeout(3000),
 broadcast_status_timer(new QTimer(this)),
 broadcast_status_timeout(20)
@@ -60,7 +60,7 @@ broadcast_status_timeout(20)
 		return;
 	}
 	
-    connect(this, SIGNAL(deviceFail()), this, SLOT(setFailed()));
+    connect(this, SIGNAL(device_fail()), this, SLOT(setFailed()));
     
 	storeMessage(QString("%1: started").arg(deviceName), false);
     
@@ -111,6 +111,31 @@ void CascDevice::sendMessages()
 	emit device_message(messages.readAll());
 	if(device_failed)
 		emit device_fail();
+}
+
+QString CascDevice::getStatus()
+{
+    return deviceStatus;
+}
+
+void CascDevice::setStatus(QString status)
+{
+    QStringList status_list = status.split("_");
+    
+    if(status_list.length() < 2){
+        emit device_message(QString("DEVICE ERROR: %1: setStatus()").arg(device_name));
+        emit device_fail();
+        return;
+    }
+    
+    if(status_list.at(0) == QString("Status") && status_list.at(1) == device_name){
+        deviceStatus = status;
+    }else if(status_list.at(0) == QString("Status") != status_list.at(1) == device_name){
+        emit device_message(QString("DEVICE ERROR: %1: setStatus()").arg(device_name));
+        emit device_fail();
+    }else{
+        deviceStatus = QString("Status_%1_%2").arg(device_name).arg(status);    
+    }
 }
 
 void CascDevice::broadcastStatus()

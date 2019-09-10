@@ -50,7 +50,7 @@ private:
     void responseAppliedCurrent(QString response);
     void responseAverages(QString response);
     
-    QDateTime * time;
+    // QDateTime * time;
     QTimer * voltage_query_timer;
     const int voltage_query_timeout;
     

@@ -55,12 +55,12 @@ void MainWindow::createActions()
 	connect(messageAct, &QAction::triggered, this, &MainWindow::toggleMessage);
 	taskBar->addAction(messageAct);
     
-    dummyScannerAct = new CascAction("./resources/dummyScanner.png", "Dummy Scanner", "Open the dummy scanner for saving sets of data as scans", "Close the dummy scanner", taskBar);
-    // const QIcon dummyScannerIcon = QIcon("./resources/dummyScanner.png");
-	// dummyScannerAct = new QAction(dummyScannerIcon, "&DUMMY", this);
-	// dummyScannerAct->setStatusTip("Open the dummy scanner for saving sets of data as scans");
-	connect(dummyScannerAct, &QAction::triggered, this, &MainWindow::toggleDummyScanner);
-	taskBar->addAction(dummyScannerAct);
+    // dummyScannerAct = new CascAction("./resources/dummyScanner.png", "Dummy Scanner", "Open the dummy scanner for saving sets of data as scans", "Close the dummy scanner", taskBar);
+    // // const QIcon dummyScannerIcon = QIcon("./resources/dummyScanner.png");
+	// // dummyScannerAct = new QAction(dummyScannerIcon, "&DUMMY", this);
+	// // dummyScannerAct->setStatusTip("Open the dummy scanner for saving sets of data as scans");
+	// connect(dummyScannerAct, &QAction::triggered, this, &MainWindow::toggleDummyScanner);
+	// taskBar->addAction(dummyScannerAct);
 	
     heinzinger30kAct = new CascAction("./resources/heinzinger30k.png", "Heinzinger 30k", "Open the 30kV heinzinger voltage controller", "Close the 30kV heinzinger voltage controller", taskBar);
 	// const QIcon heinzinger30kIcon = QIcon("./resources/heinzinger30k.png");
@@ -109,9 +109,9 @@ void MainWindow::createDevicesBar()
 	// connect(listenerButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleListener(bool)));
 	connect(listenerButton, &QAbstractButton::clicked, this, &MainWindow::toggleListener);
     
-    dataSaverDeviceButton = new DeviceButton("Data saver", devicesBar, "Start the scan saving device", "Stop the scan saving device", "DATA SAVER FAIL");
-    // connect(dataSaverDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleDataSaver(bool)));
-    connect(dataSaverDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleDataSaver);
+    // dataSaverDeviceButton = new DeviceButton("Data saver", devicesBar, "Start the scan saving device", "Stop the scan saving device", "DATA SAVER FAIL");
+    // // connect(dataSaverDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleDataSaver(bool)));
+    // connect(dataSaverDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleDataSaver);
 
 	heinzinger30kDeviceButton = new DeviceButton("Heinzinger 30kV", devicesBar, "Start the heinzinger 30kV power supply device", "Stop the heinzinger 30kV device", "HEINZINGER 30K FAIL");
 	// connect(heinzinger30kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger30kDevice(bool)));
@@ -134,7 +134,7 @@ void MainWindow::createDevicesBar()
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
-    devicesBar->addWidget(dataSaverDeviceButton);
+    // devicesBar->addWidget(dataSaverDeviceButton);
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
     devicesBar->addWidget(nxdsPumpDeviceButton);
@@ -199,7 +199,7 @@ void MainWindow::toggleHeinzinger30k()
 		// heinzinger30kAct->setStatusTip("Open the 30kV heinzinger voltage controller");
 		// heinzinger30kWindow_open = false;
 	}else{
-		heinzinger30kWindow = new HeinzingerVoltageWindow(heinzinger30k_temp_path, &heinzinger30kFileMutex, maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, this);
+		heinzinger30kWindow = new HeinzingerVoltageWindow(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, this);
 		setupWidget(heinzinger30kWindow, heinzinger30kAct);
 		
 		// connect(heinzinger30kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger30kCommand(QString)));
@@ -229,7 +229,7 @@ void MainWindow::toggleHeinzinger20k()
 		// heinzinger20kAct->setStatusTip("Open the 20kV heinzinger voltage controller");
 		// heinzinger20kWindow_open = false;
 	}else{
-		heinzinger20kWindow = new HeinzingerVoltageWindow(heinzinger20k_temp_path, &heinzinger20kFileMutex, maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, this);
+		heinzinger20kWindow = new HeinzingerVoltageWindow(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, this);
 		setupWidget(heinzinger20kWindow, heinzinger20kAct);
 		
 		// connect(heinzinger20kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger20kCommand(QString)));
@@ -251,30 +251,30 @@ void MainWindow::toggleHeinzinger20k()
 // }
 
 
-void MainWindow::toggleDummyScanner()
-{
-    // if(dummyScanner_open){
-    if(dummyScannerAct->widgetToggle()){
-        delete dummyScanner;
+// void MainWindow::toggleDummyScanner()
+// {
+    // // if(dummyScanner_open){
+    // if(dummyScannerAct->widgetToggle()){
+        // delete dummyScanner;
         
-        // dummyScannerAct->setStatusTip("Open the dummy scanner");
-        // dummyScanner_open = false;
-    }else{
-        dummyScanner = new DummyScanner(this);
-        setupWidget(dummyScanner, dummyScannerAct);
+        // // dummyScannerAct->setStatusTip("Open the dummy scanner");
+        // // dummyScanner_open = false;
+    // }else{
+        // dummyScanner = new DummyScanner(this);
+        // setupWidget(dummyScanner, dummyScannerAct);
     
-        // connect(dummyScanner, SIGNAL(sendCommand(QString)), this, SLOT(dummyScannerCommand(QString)));
+        // // connect(dummyScanner, SIGNAL(sendCommand(QString)), this, SLOT(dummyScannerCommand(QString)));
         
-        if(dataSaverDeviceButton->deviceIsRunning()){
-            dummyScanner->dataSaverOn(true);
-        }
+        // if(dataSaverDeviceButton->deviceIsRunning()){
+            // dummyScanner->dataSaverOn(true);
+        // }
         
-        addDockWidget(Qt::TopDockWidgetArea, dummyScanner);
+        // addDockWidget(Qt::TopDockWidgetArea, dummyScanner);
         
-        // dummyScannerAct->setStatusTip("Close the dummy scanner");
-        // dummyScanner_open = true;
-    }    
-}
+        // // dummyScannerAct->setStatusTip("Close the dummy scanner");
+        // // dummyScanner_open = true;
+    // }    
+// }
 
 // void MainWindow::dummyScannerCommand(QString command)
 // {
@@ -401,40 +401,40 @@ void MainWindow::toggleListener()
     }
 }
 
-//currently only saving permenant files for 30k heinzinger
-void MainWindow::toggleDataSaver()
-{
-    if(dummyScannerAct->widgetIsOpen()){
-        //sending before switch in deviceToggle() below
-        dummyScanner->dataSaverOn(!dataSaverDeviceButton->deviceIsRunning());
-    }
+// //currently only saving permenant files for 30k heinzinger
+// void MainWindow::toggleDataSaver()
+// {
+    // if(dummyScannerAct->widgetIsOpen()){
+        // //sending before switch in deviceToggle() below
+        // dummyScanner->dataSaverOn(!dataSaverDeviceButton->deviceIsRunning());
+    // }
     
-    if(dataSaverDeviceButton->deviceToggle()){
-        return;
-    }
+    // if(dataSaverDeviceButton->deviceToggle()){
+        // return;
+    // }
     
-    bool local = config->deviceLocal(QString("datasaver"));
+    // bool local = config->deviceLocal(QString("datasaver"));
     
-    if(local){
-        QStringList temp_path_list = {heinzinger30k_temp_path};
-        QVector<QMutex*> file_mutex_list = {&heinzinger30kFileMutex};
-        DataSaver * dataSaverDevice = new DataSaver(temp_path_list, finalBasePath, file_mutex_list, config);
-        setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
-        // connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(saverCommand(QString)));
-        connect(dummyScannerAct, SIGNAL(newWidgetCommand(QString)), dataSaverDevice, SLOT(saverCommand(QString)));
-    }else{
-        RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger30kDeviceButton->deviceIsRunning(), config);
-        setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
-        // connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(remoteDeviceCommand(QString)));
-        connect(dummyScannerAct, SIGNAL(newWidgetCommand(QString)), dataSaverDevice, SLOT(remoteDeviceCommand(QString)));
-        connect(this, SIGNAL(newDataSaverStart(QString)), dataSaverDevice, SLOT(startDevice(QString)));
-    }
-}
+    // if(local){
+        // QStringList temp_path_list = {heinzinger30k_temp_path};
+        // QVector<QMutex*> file_mutex_list = {&heinzinger30kFileMutex};
+        // DataSaver * dataSaverDevice = new DataSaver(temp_path_list, finalBasePath, file_mutex_list, config);
+        // setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
+        // // connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(saverCommand(QString)));
+        // connect(dummyScannerAct, SIGNAL(newWidgetCommand(QString)), dataSaverDevice, SLOT(saverCommand(QString)));
+    // }else{
+        // RemoteDataSaver * dataSaverDevice = new RemoteDataSaver(heinzinger30kDeviceButton->deviceIsRunning(), config);
+        // setupDevice(dataSaverDevice, dataSaverDeviceButton, &dataSaverDeviceThread);
+        // // connect(this, SIGNAL(newDummyScannerCommand(QString)), dataSaverDevice, SLOT(remoteDeviceCommand(QString)));
+        // connect(dummyScannerAct, SIGNAL(newWidgetCommand(QString)), dataSaverDevice, SLOT(remoteDeviceCommand(QString)));
+        // connect(this, SIGNAL(newDataSaverStart(QString)), dataSaverDevice, SLOT(startDevice(QString)));
+    // }
+// }
 
-void MainWindow::dataSaverStart(QString device)
-{
-    emit newDataSaverStart(device);
-}
+// void MainWindow::dataSaverStart(QString device)
+// {
+    // emit newDataSaverStart(device);
+// }
 
 void MainWindow::toggleHeinzinger30kDevice()
 {
@@ -455,14 +455,14 @@ void MainWindow::toggleHeinzinger30kDevice()
         connect(heinzinger30kAct, SIGNAL(newWidgetCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
         // connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
     }else{
-        RemoteDataDevice * heinzinger30kDevice = new RemoteDataDevice(heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
+        RemoteDevice * heinzinger30kDevice = new RemoteDevice(QString("heinzingerps30k"), config);
         setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
         // connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
         connect(heinzinger30kAct, SIGNAL(newWidgetCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
         // connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
     }
     //tell the data saver PC to start requesting new heinzingerps data
-    dataSaverStart("heinzingerps30k");
+    // dataSaverStart("heinzingerps30k");
     // heinzinger30k_started = true;
     // centralGraph->newData();
 }
@@ -491,14 +491,14 @@ void MainWindow::toggleHeinzinger20kDevice()
         connect(heinzinger20kAct, SIGNAL(newWidgetCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
         // connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
     }else{
-        RemoteDataDevice * heinzinger20kDevice = new RemoteDataDevice(heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
+        RemoteDevice * heinzinger20kDevice = new RemoteDevice(QString("heinzingerps20k"), config);
         setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
         // connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
         connect(heinzinger20kAct, SIGNAL(newWidgetCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
         // connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
     }
     //tell the data saver PC to start requesting new heinzingerps data
-    dataSaverStart("heinzingerps20k");
+    // dataSaverStart("heinzingerps20k");
     // heinzinger20k_started = true;
     // centralGraph->newHeinzinger20k();
 }
@@ -591,8 +591,8 @@ void MainWindow::toggleDevice(QString device, bool start)
         heinzinger30kDeviceButton->click();
     else if(device == "heinzingerps20k" && ((start && !heinzinger20kDeviceButton->deviceIsRunning()) || (!start && heinzinger20kDeviceButton->deviceIsRunning())))
         heinzinger20kDeviceButton->click();
-    else if(device == "datasaver" && ((start && !dataSaverDeviceButton->deviceIsRunning()) || (!start && dataSaverDeviceButton->deviceIsRunning())))
-        dataSaverDeviceButton->click();
+    // else if(device == "datasaver" && ((start && !dataSaverDeviceButton->deviceIsRunning()) || (!start && dataSaverDeviceButton->deviceIsRunning())))
+        // dataSaverDeviceButton->click();
     else if(device == nxdsPumpNames[0] && ((start && !nxdsPumpDeviceButton->deviceIsRunning()) || (!start && nxdsPumpDeviceButton->deviceIsRunning())))
         nxdsPumpDeviceButton->click();
     else if(device == agilentTV301Names[0] && ((start && !agilentTV301DeviceButton->deviceIsRunning()) || (!start && agilentTV301DeviceButton->deviceIsRunning())))

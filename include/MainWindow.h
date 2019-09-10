@@ -8,12 +8,13 @@
 #include "include/MessageWindow.h"
 #include "include/Listener.h"
 #include "include/CascConfig.h"
-#include "include/RemoteDataDevice.h"
+// #include "include/RemoteDataDevice.h"
 #include "include/HeinzingerPS.h"
 #include "include/HeinzingerVoltageWindow.h"
-#include "include/DataSaver.h"
-#include "include/DummyScanner.h"
-#include "include/RemoteDataSaver.h"
+// #include "include/DataSaver.h"
+// #include "include/DummyScanner.h"
+// #include "include/RemoteDataSaver.h"
+#include "include/RemoteDevice.h"
 #include "include/NxdsPump.h"
 #include "include/NxdsPumpStatusWindow.h"
 #include "include/SimpleGraph.h"
@@ -39,7 +40,7 @@ private slots:
     
 	void toggleHeinzinger30k();
 	void toggleHeinzinger20k();
-    void toggleDummyScanner();
+    // void toggleDummyScanner();
     void toggleNxdsPumpWindow();
     void toggleAgilentTV301Window();
     void toggleLaseLockWindow();
@@ -55,7 +56,7 @@ private slots:
 	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
 	
 	void toggleListener();
-    void toggleDataSaver();
+    // void toggleDataSaver();
 	void toggleHeinzinger30kDevice();
 	void toggleHeinzinger20kDevice();
     void toggleNxdsPumpDevice();
@@ -70,7 +71,7 @@ private slots:
 
 signals:
 	void new_message(QString message);
-	void newDataSaverStart(QString device);
+	// void newDataSaverStart(QString device);
     
     //command signals to devices
 	// void newHeinzinger30kCommand(QString command);
@@ -102,11 +103,11 @@ private:
 	QTextStream messages;
 
 	//file paths
-	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.dat";
-	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.dat";
-    const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.dat";
-    const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.dat";
-    const QString laseLock_temp_path = "./temp/laseLock_temp.dat";
+	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.csv";
+	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.csv";
+    const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.csv";
+    const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.csv";
+    const QString laseLock_temp_path = "./temp/laseLock_temp.csv";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
@@ -142,9 +143,9 @@ private:
     const uint maxHeinzinger20kVoltage;
     const uint maxHeinzinger20kCurrent;
     
-    CascAction * dummyScannerAct;
-    DummyScanner * dummyScanner;
-    // bool dummyScanner_open;
+    // CascAction * dummyScannerAct;
+    // DummyScanner * dummyScanner;
+    // // bool dummyScanner_open;
     
     CascAction * nxdsPumpAct;
     // QAction * nxdsPumpAct;

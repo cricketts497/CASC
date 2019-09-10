@@ -1,3 +1,4 @@
+
 #include "include/LocalDevice.h"
 
 /*!
@@ -81,7 +82,7 @@ void LocalDevice::receiveCommand()
     
     //status command
     if(command == QString(askStatusMessage)){
-        socket->write(deviceStatus.toUtf8());
+        socket->write(getStatus().toUtf8());
         return;
     }
     

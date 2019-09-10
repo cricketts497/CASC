@@ -10,7 +10,7 @@ class SerialDevice : public LocalDataDevice
 	Q_OBJECT
 	
 public:
-	SerialDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
+	SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
 	
 public slots:
     void queueSerialCommand(QString command);

@@ -1,7 +1,7 @@
 #include "include/SerialDevice.h"
 
-SerialDevice::SerialDevice(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-LocalDataDevice(file_path, file_mutex, deviceName, config, parent),
+SerialDevice::SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+LocalDataDevice(file_format,file_path, file_mutex, deviceName, config, parent),
 serial_timeout(2000),
 serial_response_wait(300),
 noResponseMessage(QByteArray("NORESP")),

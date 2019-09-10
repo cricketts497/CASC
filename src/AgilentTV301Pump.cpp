@@ -1,7 +1,7 @@
 #include "include/AgilentTV301Pump.h"
 
 AgilentTV301Pump::AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-SerialDevice(file_path, file_mutex, deviceName, config, parent),
+SerialDevice(QStringList({"statusCode","errorCode","temperature","driveFrequency"}), file_path, file_mutex, deviceName, config, parent),
 activeQuery(QString("NONE")),
 statusTimer(new QTimer(this)),
 statusTimeout(1000),
@@ -67,7 +67,10 @@ pumpDrive(0)
     driveTimer->start();
     
     //intial device status: device_name, statusCode, errorCode, temperature
-    deviceStatus = QString("Status_%1_%2_%3_%4_%5").arg(device_name).arg(pumpStatusCode).arg(pumpErrorCode).arg(pumpTemperature).arg(pumpDrive); 
+    setStatus(QString("%1_%2_%3_%4").arg(pumpStatusCode).arg(pumpErrorCode).arg(pumpTemperature).arg(pumpDrive)); 
+    
+    //save the first real values to come in
+    saveToFile = true;
 }
 
 void AgilentTV301Pump::queryStatus()
@@ -235,7 +238,7 @@ void AgilentTV301Pump::dealWithResponse(QByteArray response)
         emit device_fail();
     }
        
-    deviceStatus = QString("Status_%1_%2_%3_%4_%5").arg(device_name).arg(pumpStatusCode).arg(pumpErrorCode).arg(pumpTemperature).arg(pumpDrive);
+    setStatus(QString("%1_%2_%3_%4").arg(pumpStatusCode).arg(pumpErrorCode).arg(pumpTemperature).arg(pumpDrive));
     // emit device_message(QString("Local AgilentTV301Pump: %1: device status %2").arg(device_name).arg(deviceStatus));
     
     activeQuery = QString("NONE");

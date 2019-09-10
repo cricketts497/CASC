@@ -31,6 +31,9 @@ signals:
 	void stopped();
 
 protected:
+    QString getStatus();
+    void setStatus(QString status);
+    
 	void storeMessage(QString message, bool fail);
 
 	const QString device_name;
@@ -46,8 +49,6 @@ protected:
     const char * failMessage;
     
     const char * askStatusMessage;
-    
-    QString deviceStatus;
 
 	bool device_failed;
     	
@@ -56,6 +57,8 @@ private slots:
     void broadcastStatus();
     
 private:
+    QString deviceStatus;
+    
     const int connection_timeout;
     
     QTimer * broadcast_status_timer = nullptr;

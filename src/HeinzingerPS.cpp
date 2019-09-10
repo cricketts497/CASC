@@ -6,8 +6,8 @@ timestamp (qint64), applied voltage (quint64)
 */
 
 HeinzingerPS::HeinzingerPS(uint voltage_limit, uint current_limit, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-SerialDevice(file_path, file_mutex, deviceName, config, parent),
-time(new QDateTime()),
+SerialDevice(QStringList({"voltageSetpoint","currentSetpoint","outputOn","voltageApplied"}), file_path, file_mutex, deviceName, config, parent),
+// time(new QDateTime()),
 voltage_query_timer(new QTimer(this)),
 voltage_query_timeout(5000),
 activeQuery(0),
@@ -33,16 +33,16 @@ averages_set(0)
     if(device_failed)
         return;
     
-    //start a new voltage file
-	QMutexLocker file_locker(file_mutex);
-	if(!data_file->open(QIODevice::WriteOnly)){
-		storeMessage(QString("LOCAL HEINZINGER ERROR: init: file->open(write)"), true);
-		return;
-	}
-	QDataStream out(data_file);
-	qint64 header = time->currentMSecsSinceEpoch();
-	out << header;
-	data_file->close();
+    // //start a new voltage file
+	// QMutexLocker file_locker(file_mutex);
+	// if(!data_file->open(QIODevice::WriteOnly)){
+		// storeMessage(QString("LOCAL HEINZINGER ERROR: init: file->open(write)"), true);
+		// return;
+	// }
+	// QDataStream out(data_file);
+	// qint64 header = time->currentMSecsSinceEpoch();
+	// out << header;
+	// data_file->close();
     
     //set the interval to query the true voltage
 	voltage_query_timer->setInterval(voltage_query_timeout);
@@ -76,8 +76,11 @@ averages_set(0)
     //reset the power supply
     writeCommand(QString("*RST \n").toUtf8());
     
-    //voltage setpoint, current setpoint, output on
-    deviceStatus = QString("Status_0_0_0");
+    //voltage setpoint, current setpoint, output on, voltage applied
+    setStatus(QString("%1_%2_0_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
+    
+    //save the first real values to come in
+    saveToFile = true;
 }
 
 //Set the voltage to zero and turn off the output
@@ -277,9 +280,9 @@ void HeinzingerPS::setHeinzingerStatus()
 {
     //voltage setpoint, current setpoint, output setpoint
     if(output_setpoint){
-        deviceStatus = QString("Status_%1_%2_1").arg(voltage_setpoint).arg(current_setpoint);
+        setStatus(QString("%1_%2_1_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
     }else{
-        deviceStatus = QString("Status_%1_%2_0").arg(voltage_setpoint).arg(current_setpoint);
+        setStatus(QString("%1_%2_0_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
     }
 }
 
@@ -487,19 +490,19 @@ void HeinzingerPS::responseAppliedVoltage(QString response)
     voltage_applied = response_voltage;
     voltage_decimal_applied = response_decimal;
     
-    //write the voltage to file with a timestamp
-	QMutexLocker file_locker(file_mutex);
-	if(!data_file->open(QIODevice::Append)){
-		emit device_message(QString("LOCAL HEINZINGER ERROR: %1: voltage_file->open(append)").arg(device_name));
-		emit device_fail();
-		return;
-	}
-	QDataStream out(data_file);
+    // //write the voltage to file with a timestamp
+	// QMutexLocker file_locker(file_mutex);
+	// if(!data_file->open(QIODevice::Append)){
+		// emit device_message(QString("LOCAL HEINZINGER ERROR: %1: voltage_file->open(append)").arg(device_name));
+		// emit device_fail();
+		// return;
+	// }
+	// QDataStream out(data_file);
     
-    qint64 timestamp = time->currentMSecsSinceEpoch();
-    out << timestamp << voltage_applied << voltage_decimal_applied;
+    // qint64 timestamp = time->currentMSecsSinceEpoch();
+    // out << timestamp << voltage_applied << voltage_decimal_applied;
     
-    data_file->close();
+    // data_file->close();
 }
 
 void HeinzingerPS::responseAppliedCurrent(QString response)

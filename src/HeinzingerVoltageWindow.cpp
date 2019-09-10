@@ -1,6 +1,6 @@
 #include "include/HeinzingerVoltageWindow.h"
 
-HeinzingerVoltageWindow::HeinzingerVoltageWindow(const QString voltage_file_path, QMutex * voltageFileMutex, uint maxVoltage, qreal maxCurrent, QWidget * parent) :
+HeinzingerVoltageWindow::HeinzingerVoltageWindow(uint maxVoltage, qreal maxCurrent, QWidget * parent) :
 CascWidget(QString("Heinzinger %1kV").arg(maxVoltage/1000), parent),
 voltageEdit(new QSpinBox(this)),
 voltageSetButton(new DeviceButton("Set volts", this, "Set the voltage on the device", "", "SET VOLTS FAIL")),
@@ -9,8 +9,7 @@ currentEdit(new QDoubleSpinBox(this)),
 currentSetButton(new DeviceButton("Set amps", this, "Set the current limit on the device", "", "SET AMPS FAIL")),
 outputButton(new DeviceButton("Output off", this, "Turn on the output", "Turn off the output", "OUTPUT FAIL")),
 voltageReadTimer(new QTimer(this)),
-voltageReadTimeout(500),
-voltageFileMutex(voltageFileMutex)
+voltageReadTimeout(500)
 {
 	QWidget * widget = new QWidget(this);
 	setWidget(widget);
@@ -63,9 +62,9 @@ voltageFileMutex(voltageFileMutex)
 	
 	setFixedSize(400,250);
     
-    voltage_file = new QFile(voltage_file_path, this);
-    voltageReadTimer->setInterval(voltageReadTimeout);
-    connect(voltageReadTimer, SIGNAL(timeout()), this, SLOT(readVoltage()));
+    // voltage_file = new QFile(voltage_file_path, this);
+    // voltageReadTimer->setInterval(voltageReadTimeout);
+    // connect(voltageReadTimer, SIGNAL(timeout()), this, SLOT(readVoltage()));
 }
 
 void HeinzingerVoltageWindow::heinzingerDeviceOn(bool on)
@@ -151,38 +150,38 @@ void HeinzingerVoltageWindow::setOutput()
     }
 }
 
-void HeinzingerVoltageWindow::readVoltage()
-{
-	bool locked = voltageFileMutex->tryLock();
-    if(!locked)
-        return;
+// void HeinzingerVoltageWindow::readVoltage()
+// {
+	// bool locked = voltageFileMutex->tryLock();
+    // if(!locked)
+        // return;
     
-    if(!voltage_file->open(QIODevice::ReadOnly)){
-        emit widget_message("Heinzinger voltage window: unable to open voltage file");
-        voltageFileMutex->unlock();
-        return;
-    }
+    // if(!voltage_file->open(QIODevice::ReadOnly)){
+        // emit widget_message("Heinzinger voltage window: unable to open voltage file");
+        // voltageFileMutex->unlock();
+        // return;
+    // }
     
-    if(voltage_file->size() > 32){
-        //get the final voltage value, two quint64, one for integer, one for numbers after decimal point => 16 bytes back from end
-        voltage_file->seek(voltage_file->size()-16);
-        QDataStream in(voltage_file);
-        in >> applied_voltage_int >> applied_voltage_decimal;
-    }
+    // if(voltage_file->size() > 32){
+        // //get the final voltage value, two quint64, one for integer, one for numbers after decimal point => 16 bytes back from end
+        // voltage_file->seek(voltage_file->size()-16);
+        // QDataStream in(voltage_file);
+        // in >> applied_voltage_int >> applied_voltage_decimal;
+    // }
     
-    voltage_file->close();
-    voltageFileMutex->unlock();
+    // voltage_file->close();
+    // voltageFileMutex->unlock();
     
-    voltageReadback->setText(QString::number(applied_voltage_int)+"."+QString::number(applied_voltage_decimal));
-}
+    // voltageReadback->setText(QString::number(applied_voltage_int)+"."+QString::number(applied_voltage_decimal));
+// }
 
 void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
 {
-    //status, voltage setpoint, current setpoint, output setpoint
+    //status, device_name, voltage setpoint, current setpoint, output setpoint, voltage applied
     QStringList status_list = status.split("_");
     
     //check for the correct format
-    if(status_list.size() != 4 || status_list.first() != QString("Status"))
+    if(status_list.size() != 6 || status_list.first() != QString("Status"))
         return;
     
     // bool voltageSet = false;
@@ -218,4 +217,7 @@ void HeinzingerVoltageWindow::receiveHeinzingerStatus(QString status)
         voltageReadTimer->stop();
         output_on = false;
     }
+    
+    qreal voltage_applied = status_list.at(4).toInt();
+    voltageReadback->setText(QString::number(voltage_applied));
 }
