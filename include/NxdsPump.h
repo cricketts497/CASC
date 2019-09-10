@@ -18,9 +18,7 @@ private slots:
     
     void dealWithResponse(QByteArray response);
 
-private:
-    QString activeQuery;
-    
+private:    
     //responses
     void responsePumpType(QString response);
     void responsePumpServiceStatus(QString response);
