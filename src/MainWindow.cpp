@@ -33,7 +33,7 @@ agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"})
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v3.1");
+	setWindowTitle("CASC v3.2");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -129,7 +129,7 @@ void MainWindow::createDevicesBar()
     // connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleAgilentTV301Device(bool)));
     connect(agilentTV301DeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleAgilentTV301Device);
 
-    laseLockDeviceButton = new DeviceButton("LaseLock test", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
+    laseLockDeviceButton = new DeviceButton("LaseLock", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
     connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleLaseLockDevice);
 
     //////////////////////////////////////////////////////////////////////////////////////////////

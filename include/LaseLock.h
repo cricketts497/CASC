@@ -10,10 +10,15 @@ public:
     LaseLock(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
     
 private slots:
+    void queryNextNumber();
+
     void lockCommand();
     void dealWithResponse(QByteArray response);
     
 private:
+    // const int queryTimeout;
+    int queryNumber;
+    
     QString activeQuery;
     
     void responseRegLocked(QString response, bool regA);
@@ -28,9 +33,13 @@ private:
     uint regARelock;
     uint regBRelock;
     
+    uint regAInClip;
+    uint regBInClip;
+    
     uint regAHold;
     uint regBHold;
     
+    QString fullResponse;
 };
 
 #endif // LASE_LOCK_H

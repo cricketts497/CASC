@@ -1,9 +1,9 @@
 #include "include/LaseLockStatusWindow.h"
 
 LaseLockStatusWindow::LaseLockStatusWindow(QWidget * parent) : 
-CascWidget(QString("TEM LaseLock"),parent),
-onMessages({"Locked", "Searching", "Clipped", "Hold"}),
-offMessages({"Not locked", "Search OK", "Out OK", "Reg OK"}),
+CascWidget(QString("LaseLock"),parent),
+onMessages({"Locked", "Searching", "In clip", "Hold"}),
+offMessages({"Not locked", "Search OK", "In OK", "Reg OK"}),
 onStates({1,2,2,2}),
 offStates({0,1,1,1})
 {
