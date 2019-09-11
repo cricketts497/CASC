@@ -19,7 +19,7 @@ private slots:
     void dealWithResponse(QByteArray response);
 
 private:
-    QString activeQuery;
+    // QString activeQuery;
     
     void responsePumpStatusCode(QString response);
     void responsePumpErrorCode(QString response);
