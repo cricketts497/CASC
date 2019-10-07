@@ -41,6 +41,7 @@ void RemoteDevice::stop_device()
         socket->disconnectFromHost();
     }
     
+    //devices in sets may not need to ask the listener on the local machine to stop as linked to same device button
 	if(device_failed || !askListener){
 		emit stopped();
 		return;
