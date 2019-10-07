@@ -1,5 +1,4 @@
 Makefile
-*.pro
 
 Makefile.*
 object_script.*

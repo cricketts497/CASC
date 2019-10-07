@@ -23,6 +23,7 @@
 #include "include/CascAction.h"
 #include "include/LaseLock.h"
 #include "include/LaseLockStatusWindow.h"
+#include "include/TcEpicsReadout.h"
 
 class MainWindow: public QMainWindow
 {
@@ -44,6 +45,7 @@ private slots:
     void toggleNxdsPumpWindow();
     void toggleAgilentTV301Window();
     void toggleLaseLockWindow();
+    void toggleTcReadout();
     
     //command re-emission functions
     // void heinzinger30kCommand(QString command);
@@ -161,6 +163,9 @@ private:
     
     CascAction * laseLockAct;
     LaseLockStatusWindow * laseLockWindow;    
+    
+    CascAction * tcReadoutAct;
+    TcEpicsReadout * tcReadoutWindow;
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////

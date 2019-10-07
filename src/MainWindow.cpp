@@ -33,7 +33,7 @@ agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"})
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v3.2");
+	setWindowTitle("CASC v4");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -93,6 +93,10 @@ void MainWindow::createActions()
     laseLockAct = new CascAction("./resources/laselock.png", "TEM LaseLock box monitor", "Open the TEM LaseLock status viewer", "Close the TEM LaseLock status viewer", taskBar);
     connect(laseLockAct, &QAction::triggered, this, &MainWindow::toggleLaseLockWindow);
     taskBar->addAction(laseLockAct);
+    
+    tcReadoutAct = new CascAction("./resources/tcReadout.png", "Thermocouple readout monitor", "Open the thermocouple temperature viewer", "Close the thermocouple temperature viewer", taskBar);
+    connect(tcReadoutAct, &QAction::triggered, this, &MainWindow::toggleTcReadout);
+    taskBar->addAction(tcReadoutAct);
 }
 
 void MainWindow::createStatusBar()
@@ -369,6 +373,19 @@ void MainWindow::toggleLaseLockWindow()
         // laseLockWindow->receiveLaseLockStatus(QString("Status_laselock_2"));
     }
 }
+
+void MainWindow::toggleTcReadout()
+{
+    if(tcReadoutAct->widgetToggle()){
+        delete tcReadoutWindow;
+    }else{
+        tcReadoutWindow = new TcEpicsReadout(this);
+        setupWidget(tcReadoutWindow, tcReadoutAct);
+        
+        addDockWidget(Qt::LeftDockWidgetArea, tcReadoutWindow);
+    }    
+}
+
 
 /////////////////////////////////////////
 
