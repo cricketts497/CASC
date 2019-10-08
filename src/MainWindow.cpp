@@ -135,6 +135,9 @@ void MainWindow::createDevicesBar()
 
     laseLockDeviceButton = new DeviceButton("LaseLock", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
     connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleLaseLockDevice);
+    
+    testDeviceButton = new EpicsDeviceButton("test_device", QStringList({"status1", "status2"}), this);
+    connect(testDeviceButton, SIGNAL(turnOn()), this, SLOT(turnOnTest()));
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
@@ -144,9 +147,17 @@ void MainWindow::createDevicesBar()
     devicesBar->addWidget(nxdsPumpDeviceButton);
     devicesBar->addWidget(agilentTV301DeviceButton);
     devicesBar->addWidget(laseLockDeviceButton);
+    devicesBar->addWidget(testDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
+}
+
+void MainWindow::turnOnTest()
+{
+    testDeviceButton->setState(true);
+    
+    testDeviceButton->setStatus(QString("Status_1_2"));
 }
 
 

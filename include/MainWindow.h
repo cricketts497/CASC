@@ -24,6 +24,7 @@
 #include "include/LaseLock.h"
 #include "include/LaseLockStatusWindow.h"
 #include "include/TcEpicsReadout.h"
+#include "include/EpicsDeviceButton.h"
 
 class MainWindow: public QMainWindow
 {
@@ -70,6 +71,8 @@ private slots:
     // void heinzinger20kStatus(QString status);
     // void nxdsPumpStatus(QString status);
     // void agilentTV301Status(QString status);
+    
+    void turnOnTest();
 
 signals:
 	void new_message(QString message);
@@ -196,6 +199,8 @@ private:
     
     DeviceButton * laseLockDeviceButton;
     QThread laseLockDeviceThread;
+    
+    EpicsDeviceButton * testDeviceButton;
 };
 
 #endif //MAIN_WINDOW_H
