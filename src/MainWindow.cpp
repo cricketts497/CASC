@@ -13,7 +13,10 @@ maxHeinzinger20kCurrent(3),
 // nxdsPumpWindow_open(false),
 // agilentTV301Window_open(false),
 nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP","BLQT"}),
-agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"})
+agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"}),
+agilentTV301StatusWindows({"IRTop:StatusCode", "IRTop:ErrorCode", "IRTop:Temperature", "IRTop:Drive", "IRBottom:StatusCode", "IRBottom:ErrorCode", "IRBottom:Temperature", "IRBottom:Drive", "DP:StatusCode", "DP:ErrorCode", "DP:Temperature", "DP:Drive"}),
+laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"})
+// agilentTV301StatusWindows({})
 // listener_running(false)
 // data_saver_started(false),
 // heinzinger30k_started(false),
@@ -33,7 +36,7 @@ agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"})
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v4");
+	setWindowTitle("CASC v4.1");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -41,6 +44,7 @@ agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"})
 	//auto start the listener
 	listenerButton->click();
 }
+
 
 void MainWindow::createActions()
 {
@@ -129,16 +133,16 @@ void MainWindow::createDevicesBar()
     // connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleNxdsPumpDevice(bool)));
     connect(nxdsPumpDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleNxdsPumpDevice);
 
-    agilentTV301DeviceButton = new DeviceButton("Agilent turbos", devicesBar, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL");
-    // connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleAgilentTV301Device(bool)));
-    connect(agilentTV301DeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleAgilentTV301Device);
-
-    laseLockDeviceButton = new DeviceButton("LaseLock", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
-    connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleLaseLockDevice);
+    // agilentTV301DeviceButton = new DeviceButton("Agilent turbos", devicesBar, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL");
+    agilentTV301DeviceButton = new EpicsDeviceButton("Turbo", agilentTV301StatusWindows, config, devicesBar);
+    // connect(agilentTV301DeviceButton, &QAbstractButton::clicked, this, &MainWindow::startAgilentTV301Device);
+    connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startAgilentTV301Device(bool)));
     
-    testDeviceButton = new EpicsDeviceButton("test_device", QStringList({"status1", "status2"}), this);
-    connect(testDeviceButton, SIGNAL(turnOn()), this, SLOT(turnOnTest()));
-
+    // laseLockDeviceButton = new DeviceButton("LaseLock", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
+    // connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::startLaseLockDevice);
+    laseLockDeviceButton = new EpicsDeviceButton("laselock", laseLockStatusWindows, config, devicesBar);
+    connect(laseLockDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startLaseLockDevice(bool)));
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(listenerButton);
     // devicesBar->addWidget(dataSaverDeviceButton);
@@ -147,17 +151,9 @@ void MainWindow::createDevicesBar()
     devicesBar->addWidget(nxdsPumpDeviceButton);
     devicesBar->addWidget(agilentTV301DeviceButton);
     devicesBar->addWidget(laseLockDeviceButton);
-    devicesBar->addWidget(testDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
-}
-
-void MainWindow::turnOnTest()
-{
-    testDeviceButton->setState(true);
-    
-    testDeviceButton->setStatus(QString("Status_1_2"));
 }
 
 
@@ -188,6 +184,9 @@ void MainWindow::toggleMessage()
 			messageWindow->addMessage(messages.readAll());
 		}
 		connect(this, SIGNAL(new_message(QString)), messageWindow, SLOT(addMessage(QString)));
+        
+        connect(agilentTV301DeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
+        connect(laseLockDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
 
 		addDockWidget(Qt::LeftDockWidgetArea, messageWindow);
 
@@ -368,10 +367,10 @@ void MainWindow::toggleLaseLockWindow()
     if(laseLockAct->widgetToggle()){
         delete laseLockWindow;
     }else{
-        laseLockWindow = new LaseLockStatusWindow(this);
+        laseLockWindow = new LaseLockStatusWindow(laseLockStatusWindows, this);
         setupWidget(laseLockWindow, laseLockAct);
         
-        connect(laseLockDeviceButton, SIGNAL(newDeviceStatus(QString)), laseLockWindow, SLOT(receiveLaseLockStatus(QString)));
+        // connect(laseLockDeviceButton, SIGNAL(newDeviceStatus(QString)), laseLockWindow, SLOT(receiveLaseLockStatus(QString)));
         
         addDockWidget(Qt::RightDockWidgetArea, laseLockWindow);
     
@@ -564,26 +563,45 @@ void MainWindow::toggleNxdsPumpDevice()
     // emit newNxdsPumpStatus(status);
 // }
 
-void MainWindow::toggleAgilentTV301Device()
-{
-    //stop_device slot connected in setupDevice() below
-    if(agilentTV301DeviceButton->deviceToggle()){
+void MainWindow::startAgilentTV301Device(bool start)
+{    
+    if(!start && !agilentTV301DeviceThread.isRunning()){
+        agilentTV301DeviceButton->deviceHasStopped();
+        return;
+    }else if(!start){
         return;
     }
-        
+
+    //stop_device slot connected in setupDevice() below
+    // if(agilentTV301DeviceButton->deviceToggle()){
+        // return;
+    // }
+    bool failed = false;
+    bool one_local = false;
     for(int i=0; i<agilentTV301Names.size(); i++){
         QString dev_name = agilentTV301Names.at(i);
 
-        bool local = config->deviceLocal(dev_name);
-
-        if(local){
-            AgilentTV301Pump * agilentTV301Device = new AgilentTV301Pump(agilentTV301_temp_path,&agilentTV301FileMutex,dev_name,config);
-            setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
+        if(!config->deviceLocal(dev_name)){
+            continue;
         }else{
-            //only send listener commands with the first device in the group
-            RemoteDevice * agilentTV301Device = new RemoteDevice(dev_name, config, nullptr, i==0);
-            setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
+            one_local = true;
         }
+
+        // if(local){
+        AgilentTV301Pump * agilentTV301Device = new AgilentTV301Pump(agilentTV301_temp_path,&agilentTV301FileMutex,dev_name,config);
+        setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
+        // }else{
+            // //only send listener commands with the first device in the group
+            // RemoteDevice * agilentTV301Device = new RemoteDevice(dev_name, config, nullptr, i==0);
+            // setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
+        // }
+        if(agilentTV301Device->getDeviceFailed()){
+            failed = true;
+        }
+    }
+    
+    if(!failed && one_local){
+        agilentTV301DeviceButton->deviceHasStarted();
     }
 }
 
@@ -592,22 +610,26 @@ void MainWindow::toggleAgilentTV301Device()
     // emit newAgilentTV301Status(status);
 // }
 
-void MainWindow::toggleLaseLockDevice()
+void MainWindow::startLaseLockDevice(bool start)
 {
-    //stop device slot connected in setupDevice() below
-    if(laseLockDeviceButton->deviceToggle()){
+    if(!start && !laseLockDeviceThread.isRunning()){
+        laseLockDeviceButton->deviceHasStopped();
+        return;
+    }else if(!start){
         return;
     }
     
-    bool local = config->deviceLocal(QString("laselock"));
+    //only need local devices as status variables accessed through epics
+    if(!config->deviceLocal(QString("laselock"))){
+        return;
+    }
     
-    if(local){
-        LaseLock * laseLockDevice = new LaseLock(laseLock_temp_path,&laseLockFileMutex,QString("laselock"),config);
-        setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
-    }else{
-        RemoteDevice * laseLockDevice = new RemoteDevice(QString("laselock"), config);
-        setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
-    }    
+    LaseLock * laseLockDevice = new LaseLock(laseLock_temp_path,&laseLockFileMutex,QString("laselock"),config);
+    setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
+        
+    if(!laseLockDevice->getDeviceFailed()){
+        laseLockDeviceButton->deviceHasStarted();
+    } 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -623,10 +645,10 @@ void MainWindow::toggleDevice(QString device, bool start)
         // dataSaverDeviceButton->click();
     else if(device == nxdsPumpNames[0] && ((start && !nxdsPumpDeviceButton->deviceIsRunning()) || (!start && nxdsPumpDeviceButton->deviceIsRunning())))
         nxdsPumpDeviceButton->click();
-    else if(device == agilentTV301Names[0] && ((start && !agilentTV301DeviceButton->deviceIsRunning()) || (!start && agilentTV301DeviceButton->deviceIsRunning())))
-        agilentTV301DeviceButton->click();
-    else if(device == "laselock" && ((start && !laseLockDeviceButton->deviceIsRunning()) || (!start && laseLockDeviceButton->deviceIsRunning())))
-        laseLockDeviceButton->click();
+    // else if(device == agilentTV301Names[0] && ((start && !agilentTV301DeviceButton->deviceIsRunning()) || (!start && agilentTV301DeviceButton->deviceIsRunning())))
+        // agilentTV301DeviceButton->click();
+    // else if(device == "laselock" && ((start && !laseLockDeviceButton->deviceIsRunning()) || (!start && laseLockDeviceButton->deviceIsRunning())))
+        // laseLockDeviceButton->click();
 }
 
 void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)
@@ -646,6 +668,26 @@ void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread
     
 	//stop the device before quitting and destroying it
 	connect(button, SIGNAL(stop_device()), device, SLOT(stop_device()));
+    connect(device, SIGNAL(stopped()), button, SLOT(deviceHasStopped()));
+}
+
+void MainWindow::setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread)
+{
+    connect(device, SIGNAL(device_status(QString)), button, SLOT(device_status(QString)));
+	connect(device, SIGNAL(device_fail()), button, SLOT(setFail()));
+	connect(device, SIGNAL(device_message(QString)), this, SLOT(keepMessage(QString)));
+
+	//emit messages stored during init
+	device->sendMessages();
+
+	//independent thread for each device
+	device->moveToThread(thread);
+	connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
+	thread->start();
+	connect(device, SIGNAL(stopped()), thread, SLOT(quit()));
+    
+	//stop the device before quitting and destroying it
+	connect(button, SIGNAL(toggle_device(bool)), device, SLOT(stop_device()));
     connect(device, SIGNAL(stopped()), button, SLOT(deviceHasStopped()));
 }
 

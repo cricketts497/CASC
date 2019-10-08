@@ -86,6 +86,11 @@ void CascDevice::stop_device()
 	emit stopped();
 }
 
+bool CascDevice::getDeviceFailed()
+{
+    return device_failed;
+}
+
 void CascDevice::setFailed()
 {
     device_failed = true;  

@@ -57,14 +57,15 @@ private slots:
 	//devices
 	void toggleDevice(QString device, bool start);
 	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
+	void setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread);
 	
 	void toggleListener();
     // void toggleDataSaver();
 	void toggleHeinzinger30kDevice();
 	void toggleHeinzinger20kDevice();
     void toggleNxdsPumpDevice();
-    void toggleAgilentTV301Device();
-    void toggleLaseLockDevice();
+    void startAgilentTV301Device(bool start);
+    void startLaseLockDevice(bool start);
     
     //status re-emission functions
     // void heinzinger30kStatus(QString status);
@@ -72,8 +73,6 @@ private slots:
     // void nxdsPumpStatus(QString status);
     // void agilentTV301Status(QString status);
     
-    void turnOnTest();
-
 signals:
 	void new_message(QString message);
 	// void newDataSaverStart(QString device);
@@ -193,14 +192,18 @@ private:
     // bool nxdsPumpSet_started;
     QThread nxdsPumpDeviceThread;
     
-    DeviceButton * agilentTV301DeviceButton;
+    // DeviceButton * agilentTV301DeviceButton;
+    EpicsDeviceButton * agilentTV301DeviceButton;
     // bool agilentTV301_started;
     QThread agilentTV301DeviceThread;
+    const QStringList agilentTV301StatusWindows;
     
-    DeviceButton * laseLockDeviceButton;
+    // DeviceButton * laseLockDeviceButton;
+    EpicsDeviceButton * laseLockDeviceButton;
     QThread laseLockDeviceThread;
+    const QStringList laseLockStatusWindows;
     
-    EpicsDeviceButton * testDeviceButton;
+    // EpicsDeviceButton * testDeviceButton;
 };
 
 #endif //MAIN_WINDOW_H

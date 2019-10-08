@@ -23,6 +23,9 @@ private:
     const QStringList windows;
     QVector<uint> boolValues;
     
+    QStringList onMessages;
+    QStringList offMessages;
+    
 };
 
 #endif // LASE_LOCK_H

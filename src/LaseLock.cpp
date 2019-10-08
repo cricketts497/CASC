@@ -4,7 +4,9 @@ LaseLock::LaseLock(QString file_path, QMutex * file_mutex, QString deviceName, C
 SerialDevice(QStringList({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"}), file_path, file_mutex, deviceName, config, parent),
 queryNumber(0),
 windows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"}),
-boolValues(windows.length(),2)//boolean values for the windows, initialise with 2=>no value
+boolValues(windows.length(),2),//boolean values for the windows, initialise with 2=>no value
+onMessages({"Locked", "Locked", "Searching", "Searching", "Inclip", "Inclip", "Hold", "Hold"}),
+offMessages({"Notlocked", "Notlocked", "Searchok", "Searchok", "Inok", "Inok", "Regok", "Regok"})
 {
     if(device_failed)
         return;
@@ -31,10 +33,10 @@ boolValues(windows.length(),2)//boolean values for the windows, initialise with 
     //set the status
     QString status = QString("");
     for(int i=0; i<boolValues.length()-1; i++){
-        status.append(QString("%1").arg(boolValues.at(i)));
+        status.append(QString("off"));
         status.append("_");
     }
-    status.append(QString("%1").arg(boolValues.at(boolValues.length()-1)));
+    status.append(QString("off"));
     setStatus(status);
     
     //save the first real values to come in
@@ -136,11 +138,26 @@ void LaseLock::dealWithResponse(QByteArray resp)
         
     //set the status
     QString status = QString("");
-    for(int i=0; i<boolValues.length()-1; i++){
-        status.append(QString("%1").arg(boolValues.at(i)));
-        status.append("_");
+    for(int i=0; i<boolValues.length(); i++){
+        uint val = boolValues.at(i);
+        
+        QString m;
+        switch(val){
+            case 0:
+                m = offMessages.at(i);
+                break;
+            case 1:
+                m = onMessages.at(i);
+                break;
+            default:
+                m = "off";
+        }
+        
+        status.append(m);
+        if(i!=boolValues.length()-1){
+            status.append("_");
+        }
     }
-    status.append(QString("%1").arg(boolValues.at(boolValues.length()-1)));
     setStatus(status);
     
     //free up the serial device

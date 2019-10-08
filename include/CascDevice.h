@@ -21,6 +21,7 @@ public:
 
 public slots:
 	void stop_device();
+    bool getDeviceFailed();
 
 signals:
     void device_status(QString status);
