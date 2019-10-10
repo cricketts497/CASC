@@ -14,7 +14,7 @@ maxHeinzinger20kCurrent(3),
 // agilentTV301Window_open(false),
 nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP","BLQT"}),
 agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"}),
-agilentTV301StatusWindows({"IRTop:StatusCode", "IRTop:ErrorCode", "IRTop:Temperature", "IRTop:Drive", "IRBottom:StatusCode", "IRBottom:ErrorCode", "IRBottom:Temperature", "IRBottom:Drive", "DP:StatusCode", "DP:ErrorCode", "DP:Temperature", "DP:Drive"}),
+agilentTV301StatusWindows({"IRTop:Status", "IRTop:Error", "IRTop:Temperature", "IRTop:Drive", "IRBottom:Status", "IRBottom:Error", "IRBottom:Temperature", "IRBottom:Drive", "DP:Status", "DP:Error", "DP:Temperature", "DP:Drive"}),
 laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"})
 // agilentTV301StatusWindows({})
 // listener_running(false)
@@ -36,7 +36,7 @@ laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "I
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v4.1");
+	setWindowTitle("CASC v4.2");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -342,7 +342,7 @@ void MainWindow::toggleAgilentTV301Window()
         setupWidget(agilentTV301Window, agilentTV301Act);
         
         // connect(this, SIGNAL(newAgilentTV301Status(QString)), agilentTV301Window, SLOT(receiveAgilentTV301Status(QString)));
-        connect(agilentTV301DeviceButton, SIGNAL(newDeviceStatus(QString)), agilentTV301Window, SLOT(receiveAgilentTV301Status(QString)));
+        // connect(agilentTV301DeviceButton, SIGNAL(newDeviceStatus(QString)), agilentTV301Window, SLOT(receiveAgilentTV301Status(QString)));
         
         addDockWidget(Qt::LeftDockWidgetArea, agilentTV301Window);
         

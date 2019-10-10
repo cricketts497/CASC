@@ -18,9 +18,7 @@ private slots:
     void pumpCommand();
     void dealWithResponse(QByteArray response);
 
-private:
-    // QString activeQuery;
-    
+private:    
     void responsePumpStatusCode(QString response);
     void responsePumpErrorCode(QString response);
     void responsePumpTemperature(QString response);
@@ -39,8 +37,8 @@ private:
     QTimer * driveTimer;
     const int driveTimeout;
     
-    uint pumpStatusCode;
-    uint pumpErrorCode;
+    QString pumpStatus;
+    QString pumpError;
     uint pumpTemperature;
     uint pumpDrive;
     
