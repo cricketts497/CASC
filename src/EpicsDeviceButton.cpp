@@ -1,12 +1,20 @@
 #include "include/EpicsDeviceButton.h"
 
-EpicsDeviceButton::EpicsDeviceButton(QString deviceName, QStringList statusWindows, CascConfig * config, QWidget * parent) : 
+EpicsDeviceButton::EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString fail_tip, CascConfig * config, QWidget * parent) : 
 QWidget(parent),
 deviceName(deviceName),
 button(new QPushButton(this)),
 setpointLabel(new QELineEdit(this)),
 stateLabel(new QELineEdit(this)),
-nStatusWindows(statusWindows.length())
+nStatusWindows(statusWindows.length()),
+offColour(QColor(Qt::white)),
+onColour(QColor(Qt::green)),
+failColour(QColor(Qt::red)),
+start_tip(start_tip),
+stop_tip(stop_tip),
+fail_tip(fail_tip),
+setpointTimer(new QTimer(this)),
+setpointTimeout(5000)
 {
     if(nStatusWindows > MAX_N_STATUS_LABELS){
         return;
@@ -20,15 +28,21 @@ nStatusWindows(statusWindows.length())
     layout->addWidget(setpointLabel);
     layout->addWidget(stateLabel);
     
+    button->setAutoFillBackground(true);
     button->setText(deviceName);
+    button->setStatusTip(start_tip);
     
     setpointLabel->setVariableName(QString("CASC:%1:SET").arg(deviceName),0);
     setpointLabel->activate();
     setpointLabel->setReadOnly(true);
     
+    setpointLabel->setVisible(false);
+    
     stateLabel->setVariableName(QString("CASC:%1:IS").arg(deviceName),0);
     stateLabel->activate();
     stateLabel->setReadOnly(true);
+    
+    stateLabel->setVisible(false);
 
     for(int i=0; i<nStatusWindows; i++){
         statusLabels[i] = new QELineEdit(QString("CASC:%1:%2").arg(deviceName).arg(statusWindows.at(i)), this);
@@ -36,17 +50,26 @@ nStatusWindows(statusWindows.length())
         statusLabels[i]->setReadOnly(true);
         
         //add in user management here?
-        statusLabels[i]->setFixedWidth(40);
-        layout->addWidget(statusLabels[i]);
-        // statusLabels[i]->setVisible(false);
+        // statusLabels[i]->setFixedWidth(40);
+        // layout->addWidget(statusLabels[i]);
+        statusLabels[i]->setVisible(false);
     }
     
     //change the setpoint on button click
     connect(button, SIGNAL(clicked()), this, SLOT(toggleSetpoint()));
     
+    //stop trying to start/stop the device if not started/stopped within certain time
+    setpointTimer->setInterval(setpointTimeout);
+    setpointTimer->setSingleShot(true);
+    connect(setpointTimer, SIGNAL(timeout()), this, SLOT(toggleSetpoint()));
+    connect(setpointTimer, SIGNAL(timeout()), this, SLOT(setpointTimeoutMessage()));
+    
     //emit a signal to turn the local device on setpoint PV change
     connect(setpointLabel, SIGNAL(dbValueChanged()), this, SLOT(toggleOn()));
     
+    //show whether the device is on or off with the button colour
+    connect(stateLabel, SIGNAL(dbValueChanged()), this, SLOT(setButtonColour()));
+        
     //check for local devices
     bool local = config->deviceLocal(deviceName);
     
@@ -85,9 +108,40 @@ void EpicsDeviceButton::toggleOn()
 {
     if(setpointLabel->text() == "ON" && stateLabel->text() == "OFF"){
         emit toggle_device(true);
+        button->setEnabled(false);
+        setpointTimer->start();
     }else if(setpointLabel->text() == "OFF" && (stateLabel->text() == "ON" || stateLabel->text() == "FAIL")){
         emit toggle_device(false);
+        button->setEnabled(false);
+        setpointTimer->start();
+    }else{
+        button->setEnabled(true);
+        setpointTimer->stop();
     }
+}
+
+void EpicsDeviceButton::setButtonColour()
+{
+    button->setEnabled(true);
+    setpointTimer->stop();
+    
+    QPalette pal = palette();
+    if(stateLabel->text() == "FAIL"){
+        pal.setColor(QPalette::Button, failColour);
+        button->setFlat(true);
+        button->setStatusTip(fail_tip);
+    }else if(stateLabel->text() == "OFF"){
+        pal.setColor(QPalette::Button, offColour);
+        button->setFlat(false);
+        button->setStatusTip(start_tip);
+    }else if(stateLabel->text() == "ON"){
+        pal.setColor(QPalette::Button, onColour);
+        button->setFlat(true);
+        button->setStatusTip(stop_tip);
+    }
+	button->setPalette(pal);
+    button->update();
+	update();
 }
 
 void EpicsDeviceButton::deviceHasStarted()
@@ -137,6 +191,11 @@ void EpicsDeviceButton::device_status(QString status)
             statusLabels[index*subWindows+i-2]->writeNow();
         }
     }
+}
+
+void EpicsDeviceButton::setpointTimeoutMessage()
+{
+    emit buttonMessage(QString("ERROR: Device %1 failed to start").arg(deviceName));
 }
 
 

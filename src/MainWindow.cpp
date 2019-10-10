@@ -2,27 +2,15 @@
 
 MainWindow::MainWindow() :
 config(new CascConfig(config_file_path, this)),
-// messageWindow_open(false),
-// heinzinger30kWindow_open(false),
 maxHeinzinger30kVoltage(30000),
 maxHeinzinger30kCurrent(3),
-// heinzinger20kWindow_open(false),
 maxHeinzinger20kVoltage(20000),
 maxHeinzinger20kCurrent(3),
-// dummyScanner_open(false),
-// nxdsPumpWindow_open(false),
-// agilentTV301Window_open(false),
 nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP","BLQT"}),
+nxdsPumpStatusWindows({"20MT:Status","20MT:Service","20MT:Temperature","20MT:Speed","20Ebara:Status","20Ebara:Service","20Ebara:Temperature","20Ebara:Speed","IR:Status","IR:Service","IR:Temperature","IR:Speed","DP:Status","DP:Service","DP:Temperature","DP:Speed","QT:Status","QT:Service","QT:Temperature","QT:Speed"}),
 agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"}),
 agilentTV301StatusWindows({"IRTop:Status", "IRTop:Error", "IRTop:Temperature", "IRTop:Drive", "IRBottom:Status", "IRBottom:Error", "IRBottom:Temperature", "IRBottom:Drive", "DP:Status", "DP:Error", "DP:Temperature", "DP:Drive"}),
 laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"})
-// agilentTV301StatusWindows({})
-// listener_running(false)
-// data_saver_started(false),
-// heinzinger30k_started(false),
-// heinzinger20k_started(false),
-// nxdsPumpSet_started(false),
-// agilentTV301_started(false)
 {
 	messages.setString(&messages_string);
 
@@ -129,18 +117,20 @@ void MainWindow::createDevicesBar()
 	// connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger20kDevice(bool)));
 	connect(heinzinger20kDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleHeinzinger20kDevice);
 
-    nxdsPumpDeviceButton = new DeviceButton("nXDS pumps", devicesBar, "Start the Edwards nXDS backing pump device", "Stop the nXDS pump device", "NXDS PUMP FAIL");
+    // nxdsPumpDeviceButton = new DeviceButton("nXDS pumps", devicesBar, "Start the Edwards nXDS backing pump device", "Stop the nXDS pump device", "NXDS PUMP FAIL");
+    nxdsPumpDeviceButton = new EpicsDeviceButton("BL", nxdsPumpStatusWindows, "Start the Edwards nXDS backing pump device", "Stop the nXDS pump device", "NXDS PUMP FAIL", config, devicesBar);
     // connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleNxdsPumpDevice(bool)));
-    connect(nxdsPumpDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleNxdsPumpDevice);
+    // connect(nxdsPumpDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleNxdsPumpDevice);
+    connect(nxdsPumpDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startNxdsPumpDevice(bool)));
 
     // agilentTV301DeviceButton = new DeviceButton("Agilent turbos", devicesBar, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL");
-    agilentTV301DeviceButton = new EpicsDeviceButton("Turbo", agilentTV301StatusWindows, config, devicesBar);
+    agilentTV301DeviceButton = new EpicsDeviceButton("Turbo", agilentTV301StatusWindows, "Start the Agilent TV301 Navigator turbo pump device", "Stop the Agilent TV 301 device", "AGILENT TV301 FAIL", config, devicesBar);
     // connect(agilentTV301DeviceButton, &QAbstractButton::clicked, this, &MainWindow::startAgilentTV301Device);
     connect(agilentTV301DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startAgilentTV301Device(bool)));
     
     // laseLockDeviceButton = new DeviceButton("LaseLock", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
     // connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::startLaseLockDevice);
-    laseLockDeviceButton = new EpicsDeviceButton("laselock", laseLockStatusWindows, config, devicesBar);
+    laseLockDeviceButton = new EpicsDeviceButton("laselock", laseLockStatusWindows, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL", config, devicesBar);
     connect(laseLockDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startLaseLockDevice(bool)));
     
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,7 +298,7 @@ void MainWindow::toggleNxdsPumpWindow()
         setupWidget(nxdsPumpWindow, nxdsPumpAct);
         
         // connect(this, SIGNAL(newNxdsPumpStatus(QString)), nxdsPumpWindow, SLOT(receiveNxdsStatus(QString)));
-        connect(nxdsPumpDeviceButton, SIGNAL(newDeviceStatus(QString)), nxdsPumpWindow, SLOT(receiveNxdsStatus(QString)));
+        // connect(nxdsPumpDeviceButton, SIGNAL(newDeviceStatus(QString)), nxdsPumpWindow, SLOT(receiveNxdsStatus(QString)));
         
         addDockWidget(Qt::TopDockWidgetArea, nxdsPumpWindow);
         
@@ -392,7 +382,7 @@ void MainWindow::toggleTcReadout()
         tcReadoutWindow = new TcEpicsReadout(this);
         setupWidget(tcReadoutWindow, tcReadoutAct);
         
-        addDockWidget(Qt::LeftDockWidgetArea, tcReadoutWindow);
+        addDockWidget(Qt::RightDockWidgetArea, tcReadoutWindow);
     }    
 }
 
@@ -536,32 +526,38 @@ void MainWindow::toggleHeinzinger20kDevice()
 // }
 
 //currently have a single thread for all the backing pumps but should be ok
-void MainWindow::toggleNxdsPumpDevice()
+void MainWindow::startNxdsPumpDevice(bool start)
 {
-    if(nxdsPumpDeviceButton->deviceToggle()){
+    if(!start && !nxdsPumpDeviceThread.isRunning()){
+        nxdsPumpDeviceButton->deviceHasStopped();
+        return;
+    }else if(!start){
         return;
     }
     
+    bool failed = false;
+    bool one_local = false;
     for(int i=0; i<nxdsPumpNames.size(); i++){
         QString dev_name = nxdsPumpNames.at(i);
 
-        bool local = config->deviceLocal(dev_name);
-        
-        if(local){
-            NxdsPump * nxdsDevice = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,dev_name,config);
-            setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+        if(!config->deviceLocal(dev_name)){
+            continue;
         }else{
-            //only send listener commands with the first device in the group
-            RemoteDevice * nxdsDevice = new RemoteDevice(dev_name, config, nullptr, i==0);
-            setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+            one_local = true;
         }
+        
+        NxdsPump * nxdsDevice = new NxdsPump(nxdsPump_temp_path,&nxdsPumpFileMutex,dev_name,config);
+        setupDevice(nxdsDevice, nxdsPumpDeviceButton, &nxdsPumpDeviceThread);
+
+        if(nxdsDevice->getDeviceFailed()){
+            failed = true;
+        }        
+    }
+    
+    if(!failed && one_local){
+        nxdsPumpDeviceButton->deviceHasStarted();
     }
 }
-
-// void MainWindow::nxdsPumpStatus(QString status)
-// {
-    // emit newNxdsPumpStatus(status);
-// }
 
 void MainWindow::startAgilentTV301Device(bool start)
 {    
@@ -572,10 +568,7 @@ void MainWindow::startAgilentTV301Device(bool start)
         return;
     }
 
-    //stop_device slot connected in setupDevice() below
-    // if(agilentTV301DeviceButton->deviceToggle()){
-        // return;
-    // }
+
     bool failed = false;
     bool one_local = false;
     for(int i=0; i<agilentTV301Names.size(); i++){
@@ -587,14 +580,9 @@ void MainWindow::startAgilentTV301Device(bool start)
             one_local = true;
         }
 
-        // if(local){
         AgilentTV301Pump * agilentTV301Device = new AgilentTV301Pump(agilentTV301_temp_path,&agilentTV301FileMutex,dev_name,config);
         setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
-        // }else{
-            // //only send listener commands with the first device in the group
-            // RemoteDevice * agilentTV301Device = new RemoteDevice(dev_name, config, nullptr, i==0);
-            // setupDevice(agilentTV301Device, agilentTV301DeviceButton, &agilentTV301DeviceThread);
-        // }
+
         if(agilentTV301Device->getDeviceFailed()){
             failed = true;
         }
@@ -605,10 +593,6 @@ void MainWindow::startAgilentTV301Device(bool start)
     }
 }
 
-// void MainWindow::agilentTV301Status(QString status)
-// {
-    // emit newAgilentTV301Status(status);
-// }
 
 void MainWindow::startLaseLockDevice(bool start)
 {
@@ -643,8 +627,8 @@ void MainWindow::toggleDevice(QString device, bool start)
         heinzinger20kDeviceButton->click();
     // else if(device == "datasaver" && ((start && !dataSaverDeviceButton->deviceIsRunning()) || (!start && dataSaverDeviceButton->deviceIsRunning())))
         // dataSaverDeviceButton->click();
-    else if(device == nxdsPumpNames[0] && ((start && !nxdsPumpDeviceButton->deviceIsRunning()) || (!start && nxdsPumpDeviceButton->deviceIsRunning())))
-        nxdsPumpDeviceButton->click();
+    // else if(device == nxdsPumpNames[0] && ((start && !nxdsPumpDeviceButton->deviceIsRunning()) || (!start && nxdsPumpDeviceButton->deviceIsRunning())))
+        // nxdsPumpDeviceButton->click();
     // else if(device == agilentTV301Names[0] && ((start && !agilentTV301DeviceButton->deviceIsRunning()) || (!start && agilentTV301DeviceButton->deviceIsRunning())))
         // agilentTV301DeviceButton->click();
     // else if(device == "laselock" && ((start && !laseLockDeviceButton->deviceIsRunning()) || (!start && laseLockDeviceButton->deviceIsRunning())))

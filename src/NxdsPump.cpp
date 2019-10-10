@@ -7,9 +7,10 @@ temperatureTimer(new QTimer(this)),
 temperatureTimeout(1000),
 speedStatusTimer(new QTimer(this)),
 speedStatusTimeout(1010),
-pumpStatus(QString("0")),
-pumpControllerTemperature(QString("0")),
-pumpServiceStatus(QString("0"))
+pumpStatus(QString("off")),
+pumpService(QString("off")),
+pumpTemperature(0),
+pumpSpeed(0)
 {
     if(device_failed)
         return;
@@ -52,7 +53,7 @@ pumpServiceStatus(QString("0"))
     speedStatusTimer->start();
     
     //speedStatus, controller temperature, service status
-    setStatus(QString("0_0_0"));
+    setStatus(QString("%1_%2_%3_%4").arg(pumpStatus).arg(pumpService).arg(pumpTemperature).arg(pumpSpeed));
     
     //save the first real values to come in
     saveToFile = true;
@@ -112,10 +113,6 @@ void NxdsPump::dealWithResponse(QByteArray resp)
     
     // emit device_message(QString("Local NxdsPump: %1: Response: %2").arg(device_name).arg(response));
     
-    // if(activeQuery == QString("NONE")){
-        // return;
-    // }
-    
     //each response ends with a carriage return
     QStringList response_list = response.split("\r");
     
@@ -145,10 +142,9 @@ void NxdsPump::dealWithResponse(QByteArray resp)
         }
     }
 
-    setStatus(QString("%1_%2_%3").arg(pumpStatus).arg(pumpControllerTemperature).arg(pumpServiceStatus));
+    setStatus(QString("%1_%2_%3_%4").arg(pumpStatus).arg(pumpService).arg(pumpTemperature).arg(pumpSpeed));
+
     // emit device_message(QString("Local NxdsPump: %1").arg(deviceStatus));
-    
-    // activeQuery = QString("NONE");
     
     //free up the serial device
     fullResponseReceived();
@@ -196,7 +192,12 @@ void NxdsPump::responsePumpServiceStatus(QString response)
         return;
     }
     
-    pumpServiceStatus = service_status_list.at(0);
+    if(serviceStatus == 0){
+        pumpService = "ok";
+        return;
+    }else{
+        pumpService = "Service";
+    }
     
     //General service message, comes with the other service messages
     if((serviceStatus&0x0080)==0x0080){
@@ -228,7 +229,7 @@ void NxdsPump::responsePumpTemperature(QString response)
     
     //check the temperature is a valid integer
     bool conv_ok;
-    int temp = temperature_list.at(1).toInt(&conv_ok);
+    uint temperature = temperature_list.at(1).toUInt(&conv_ok);
     if(!conv_ok){
         emit device_message(QString("Local NxdsPump: %1: Pump response %2 is invalid for PUMPTEMPERATURE query").arg(device_name).arg(response));
         return;
@@ -237,7 +238,7 @@ void NxdsPump::responsePumpTemperature(QString response)
     //return value of -200 for either indicates temperature not utilised
     //getting -200 for pump temperature
     // emit device_message(QString("Local NxdsPump: %1: Controller temperature: %2 degrees").arg(device_name).arg(temperature_list[1]));
-    pumpControllerTemperature = temperature_list[1];
+    pumpTemperature = temperature;
 }
 
 void NxdsPump::responsePumpSpeedStatus(QString response)
@@ -252,7 +253,7 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     
     //check each register and the rotational speed with conversion
     bool conv_ok;
-    int rot_speed = speed_status_list.at(0).toInt(&conv_ok);
+    uint rot_speed = speed_status_list.at(0).toUInt(&conv_ok);
     if(!conv_ok){
         emit device_message(QString("Local NxdsPump: %1: rotational speed is invalid: %2").arg(device_name).arg(speed_status_list[0]));
         return;
@@ -280,9 +281,70 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     
     // emit device_message(QString("Local NxdsPump: %1: Rotational speed: %2 Hz, register 1: %3, register 2: %4, warning register: %5, fault register: %6").arg(device_name).arg(speed_status_list[0]).arg(speed_status_list[1]).arg(speed_status_list[2]).arg(speed_status_list[3]).arg(speed_status_list[4]));
     
-    pumpStatus = response;
+    pumpSpeed = rot_speed;
+    // pumpStatus = response;
+    
+    //fault register
+    //as first if statement, always checking for fault messages
+    if(fault_register != 0){
+        pumpStatus = "FAULT";
+        //over voltage trip
+        if((fault_register&0x0002)==0x0002){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Over voltage trip: excessive link voltage").arg(device_name));
+        }
+        //over current trip
+        if((fault_register&0x0004)==0x0004){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Over current trip: excessive motor current").arg(device_name));
+        }
+        //over temperature trip
+        if((fault_register&0x0008)==0x0008){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Over temperature trip: excessive controller temperature").arg(device_name));
+        }
+        //under temperature trip
+        if((fault_register&0x0010)==0x0010){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Under temperature trip: temperature sensor failure").arg(device_name));
+        }
+        //Power stage fault
+        if((fault_register&0x0020)==0x0020){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Power stage fault: power stage has failed").arg(device_name));
+        }
+        //hardware fault latch
+        if((fault_register&0x0100)==0x0100){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Hardware latch set: fault latch activated").arg(device_name));
+        }
+        //Serial control mode interlock
+        if((fault_register&0x2000)==0x2000){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Serial control mode interlock: serial enable went inactive when operating from serial start command").arg(device_name));
+        }
+        //Overload timeout
+        if((fault_register&0x4000)==0x4000){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Overload timeout: output frequency fell below threshold for more than allowable time").arg(device_name));
+        }
+        //acceleration timeout
+        if((fault_register&0x8000)==0x8000){
+            emit device_message(QString("Local NxdsPump: %1: FAULT: Acceleration timeout: output frequency didnt reach threshold in allowable time").arg(device_name));
+        }
+    //warning register
+    }else if(warning_register != 0){
+        pumpStatus = "WARNING";
+    //first register messages
+    //Standby
+    }else if((register1&0x0004)==0x0004){
+        pumpStatus = "Standby";
+    //decel
+    }else if((register1&0x0001)==0x0001){
+        pumpStatus = "Decelerating";
+    //accel or running
+    }else if((register1&0x0002)==0x0002){
+        pumpStatus = "Running";
+    //if none of these are given, probably that the pump is off
+    }else{
+        pumpStatus = "PumpOff";
+    }   
+
     
     //first register messages
+    //always check for decel and Standby
     //decel
     if((register1&0x0001)==0x0001){
         emit device_message(QString("Local NxdsPump: %1: Decelerating").arg(device_name));
@@ -336,8 +398,7 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
         // emit device_message(QString("Local NxdsPump: %1: Fault status").arg(device_name));
     // }
     
-    
-    //warning register
+    //always check for warning messages
     //Low pump controller temperature
     if((warning_register&0x0002)==0x0002){
         emit device_message(QString("Local NxdsPump: %1: WARNING: Low pump-controller temperature: below the measurable range").arg(device_name));
@@ -349,45 +410,6 @@ void NxdsPump::responsePumpSpeedStatus(QString response)
     //high pump controller temperature
     if((warning_register&0x0400)==0x0400){
         emit device_message(QString("Local NxdsPump: %1: WARNING: High pump-controller temperature: above the measurable range").arg(device_name));
-    }
-    
-    
-    //fault register
-    //over voltage trip
-    if((fault_register&0x0002)==0x0002){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Over voltage trip: excessive link voltage").arg(device_name));
-    }
-    //over current trip
-    if((fault_register&0x0004)==0x0004){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Over current trip: excessive motor current").arg(device_name));
-    }
-    //over temperature trip
-    if((fault_register&0x0008)==0x0008){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Over temperature trip: excessive controller temperature").arg(device_name));
-    }
-    //under temperature trip
-    if((fault_register&0x0010)==0x0010){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Under temperature trip: temperature sensor failure").arg(device_name));
-    }
-    //Power stage fault
-    if((fault_register&0x0020)==0x0020){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Power stage fault: power stage has failed").arg(device_name));
-    }
-    //hardware fault latch
-    if((fault_register&0x0100)==0x0100){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Hardware latch set: fault latch activated").arg(device_name));
-    }
-    //Serial control mode interlock
-    if((fault_register&0x2000)==0x2000){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Serial control mode interlock: serial enable went inactive when operating from serial start command").arg(device_name));
-    }
-    //Overload timeout
-    if((fault_register&0x4000)==0x4000){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Overload timeout: output frequency fell below threshold for more than allowable time").arg(device_name));
-    }
-    //acceleration timeout
-    if((fault_register&0x8000)==0x8000){
-        emit device_message(QString("Local NxdsPump: %1: FAULT: Acceleration timeout: output frequency didnt reach threshold in allowable time").arg(device_name));
     }
 }
 

@@ -34,8 +34,9 @@ private:
     const int speedStatusTimeout;
     
     QString pumpStatus;
-    QString pumpControllerTemperature;
-    QString pumpServiceStatus;
+    QString pumpService;
+    uint pumpTemperature;
+    uint pumpSpeed;
 };
 
 #endif // NXDS_PUMP_H

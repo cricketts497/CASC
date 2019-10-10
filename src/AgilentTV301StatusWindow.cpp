@@ -41,10 +41,10 @@ CascWidget(QString("Agilent Turbos"), parent)
     
     for(int i=0; i<pump_names.length(); i++){
         QLabel * pump_name_label = new QLabel(pump_names.at(i), this);
-        QELabel * drive = new QELabel(QString("CASC:Turbo:%1:Drive").arg(pump_names.at(i).mid(5)));
-        QELabel * temperature = new QELabel(QString("CASC:Turbo:%1:Temperature").arg(pump_names.at(i).mid(5)));
-        QELabel * status = new QELabel(QString("CASC:Turbo:%1:Status").arg(pump_names.at(i).mid(5)));
-        QELabel * error = new QELabel(QString("CASC:Turbo:%1:Error").arg(pump_names.at(i).mid(5)));
+        QELabel * drive = new QELabel(QString("CASC:Turbo:%1:Drive").arg(pump_names.at(i).mid(5)), this);
+        QELabel * temperature = new QELabel(QString("CASC:Turbo:%1:Temperature").arg(pump_names.at(i).mid(5)), this);
+        QELabel * status = new QELabel(QString("CASC:Turbo:%1:Status").arg(pump_names.at(i).mid(5)), this);
+        QELabel * error = new QELabel(QString("CASC:Turbo:%1:Error").arg(pump_names.at(i).mid(5)), this);
         
         drive->activate();
         temperature->activate();
@@ -58,7 +58,7 @@ CascWidget(QString("Agilent Turbos"), parent)
         layout->addWidget(error,4,i+1);
     }
     
-    widget->setFixedSize(430,250);
+    widget->setFixedSize(430,240);
 }
 
 

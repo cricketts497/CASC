@@ -63,7 +63,7 @@ private slots:
     // void toggleDataSaver();
 	void toggleHeinzinger30kDevice();
 	void toggleHeinzinger20kDevice();
-    void toggleNxdsPumpDevice();
+    void startNxdsPumpDevice(bool start);
     void startAgilentTV301Device(bool start);
     void startLaseLockDevice(bool start);
     
@@ -188,9 +188,11 @@ private:
 	// bool heinzinger20k_started;
 	QThread heinzinger20kDeviceThread;
     
-    DeviceButton * nxdsPumpDeviceButton;
+    // DeviceButton * nxdsPumpDeviceButton;
+    EpicsDeviceButton * nxdsPumpDeviceButton;
     // bool nxdsPumpSet_started;
     QThread nxdsPumpDeviceThread;
+    const QStringList nxdsPumpStatusWindows;
     
     // DeviceButton * agilentTV301DeviceButton;
     EpicsDeviceButton * agilentTV301DeviceButton;
