@@ -6,6 +6,7 @@ maxHeinzinger30kVoltage(30000),
 maxHeinzinger30kCurrent(3),
 maxHeinzinger20kVoltage(20000),
 maxHeinzinger20kCurrent(3),
+heinzingerStatusWindows({"VoltageSetpoint", "CurrentSetpoint","OutputSetpoint", "VoltageApplied"}),
 nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP","BLQT"}),
 nxdsPumpStatusWindows({"20MT:Status","20MT:Service","20MT:Temperature","20MT:Speed","20Ebara:Status","20Ebara:Service","20Ebara:Temperature","20Ebara:Speed","IR:Status","IR:Service","IR:Temperature","IR:Speed","DP:Status","DP:Service","DP:Temperature","DP:Speed","QT:Status","QT:Service","QT:Temperature","QT:Speed"}),
 agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"}),
@@ -109,13 +110,17 @@ void MainWindow::createDevicesBar()
     // // connect(dataSaverDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleDataSaver(bool)));
     // connect(dataSaverDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleDataSaver);
 
-	heinzinger30kDeviceButton = new DeviceButton("Heinzinger 30kV", devicesBar, "Start the heinzinger 30kV power supply device", "Stop the heinzinger 30kV device", "HEINZINGER 30K FAIL");
+	// heinzinger30kDeviceButton = new DeviceButton("Heinzinger 30kV", devicesBar, "Start the heinzinger 30kV power supply device", "Stop the heinzinger 30kV device", "HEINZINGER 30K FAIL");
+	heinzinger30kDeviceButton = new EpicsDeviceButton("Heinzinger30k", heinzingerStatusWindows, "Start the heinzinger 30kV power supply device", "Stop the heinzinger 30kV device", "HEINZINGER 30K FAIL", config, devicesBar);
 	// connect(heinzinger30kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger30kDevice(bool)));
-	connect(heinzinger30kDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleHeinzinger30kDevice);
+	// connect(heinzinger30kDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleHeinzinger30kDevice);
+	connect(heinzinger30kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startHeinzinger30kDevice(bool)));
 
-    heinzinger20kDeviceButton = new DeviceButton("Heinzinger 20kV", devicesBar, "Start the heinzinger 20kV power supply device", "Stop the heinzinger 20kV device", "HEINZINGER 20K FAIL");
+    // heinzinger20kDeviceButton = new DeviceButton("Heinzinger 20kV", devicesBar, "Start the heinzinger 20kV power supply device", "Stop the heinzinger 20kV device", "HEINZINGER 20K FAIL");
+    heinzinger20kDeviceButton = new EpicsDeviceButton("Heinzinger20k", heinzingerStatusWindows, "Start the heinzinger 20kV power supply device", "Stop the heinzinger 20kV device", "HEINZINGER 20K FAIL", config, devicesBar);
 	// connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(toggleHeinzinger20kDevice(bool)));
-	connect(heinzinger20kDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleHeinzinger20kDevice);
+	// connect(heinzinger20kDeviceButton, &QAbstractButton::clicked, this, &MainWindow::toggleHeinzinger20kDevice);
+	connect(heinzinger20kDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startHeinzinger20kDevice(bool)));
 
     // nxdsPumpDeviceButton = new DeviceButton("nXDS pumps", devicesBar, "Start the Edwards nXDS backing pump device", "Stop the nXDS pump device", "NXDS PUMP FAIL");
     nxdsPumpDeviceButton = new EpicsDeviceButton("BL", nxdsPumpStatusWindows, "Start the Edwards nXDS backing pump device", "Stop the nXDS pump device", "NXDS PUMP FAIL", config, devicesBar);
@@ -130,7 +135,7 @@ void MainWindow::createDevicesBar()
     
     // laseLockDeviceButton = new DeviceButton("LaseLock", devicesBar, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL");
     // connect(laseLockDeviceButton, &QAbstractButton::clicked, this, &MainWindow::startLaseLockDevice);
-    laseLockDeviceButton = new EpicsDeviceButton("laselock", laseLockStatusWindows, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL", config, devicesBar);
+    laseLockDeviceButton = new EpicsDeviceButton("Laselock", laseLockStatusWindows, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL", config, devicesBar);
     connect(laseLockDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startLaseLockDevice(bool)));
     
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,10 +213,10 @@ void MainWindow::toggleHeinzinger30k()
 		
 		// connect(heinzinger30kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger30kCommand(QString)));
 		// connect(this, SIGNAL(newHeinzinger30kStatus(QString)), heinzinger30kWindow, SLOT(receiveHeinzingerStatus(QString)));
-		connect(heinzinger30kDeviceButton, SIGNAL(newDeviceStatus(QString)), heinzinger30kWindow, SLOT(receiveHeinzingerStatus(QString)));
+		// connect(heinzinger30kDeviceButton, SIGNAL(newDeviceStatus(QString)), heinzinger30kWindow, SLOT(receiveHeinzingerStatus(QString)));
         
-        if(heinzinger30kDeviceButton->deviceIsRunning())
-            heinzinger30kWindow->heinzingerDeviceOn(true);
+        // if(heinzinger30kDeviceButton->deviceIsRunning())
+            // heinzinger30kWindow->heinzingerDeviceOn(true);
         
 		addDockWidget(Qt::RightDockWidgetArea, heinzinger30kWindow);
 		
@@ -238,10 +243,10 @@ void MainWindow::toggleHeinzinger20k()
 		
 		// connect(heinzinger20kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger20kCommand(QString)));
         // connect(this, SIGNAL(newHeinzinger20kStatus(QString)), heinzinger20kWindow, SLOT(receiveHeinzingerStatus(QString)));
-        connect(heinzinger20kDeviceButton, SIGNAL(newDeviceStatus(QString)), heinzinger20kWindow, SLOT(receiveHeinzingerStatus(QString)));
+        // connect(heinzinger20kDeviceButton, SIGNAL(newDeviceStatus(QString)), heinzinger20kWindow, SLOT(receiveHeinzingerStatus(QString)));
 		
-        if(heinzinger20kDeviceButton->deviceIsRunning())
-            heinzinger20kWindow->heinzingerDeviceOn(true);
+        // if(heinzinger20kDeviceButton->deviceIsRunning())
+            // heinzinger20kWindow->heinzingerDeviceOn(true);
         
 		addDockWidget(Qt::BottomDockWidgetArea, heinzinger20kWindow);
 		
@@ -453,77 +458,88 @@ void MainWindow::toggleListener()
     // emit newDataSaverStart(device);
 // }
 
-void MainWindow::toggleHeinzinger30kDevice()
+void MainWindow::startHeinzinger30kDevice(bool start)
 {
-    //before doing the button toggle
-    if(heinzinger30kAct->widgetIsOpen())
-        heinzinger30kWindow->heinzingerDeviceOn(!heinzinger30kDeviceButton->deviceIsRunning());
-    
-    if(heinzinger30kDeviceButton->deviceToggle()){
+    if(!start && !heinzinger30kDeviceThread.isRunning()){
+        heinzinger30kDeviceButton->deviceHasStopped();
+        return;
+    }else if(!start || !config->deviceLocal(QString("heinzingerps30k"))){
         return;
     }
     
-    bool local = config->deviceLocal(QString("heinzingerps30k"));
+    // //before doing the button toggle
+    // if(heinzinger30kAct->widgetIsOpen())
+        // heinzinger30kWindow->heinzingerDeviceOn(!heinzinger30kDeviceButton->deviceIsRunning());
     
-    if(local){
-        HeinzingerPS * heinzinger30kDevice = new HeinzingerPS(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
-        setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
+    // if(heinzinger30kDeviceButton->deviceToggle()){
+        // return;
+    // }
+    
+    // bool local = config->deviceLocal(QString("heinzingerps30k"));
+    
+    // if(local){
+    HeinzingerPS * heinzinger30kDevice = new HeinzingerPS(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, heinzinger30k_temp_path, &heinzinger30kFileMutex, QString("heinzingerps30k"), config);
+    setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
         // connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
-        connect(heinzinger30kAct, SIGNAL(newWidgetCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
+        // connect(heinzinger30kAct, SIGNAL(newWidgetCommand(QString)), heinzinger30kDevice, SLOT(queueSerialCommand(QString)));
         // connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
-    }else{
-        RemoteDevice * heinzinger30kDevice = new RemoteDevice(QString("heinzingerps30k"), config);
-        setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
-        // connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
-        connect(heinzinger30kAct, SIGNAL(newWidgetCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
-        // connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
-    }
+    // }else{
+        // RemoteDevice * heinzinger30kDevice = new RemoteDevice(QString("heinzingerps30k"), config);
+        // setupDevice(heinzinger30kDevice, heinzinger30kDeviceButton, &heinzinger30kDeviceThread);
+        // // connect(this, SIGNAL(newHeinzinger30kCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
+        // connect(heinzinger30kAct, SIGNAL(newWidgetCommand(QString)), heinzinger30kDevice, SLOT(remoteDeviceCommand(QString)));
+        // // connect(heinzinger30kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger30kStatus(QString)));
+    // }
     //tell the data saver PC to start requesting new heinzingerps data
     // dataSaverStart("heinzingerps30k");
     // heinzinger30k_started = true;
     // centralGraph->newData();
+    
+    if(!heinzinger30kDevice->getDeviceFailed()){
+        heinzinger30kDeviceButton->deviceHasStarted();
+    }
 }
 
-// void MainWindow::heinzinger30kStatus(QString status)
-// {
-    // emit newHeinzinger30kStatus(status);
-// }
-
-void MainWindow::toggleHeinzinger20kDevice()
+void MainWindow::startHeinzinger20kDevice(bool start)
 {
-    //before doing the button toggle
-    if(heinzinger20kAct->widgetIsOpen())
-        heinzinger20kWindow->heinzingerDeviceOn(!heinzinger20kDeviceButton->deviceIsRunning());
-    
-    if(heinzinger20kDeviceButton->deviceToggle()){
+    if(!start && !heinzinger20kDeviceThread.isRunning()){
+        heinzinger20kDeviceButton->deviceHasStopped();
+        return;
+    }else if(!start || !config->deviceLocal(QString("heinzingerps20k"))){
         return;
     }
     
-    bool local = config->deviceLocal(QString("heinzingerps20k"));
+    // //before doing the button toggle
+    // if(heinzinger20kAct->widgetIsOpen())
+        // heinzinger20kWindow->heinzingerDeviceOn(!heinzinger20kDeviceButton->deviceIsRunning());
     
-    if(local){
-        HeinzingerPS * heinzinger20kDevice = new HeinzingerPS(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
-        setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
+    // if(heinzinger20kDeviceButton->deviceToggle()){
+        // return;
+    // }
+    
+    //if(local){
+    HeinzingerPS * heinzinger20kDevice = new HeinzingerPS(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, heinzinger20k_temp_path, &heinzinger20kFileMutex, QString("heinzingerps20k"), config);
+    setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
         // connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
-        connect(heinzinger20kAct, SIGNAL(newWidgetCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
+        // connect(heinzinger20kAct, SIGNAL(newWidgetCommand(QString)), heinzinger20kDevice, SLOT(queueSerialCommand(QString)));
         // connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
-    }else{
-        RemoteDevice * heinzinger20kDevice = new RemoteDevice(QString("heinzingerps20k"), config);
-        setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
-        // connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
-        connect(heinzinger20kAct, SIGNAL(newWidgetCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
-        // connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
-    }
+    // }else{
+        // RemoteDevice * heinzinger20kDevice = new RemoteDevice(QString("heinzingerps20k"), config);
+        // setupDevice(heinzinger20kDevice, heinzinger20kDeviceButton, &heinzinger20kDeviceThread);
+        // // connect(this, SIGNAL(newHeinzinger20kCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
+        // connect(heinzinger20kAct, SIGNAL(newWidgetCommand(QString)), heinzinger20kDevice, SLOT(remoteDeviceCommand(QString)));
+        // // connect(heinzinger20kDevice, SIGNAL(device_status(QString)), this, SLOT(heinzinger20kStatus(QString)));
+    // }
     //tell the data saver PC to start requesting new heinzingerps data
     // dataSaverStart("heinzingerps20k");
     // heinzinger20k_started = true;
     // centralGraph->newHeinzinger20k();
+    
+    if(!heinzinger20kDevice->getDeviceFailed()){
+        heinzinger20kDeviceButton->deviceHasStarted();
+    }
 }
 
-// void MainWindow::heinzinger20kStatus(QString status)
-// {
-    // emit newHeinzinger20kStatus(status);
-// }
 
 //currently have a single thread for all the backing pumps but should be ok
 void MainWindow::startNxdsPumpDevice(bool start)
@@ -599,14 +615,11 @@ void MainWindow::startLaseLockDevice(bool start)
     if(!start && !laseLockDeviceThread.isRunning()){
         laseLockDeviceButton->deviceHasStopped();
         return;
-    }else if(!start){
+    //only need local devices as status variables accessed through epics
+    }else if(!start || !config->deviceLocal(QString("laselock"))){
         return;
     }
     
-    //only need local devices as status variables accessed through epics
-    if(!config->deviceLocal(QString("laselock"))){
-        return;
-    }
     
     LaseLock * laseLockDevice = new LaseLock(laseLock_temp_path,&laseLockFileMutex,QString("laselock"),config);
     setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
@@ -619,12 +632,12 @@ void MainWindow::startLaseLockDevice(bool start)
 //////////////////////////////////////////////////////////////////////////////////////
 
 //deal with start stop signals received by listener
-void MainWindow::toggleDevice(QString device, bool start)
-{
-    if(device == "heinzingerps30k" && ((start && !heinzinger30kDeviceButton->deviceIsRunning()) || (!start && heinzinger30kDeviceButton->deviceIsRunning())))
-        heinzinger30kDeviceButton->click();
-    else if(device == "heinzingerps20k" && ((start && !heinzinger20kDeviceButton->deviceIsRunning()) || (!start && heinzinger20kDeviceButton->deviceIsRunning())))
-        heinzinger20kDeviceButton->click();
+// void MainWindow::toggleDevice(QString device, bool start)
+// {
+    // if(device == "heinzingerps30k" && ((start && !heinzinger30kDeviceButton->deviceIsRunning()) || (!start && heinzinger30kDeviceButton->deviceIsRunning())))
+        // heinzinger30kDeviceButton->click();
+    // else if(device == "heinzingerps20k" && ((start && !heinzinger20kDeviceButton->deviceIsRunning()) || (!start && heinzinger20kDeviceButton->deviceIsRunning())))
+        // heinzinger20kDeviceButton->click();
     // else if(device == "datasaver" && ((start && !dataSaverDeviceButton->deviceIsRunning()) || (!start && dataSaverDeviceButton->deviceIsRunning())))
         // dataSaverDeviceButton->click();
     // else if(device == nxdsPumpNames[0] && ((start && !nxdsPumpDeviceButton->deviceIsRunning()) || (!start && nxdsPumpDeviceButton->deviceIsRunning())))
@@ -633,27 +646,27 @@ void MainWindow::toggleDevice(QString device, bool start)
         // agilentTV301DeviceButton->click();
     // else if(device == "laselock" && ((start && !laseLockDeviceButton->deviceIsRunning()) || (!start && laseLockDeviceButton->deviceIsRunning())))
         // laseLockDeviceButton->click();
-}
+// }
 
-void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)
-{
-    connect(device, SIGNAL(device_status(QString)), button, SLOT(device_status(QString)));
-	connect(device, SIGNAL(device_fail()), button, SLOT(setFail()));
-	connect(device, SIGNAL(device_message(QString)), this, SLOT(keepMessage(QString)));
+// void MainWindow::setupDevice(CascDevice * device, DeviceButton * button, QThread * thread)
+// {
+    // connect(device, SIGNAL(device_status(QString)), button, SLOT(device_status(QString)));
+	// connect(device, SIGNAL(device_fail()), button, SLOT(setFail()));
+	// connect(device, SIGNAL(device_message(QString)), this, SLOT(keepMessage(QString)));
 
-	//emit messages stored during init
-	device->sendMessages();
+	// //emit messages stored during init
+	// device->sendMessages();
 
-	//independent thread for each device
-	device->moveToThread(thread);
-	connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
-	thread->start();
-	connect(device, SIGNAL(stopped()), thread, SLOT(quit()));
+	// //independent thread for each device
+	// device->moveToThread(thread);
+	// connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
+	// thread->start();
+	// connect(device, SIGNAL(stopped()), thread, SLOT(quit()));
     
-	//stop the device before quitting and destroying it
-	connect(button, SIGNAL(stop_device()), device, SLOT(stop_device()));
-    connect(device, SIGNAL(stopped()), button, SLOT(deviceHasStopped()));
-}
+	// //stop the device before quitting and destroying it
+	// connect(button, SIGNAL(stop_device()), device, SLOT(stop_device()));
+    // connect(device, SIGNAL(stopped()), button, SLOT(deviceHasStopped()));
+// }
 
 void MainWindow::setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread)
 {

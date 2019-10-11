@@ -55,14 +55,14 @@ private slots:
 	
 
 	//devices
-	void toggleDevice(QString device, bool start);
-	void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
+	// void toggleDevice(QString device, bool start);
+	// void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
 	void setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread);
 	
 	void toggleListener();
     // void toggleDataSaver();
-	void toggleHeinzinger30kDevice();
-	void toggleHeinzinger20kDevice();
+	void startHeinzinger30kDevice(bool start);
+	void startHeinzinger20kDevice(bool start);
     void startNxdsPumpDevice(bool start);
     void startAgilentTV301Device(bool start);
     void startLaseLockDevice(bool start);
@@ -175,16 +175,19 @@ private:
 	Listener * listener;
 	// bool listener_running;
     
-    DeviceButton * dataSaverDeviceButton;
-    // bool data_saver_started;
-    QThread dataSaverDeviceThread;
-    void dataSaverStart(QString device);
+    // DeviceButton * dataSaverDeviceButton;
+    // // bool data_saver_started;
+    // QThread dataSaverDeviceThread;
+    // void dataSaverStart(QString device);
 
-	DeviceButton * heinzinger30kDeviceButton;
+	// DeviceButton * heinzinger30kDeviceButton;
+	EpicsDeviceButton * heinzinger30kDeviceButton;
 	// bool heinzinger30k_started;
 	QThread heinzinger30kDeviceThread;
+    const QStringList heinzingerStatusWindows;
     
-    DeviceButton * heinzinger20kDeviceButton;
+    // DeviceButton * heinzinger20kDeviceButton;
+    EpicsDeviceButton * heinzinger20kDeviceButton;
 	// bool heinzinger20k_started;
 	QThread heinzinger20kDeviceThread;
     

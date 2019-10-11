@@ -2,49 +2,49 @@
 #define HEINZINGER_VOLTAGE_WINDOW_H
 
 #include "include/CascWidget.h"
-#include "include/DeviceButton.h"
+#include "QELineEdit.h"
 
 class HeinzingerVoltageWindow : public CascWidget
 {
 	Q_OBJECT
 	
 public:
-	HeinzingerVoltageWindow(uint maxVoltage=1, qreal maxCurrent=0.01, QWidget * parent=nullptr);
+	HeinzingerVoltageWindow(QString deviceName, uint maxVoltage=1, qreal maxCurrent=0.01, QWidget * parent=nullptr);
 	
-    void heinzingerDeviceOn(bool on);
+    // void heinzingerDeviceOn(bool on);
     
-public slots:
-    void receiveHeinzingerStatus(QString status);
+// public slots:
+    // void receiveHeinzingerStatus(QString status);
 	
-private slots:
-    void voltageChanged();
-    void currentChanged();
-	void setVoltage();
-    void setCurrent();
-    void setOutput();
+// private slots:
+    // void voltageChanged();
+    // void currentChanged();
+	// void setVoltage();
+    // void setCurrent();
+    // void setOutput();
     
-    // void readVoltage();
+    // // void readVoltage();
 	
-private:
-	QSpinBox * voltageEdit;
-    DeviceButton * voltageSetButton;
-	QLabel * voltageReadback;
+// private:
+	// QSpinBox * voltageEdit;
+    // DeviceButton * voltageSetButton;
+	// QLabel * voltageReadback;
     
-    QDoubleSpinBox * currentEdit;
-    DeviceButton * currentSetButton;
+    // QDoubleSpinBox * currentEdit;
+    // DeviceButton * currentSetButton;
     
-    DeviceButton * outputButton;
+    // DeviceButton * outputButton;
     
-    QTimer * voltageReadTimer;
-    const int voltageReadTimeout;
+    // QTimer * voltageReadTimer;
+    // const int voltageReadTimeout;
     
-    QFile * voltage_file;
-    QMutex * voltageFileMutex;
+    // QFile * voltage_file;
+    // QMutex * voltageFileMutex;
     
-    quint64 applied_voltage_int;
-    quint64 applied_voltage_decimal;
+    // quint64 applied_voltage_int;
+    // quint64 applied_voltage_decimal;
     
-    bool output_on;
+    // bool output_on;
 };
 
 

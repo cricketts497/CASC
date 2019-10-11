@@ -77,7 +77,7 @@ averages_set(0)
     writeCommand(QString("*RST \n").toUtf8());
     
     //voltage setpoint, current setpoint, output on, voltage applied
-    setStatus(QString("%1_%2_0_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
+    setStatus(QString("%1_%2_OutputOff_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
     
     //save the first real values to come in
     saveToFile = true;
@@ -280,9 +280,9 @@ void HeinzingerPS::setHeinzingerStatus()
 {
     //voltage setpoint, current setpoint, output setpoint
     if(output_setpoint){
-        setStatus(QString("%1_%2_1_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
+        setStatus(QString("%1_%2_OutputOn_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
     }else{
-        setStatus(QString("%1_%2_0_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
+        setStatus(QString("%1_%2_OutputOff_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
     }
 }
 
