@@ -68,6 +68,7 @@ setpointTimeout(5000)
     connect(setpointLabel, SIGNAL(dbValueChanged()), this, SLOT(toggleOn()));
     
     //show whether the device is on or off with the button colour
+    setButtonColour();
     connect(stateLabel, SIGNAL(dbValueChanged()), this, SLOT(setButtonColour()));
         
     //check for local devices

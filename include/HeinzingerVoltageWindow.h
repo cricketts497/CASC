@@ -2,6 +2,8 @@
 #define HEINZINGER_VOLTAGE_WINDOW_H
 
 #include "include/CascWidget.h"
+#include "QESpinBox.h"
+#include "QELabel.h"
 #include "QELineEdit.h"
 
 class HeinzingerVoltageWindow : public CascWidget
@@ -10,41 +12,22 @@ class HeinzingerVoltageWindow : public CascWidget
 	
 public:
 	HeinzingerVoltageWindow(QString deviceName, uint maxVoltage=1, qreal maxCurrent=0.01, QWidget * parent=nullptr);
-	
-    // void heinzingerDeviceOn(bool on);
+
+private slots:
+    void setOutputButtonState();
+    void toggleOutputCommanded();
+    void outputSetpointTimeoutMessage();
+
+private:    
+    const QColor offColour;
+	const QColor onColour;
     
-// public slots:
-    // void receiveHeinzingerStatus(QString status);
-	
-// private slots:
-    // void voltageChanged();
-    // void currentChanged();
-	// void setVoltage();
-    // void setCurrent();
-    // void setOutput();
+    QTimer * outputSetpointTimer;
+    const int outputSetpointTimeout;
     
-    // // void readVoltage();
-	
-// private:
-	// QSpinBox * voltageEdit;
-    // DeviceButton * voltageSetButton;
-	// QLabel * voltageReadback;
-    
-    // QDoubleSpinBox * currentEdit;
-    // DeviceButton * currentSetButton;
-    
-    // DeviceButton * outputButton;
-    
-    // QTimer * voltageReadTimer;
-    // const int voltageReadTimeout;
-    
-    // QFile * voltage_file;
-    // QMutex * voltageFileMutex;
-    
-    // quint64 applied_voltage_int;
-    // quint64 applied_voltage_decimal;
-    
-    // bool output_on;
+    QPushButton * outputButton;
+    QELineEdit * outputCommanded;
+    QELineEdit * outputSetpoint;
 };
 
 

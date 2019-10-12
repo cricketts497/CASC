@@ -180,6 +180,9 @@ void MainWindow::toggleMessage()
 		}
 		connect(this, SIGNAL(new_message(QString)), messageWindow, SLOT(addMessage(QString)));
         
+        connect(heinzinger30kDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
+        connect(heinzinger20kDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
+        connect(nxdsPumpDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(agilentTV301DeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(laseLockDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
 
@@ -208,7 +211,7 @@ void MainWindow::toggleHeinzinger30k()
 		// heinzinger30kAct->setStatusTip("Open the 30kV heinzinger voltage controller");
 		// heinzinger30kWindow_open = false;
 	}else{
-		heinzinger30kWindow = new HeinzingerVoltageWindow(maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, this);
+		heinzinger30kWindow = new HeinzingerVoltageWindow("Heinzinger30k", maxHeinzinger30kVoltage, maxHeinzinger30kCurrent, this);
 		setupWidget(heinzinger30kWindow, heinzinger30kAct);
 		
 		// connect(heinzinger30kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger30kCommand(QString)));
@@ -238,7 +241,7 @@ void MainWindow::toggleHeinzinger20k()
 		// heinzinger20kAct->setStatusTip("Open the 20kV heinzinger voltage controller");
 		// heinzinger20kWindow_open = false;
 	}else{
-		heinzinger20kWindow = new HeinzingerVoltageWindow(maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, this);
+		heinzinger20kWindow = new HeinzingerVoltageWindow("Heinzinger20k", maxHeinzinger20kVoltage, maxHeinzinger20kCurrent, this);
 		setupWidget(heinzinger20kWindow, heinzinger20kAct);
 		
 		// connect(heinzinger20kWindow, SIGNAL(sendCommand(QString)), this, SLOT(heinzinger20kCommand(QString)));
