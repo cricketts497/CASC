@@ -4,9 +4,9 @@
 #include <QMainWindow>
 #include <QtWidgets>
 
-#include "include/DeviceButton.h"
+// #include "include/DeviceButton.h"
 #include "include/MessageWindow.h"
-#include "include/Listener.h"
+// #include "include/Listener.h"
 #include "include/CascConfig.h"
 // #include "include/RemoteDataDevice.h"
 #include "include/HeinzingerPS.h"
@@ -14,7 +14,7 @@
 // #include "include/DataSaver.h"
 // #include "include/DummyScanner.h"
 // #include "include/RemoteDataSaver.h"
-#include "include/RemoteDevice.h"
+// #include "include/RemoteDevice.h"
 #include "include/NxdsPump.h"
 #include "include/NxdsPumpStatusWindow.h"
 #include "include/SimpleGraph.h"
@@ -59,7 +59,7 @@ private slots:
 	// void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
 	void setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread);
 	
-	void toggleListener();
+	// void toggleListener();
     // void toggleDataSaver();
 	void startHeinzinger30kDevice(bool start);
 	void startHeinzinger20kDevice(bool start);
@@ -107,21 +107,21 @@ private:
 	QTextStream messages;
 
 	//file paths
-	const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.csv";
-	const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.csv";
-    const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.csv";
-    const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.csv";
-    const QString laseLock_temp_path = "./temp/laseLock_temp.csv";
+	// const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.csv";
+	// const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.csv";
+    // const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.csv";
+    // const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.csv";
+    // const QString laseLock_temp_path = "./temp/laseLock_temp.csv";
     
     //base path containing the scan directories
     const QString finalBasePath = "./data";
 
     //file mutexes to prevent files from being opened concurently in separate threads
-	QMutex heinzinger30kFileMutex;
-	QMutex heinzinger20kFileMutex;
-    QMutex nxdsPumpFileMutex;
-    QMutex agilentTV301FileMutex;
-    QMutex laseLockFileMutex;
+	// QMutex heinzinger30kFileMutex;
+	// QMutex heinzinger20kFileMutex;
+    // QMutex nxdsPumpFileMutex;
+    // QMutex agilentTV301FileMutex;
+    // QMutex laseLockFileMutex;
 
 	//graph widget as central of main window
 	SimpleGraph *centralGraph;
@@ -171,8 +171,8 @@ private:
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////
-	DeviceButton * listenerButton;
-	Listener * listener;
+	// DeviceButton * listenerButton;
+	// Listener * listener;
 	// bool listener_running;
     
     // DeviceButton * dataSaverDeviceButton;
@@ -185,6 +185,7 @@ private:
 	// bool heinzinger30k_started;
 	QThread heinzinger30kDeviceThread;
     const QStringList heinzingerStatusWindows;
+    const QStringList heinzingerCommandWindows;
     
     // DeviceButton * heinzinger20kDeviceButton;
     EpicsDeviceButton * heinzinger20kDeviceButton;

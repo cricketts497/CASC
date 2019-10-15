@@ -22,10 +22,12 @@ public:
 public slots:
 	void stop_device();
     bool getDeviceFailed();
+    void receiveWidgetCommand(QString);
 
 signals:
     void device_status(QString status);
-
+    void newWidgetCommand(QString command);
+    
 	void device_message(QString message);
 	void device_fail();
 	

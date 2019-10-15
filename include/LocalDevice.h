@@ -15,9 +15,9 @@ public:
 // public slots:
     // void localDeviceCommand(QString command);
     
-signals:
-    void newLocalCommand(QString command);
-    void newRemoteCommand(QString command);
+// signals:
+    // void newLocalCommand(QString command);
+    // void newRemoteCommand(QString command);
     
 protected:
 	QTcpSocket * socket = nullptr;

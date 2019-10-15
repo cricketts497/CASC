@@ -35,19 +35,19 @@ for name in ["20MT", "20Ebara", "IR", "DP", "QT"]:
     pvdb["BL:{}:Temperature".format(name)] = {'type':'int', 'lolo':20, 'low':45, 'high':55, 'hihi':60, 'unit':'C'}
 
 #Heinzinger30k device
-pvdb["Heinzinger30k:VoltageSetpoint"] = {'type':'int', 'low':-1, 'hihi':30001, 'unit':'V'}
+pvdb["Heinzinger30k:VoltageSetpoint"] = {'type':'float', 'low':-1, 'high':30001, 'prec':1, 'unit':'V'}
 pvdb["Heinzinger30k:CurrentSetpoint"] = {'type':'float', 'low':-1, 'high':1, 'hihi':3, 'prec':2, 'unit':'mA'}
 pvdb["Heinzinger30k:OutputSetpoint"] = {'type':'enum', 'enums':['OutputOff','OutputOn','off'], 'value':2}
-pvdb["Heinzinger30k:VoltageApplied"] = {'type':'float', 'low':-1, 'hihi':30001, 'prec':2, 'unit':'V'}
+pvdb["Heinzinger30k:VoltageApplied"] = {'type':'float', 'low':-1, 'high':30001, 'prec':2, 'unit':'V'}
 pvdb["Heinzinger30k:VoltageCommanded"] = {'type':'int', 'low':-1, 'high':30001, 'unit':'V'}
 pvdb["Heinzinger30k:CurrentCommanded"] = {'type':'float', 'low':-1, 'high':1, 'hihi':3, 'prec':2, 'unit':'mA'}
 pvdb["Heinzinger30k:OutputCommanded"] = {'type':'enum', 'enums':['OutputOff','OutputOn']}
 
 #Heinzinger20k device
-pvdb["Heinzinger20k:VoltageSetpoint"] = {'type':'int', 'low':-1, 'hihi':20001, 'unit':'V'}
+pvdb["Heinzinger20k:VoltageSetpoint"] = {'type':'float', 'low':-1, 'high':20001, 'prec':1, 'unit':'V'}
 pvdb["Heinzinger20k:CurrentSetpoint"] = {'type':'float', 'low':-1, 'high':1, 'hihi':3, 'prec':2, 'unit':'mA'}
 pvdb["Heinzinger20k:OutputSetpoint"] = {'type':'enum', 'enums':['OutputOff','OutputOn','off'], 'value':2}
-pvdb["Heinzinger20k:VoltageApplied"] = {'type':'float', 'low':-1,'hihi':20001, 'prec':2, 'unit':'V'}
+pvdb["Heinzinger20k:VoltageApplied"] = {'type':'float', 'low':-1,'high':20001, 'prec':2, 'unit':'V'}
 pvdb["Heinzinger20k:VoltageCommanded"] = {'type':'int', 'low':-1, 'high':20001, 'unit':'V'}
 pvdb["Heinzinger20k:CurrentCommanded"] = {'type':'float', 'low':-1,'high':1, 'hihi':3, 'prec':2, 'unit':'mA'}
 pvdb["Heinzinger20k:OutputCommanded"] = {'type':'enum', 'enums':['OutputOff','OutputOn']}

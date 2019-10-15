@@ -1,7 +1,8 @@
 #include "include/AgilentTV301Pump.h"
 
-AgilentTV301Pump::AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-SerialDevice(QStringList({"statusCode","errorCode","temperature","driveFrequency"}), file_path, file_mutex, deviceName, config, parent),
+// AgilentTV301Pump::AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+AgilentTV301Pump::AgilentTV301Pump(QString deviceName, CascConfig * config, QObject * parent) :
+SerialDevice(deviceName, config, parent),
 statusTimer(new QTimer(this)),
 statusTimeout(1000),
 errorCodeTimer(new QTimer(this)),
@@ -69,7 +70,7 @@ pumpDrive(0)
     setStatus(QString("%1_%2_%3_%4").arg(pumpStatus).arg(pumpError).arg(pumpTemperature).arg(pumpDrive)); 
     
     //save the first real values to come in
-    saveToFile = true;
+    // saveToFile = true;
 }
 
 void AgilentTV301Pump::queryStatus()

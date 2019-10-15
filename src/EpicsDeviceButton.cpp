@@ -1,12 +1,14 @@
 #include "include/EpicsDeviceButton.h"
 
-EpicsDeviceButton::EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString fail_tip, CascConfig * config, QWidget * parent) : 
+EpicsDeviceButton::EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString fail_tip, CascConfig * config, QWidget * parent, QStringList commandWindows) : 
 QWidget(parent),
 deviceName(deviceName),
 button(new QPushButton(this)),
 setpointLabel(new QELineEdit(this)),
 stateLabel(new QELineEdit(this)),
 nStatusWindows(statusWindows.length()),
+commandWindows(commandWindows),
+commandList(commandWindows),
 offColour(QColor(Qt::white)),
 onColour(QColor(Qt::green)),
 failColour(QColor(Qt::red)),
@@ -16,7 +18,7 @@ fail_tip(fail_tip),
 setpointTimer(new QTimer(this)),
 setpointTimeout(5000)
 {
-    if(nStatusWindows > MAX_N_STATUS_LABELS){
+    if(nStatusWindows > MAX_N_STATUS_LABELS || commandWindows.length() > MAX_N_COMMAND_LABELS){
         return;
     }
     
@@ -44,6 +46,7 @@ setpointTimeout(5000)
     
     stateLabel->setVisible(false);
 
+    //device to widgets
     for(int i=0; i<nStatusWindows; i++){
         statusLabels[i] = new QELineEdit(QString("CASC:%1:%2").arg(deviceName).arg(statusWindows.at(i)), this);
         statusLabels[i]->activate();
@@ -53,6 +56,18 @@ setpointTimeout(5000)
         // statusLabels[i]->setFixedWidth(40);
         // layout->addWidget(statusLabels[i]);
         statusLabels[i]->setVisible(false);
+    }
+    
+    //widgets to devices
+    for(int i=0; i<commandWindows.length(); i++){
+        commandLabels[i] = new QELineEdit(QString("CASC:%1:%2").arg(deviceName).arg(commandWindows.at(i)), this);
+        commandLabels[i]->activate();
+        commandLabels[i]->setReadOnly(true);
+
+        commandLabels[i]->setVisible(false);
+        // layout->addWidget(commandLabels[i]);
+        
+        connect(commandLabels[i], SIGNAL(dbValueChanged()), this, SLOT(emitNewCommand()));
     }
     
     //change the setpoint on button click
@@ -190,6 +205,19 @@ void EpicsDeviceButton::device_status(QString status)
         for(int i=2; i<status_list.length(); i++){
             statusLabels[index*subWindows+i-2]->setText(status_list.at(i));
             statusLabels[index*subWindows+i-2]->writeNow();
+        }
+    }
+}
+
+void EpicsDeviceButton::emitNewCommand()
+{
+    for(int i=0; i<commandWindows.length(); i++){
+        if(commandLabels[i]->text() != commandList.at(i)){
+            QString var_name = QString("CASC:%1:%2").arg(deviceName).arg(commandWindows.at(i));
+            
+            emit widgetCommand(QString("Command_%1_%2").arg(var_name).arg(commandLabels[i]->text()));
+            
+            commandList[i] = commandLabels[i]->text();
         }
     }
 }

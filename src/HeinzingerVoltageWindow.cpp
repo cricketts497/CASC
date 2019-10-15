@@ -23,9 +23,10 @@ outputSetpointTimeout(5000)
     
     QLabel * outputEditLabel = new QLabel("Output:", this);
     outputButton = new QPushButton("Disconnected", this);
+    QELabel * voltageApplied = new QELabel(QString("CASC:%1:VoltageApplied").arg(deviceName), this);
+    
     outputCommanded = new QELineEdit(QString("CASC:%1:OutputCommanded").arg(deviceName), this);
     outputSetpoint = new QELineEdit(QString("CASC:%1:OutputSetpoint").arg(deviceName), this);
-    QELabel * voltageApplied = new QELabel(QString("CASC:%1:VoltageApplied").arg(deviceName), this);
     
     layout->addWidget(voltageEditLabel,0,0);
     layout->addWidget(voltageEdit,0,1);
@@ -38,8 +39,8 @@ outputSetpointTimeout(5000)
     layout->addWidget(voltageApplied,2,2);
     
     ////
-    layout->addWidget(outputCommanded,2,3);
-    layout->addWidget(outputSetpoint,2,4);
+    // layout->addWidget(outputCommanded,2,3);
+    // layout->addWidget(outputSetpoint,2,4);
     ////
     
     voltageEdit->setVariableNameProperty(QString("CASC:%1:VoltageCommanded").arg(deviceName));
@@ -58,10 +59,14 @@ outputSetpointTimeout(5000)
     currentEdit->setSingleStep(0.1);
     currentEdit->setDecimals(2);
 
+    outputCommanded->activate();
+    outputSetpoint->activate();
+
     outputCommanded->setReadOnly(true);
     outputSetpoint->setReadOnly(true);
-    // outputCommanded->setVisible(false);
-    // outputSetpoint->setVisible(false);
+    outputCommanded->setVisible(false);
+    outputSetpoint->setVisible(false);
+    
     outputButton->setAutoFillBackground(true);
     setOutputButtonState();
     connect(outputSetpoint, SIGNAL(dbValueChanged()), this, SLOT(setOutputButtonState()));
@@ -73,7 +78,7 @@ outputSetpointTimeout(5000)
     connect(outputSetpointTimer, SIGNAL(timeout()), this, SLOT(toggleOutputCommanded()));
     connect(outputSetpointTimer, SIGNAL(timeout()), this, SLOT(outputSetpointTimeoutMessage()));
     
-	// widget->setFixedSize(400,250);
+	widget->setFixedSize(300,150);
 }
 
 void HeinzingerVoltageWindow::setOutputButtonState()

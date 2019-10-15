@@ -147,3 +147,26 @@ void CascDevice::broadcastStatus()
 {
     emit device_status(deviceStatus);
 }
+
+void CascDevice::receiveWidgetCommand(QString command)
+{
+    emit newWidgetCommand(command);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

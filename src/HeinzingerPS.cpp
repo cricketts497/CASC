@@ -5,11 +5,12 @@ Data file has format:
 timestamp (qint64), applied voltage (quint64)
 */
 
-HeinzingerPS::HeinzingerPS(uint voltage_limit, uint current_limit, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-SerialDevice(QStringList({"voltageSetpoint","currentSetpoint","outputOn","voltageApplied"}), file_path, file_mutex, deviceName, config, parent),
+// HeinzingerPS::HeinzingerPS(uint voltage_limit, uint current_limit, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+HeinzingerPS::HeinzingerPS(uint voltage_limit, uint current_limit, QString deviceName, CascConfig * config, QObject * parent) :
+SerialDevice(deviceName, config, parent),
 // time(new QDateTime()),
 voltage_query_timer(new QTimer(this)),
-voltage_query_timeout(5000),
+voltage_query_timeout(1000),
 activeQuery(0),
 voltage_limit(voltage_limit),
 current_limit(current_limit),
@@ -25,10 +26,10 @@ amps_ok(false),
 voltage_set(0),
 current_set(0),
 voltage_applied(0),
-voltage_decimal_applied(0),
 current_applied(0),
 current_decimal_applied(0),
-averages_set(0)
+averages_set(0),
+voltage_buffer(0.5)
 {
     if(device_failed)
         return;
@@ -57,7 +58,7 @@ averages_set(0)
 	setFlowControl(0);//SoftwareControl
     
     //commands from remote widgets
-    connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));
+    // connect(this, SIGNAL(newRemoteCommand(QString)), this, SLOT(heinzingerRemoteCommand(QString)));
     
     //response from device
     connect(this, SIGNAL(newSerialResponse(QByteArray)), this, SLOT(dealWithResponse(QByteArray)));
@@ -80,7 +81,7 @@ averages_set(0)
     setStatus(QString("%1_%2_OutputOff_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
     
     //save the first real values to come in
-    saveToFile = true;
+    // saveToFile = true;
 }
 
 //Set the voltage to zero and turn off the output
@@ -89,7 +90,7 @@ void HeinzingerPS::stop_device()
 {
     activeQuery = 0;
     setVoltage(0);
-    
+    voltage_query_timer->stop();
     if(voltage_set == 0){
         //output already disabled
         emit device_message(QString("Local Heinzinger: %1: Output disabled").arg(device_name));
@@ -104,56 +105,98 @@ void HeinzingerPS::stop_device()
     connect(this, &HeinzingerPS::voltage_set_zero, this, &SerialDevice::stop_device);
 }
 
-//!Only put remote commands of the correct type in the serial command queue
-void HeinzingerPS::heinzingerRemoteCommand(QString command)
-{
-    QStringList command_list = command.split("_");
-    if(command_list.first() == QString("VOLT") || command_list.first() == QString("CURR") || command_list.first() == QString("OUTP")){
-        socket->write(okMessage);
-        queueSerialCommand(command);
-    }
-}
+// //!Only put remote commands of the correct type in the serial command queue
+// void HeinzingerPS::heinzingerRemoteCommand(QString command)
+// {
+    // QStringList command_list = command.split("_");
+    // if(command_list.first() == QString("VOLT") || command_list.first() == QString("CURR") || command_list.first() == QString("OUTP")){
+        // socket->write(okMessage);
+        // queueSerialCommand(command);
+    // }
+// }
 
 //receive commands from remote device
 void HeinzingerPS::heinzingerCommand()
 {	
     //no further commands or current command ongoing
-    if(serialCommandQueue.isEmpty() || activeSetFunction != 0 || activeQuery != 0)
+    if(serialCommandQueue.isEmpty() || activeSetFunction != 0 || activeQuery != 0){
         return;
+    }
     
     QString command = serialCommandQueue.dequeue();
 	QStringList command_list = command.split("_");
-	
+    
+    if(command_list.first() == QString("MEASVOLT")){
+        queryAppliedVoltage();
+        return;
+    }
+    
+    if(command_list.first() != "Command"){
+        return;
+    }
+    
+    //check the epics variable name
+    QStringList paramList = command_list.at(1).split(":");
+    if(paramList.first() != "CASC" || paramList.length() < 3){
+        return;
+    }
+    if(paramList.at(1) != device_name){
+        return;
+    }
+    
     bool conv_ok;
-    if(command_list.first() == QString("VOLT")){
-        uint voltage = command_list.at(1).toUInt(&conv_ok);
-        if(!conv_ok){
+    if(paramList.at(2) == "VoltageCommanded"){
+        uint voltage = command_list.at(2).toUInt(&conv_ok);
+        if(!conv_ok || voltage > voltage_limit){
             emit device_message(QString("Local Heinzinger: %1: command: Bad voltage").arg(device_name));
             return;
         }
         setVoltage(voltage);
-    }else if(command_list.first() == QString("CURR")){
-        qreal current = command_list.at(1).toFloat(&conv_ok);
-        if(!conv_ok){
+    }else if(paramList.at(2) == "CurrentCommanded"){
+        qreal current = command_list.at(2).toFloat(&conv_ok);
+        if(!conv_ok || current > current_limit){
             emit device_message(QString("Local Heinzinger: %1: command: Bad current").arg(device_name));
             return;
         }
         setCurrent(current);
-    //use 0=off or 1=on for remote on/off commands
-    }else if(command_list.first() == QString("OUTP")){
-        uint on = command_list.at(1).toUInt(&conv_ok);
-        if(!conv_ok){
-            emit device_message(QString("Local Heinzinger: %1: command: Bad on/off, use 0=off, 1=on").arg(device_name));
-            return;
-        }
-        if(on == 0){
+    }else if(paramList.at(2) == "OutputCommanded"){
+        if(command_list.at(2) == "OutputOff"){
             setOutput(false);
-        }else if(on == 1){
+        }else if(command_list.at(2) == "OutputOn"){
             setOutput(true);
         }
-    }else if(command_list.first() == QString("MEASVOLT")){
-        queryAppliedVoltage();
     }
+	
+    
+    // if(command_list.first() == QString("VOLT")){
+        // uint voltage = command_list.at(1).toUInt(&conv_ok);
+        // if(!conv_ok){
+            // emit device_message(QString("Local Heinzinger: %1: command: Bad voltage").arg(device_name));
+            // return;
+        // }
+        // setVoltage(voltage);
+    // }else if(command_list.first() == QString("CURR")){
+        // qreal current = command_list.at(1).toFloat(&conv_ok);
+        // if(!conv_ok){
+            // emit device_message(QString("Local Heinzinger: %1: command: Bad current").arg(device_name));
+            // return;
+        // }
+        // setCurrent(current);
+    // //use 0=off or 1=on for remote on/off commands
+    // }else if(command_list.first() == QString("OUTP")){
+        // uint on = command_list.at(1).toUInt(&conv_ok);
+        // if(!conv_ok){
+            // emit device_message(QString("Local Heinzinger: %1: command: Bad on/off, use 0=off, 1=on").arg(device_name));
+            // return;
+        // }
+        // if(on == 0){
+            // setOutput(false);
+        // }else if(on == 1){
+            // setOutput(true);
+        // }
+    // }else if(command_list.first() == QString("MEASVOLT")){
+        // queryAppliedVoltage();
+    // }
 }
 
 //query values after setting them with some delay
@@ -186,7 +229,7 @@ void HeinzingerPS::dealWithResponse(QByteArray resp)
         return;
     }
     
-    fullResponseReceived();
+    
     QString response = QString::fromUtf8(resp);
     
     // emit device_message(QString("Local Heinzinger: %1: Response: %2").arg(device_name).arg(response));
@@ -212,27 +255,31 @@ void HeinzingerPS::dealWithResponse(QByteArray resp)
             emit device_fail();
         }
     }
-        
+    setHeinzingerStatus();
     activeQuery = 0;
+    fullResponseReceived();
 }
 
 //serial commands
 /////////////////////////////////////////////////////
 void HeinzingerPS::setOutput(bool on)
 {
+    emit device_message(QString("Set output"));
     if(!volts_ok || !amps_ok || !on){
         if(writeCommand(QString("OUTP OFF\n").toUtf8())){
             output_setpoint = false;
             
-            if(voltage_query_timer->isActive())
-                voltage_query_timer->stop();
+            // if(voltage_query_timer->isActive())
+                // voltage_query_timer->stop();
         }
     }else{
         if(writeCommand(QString("OUTP ON\n").toUtf8())){
             output_setpoint = true;
             
             //start querying the applied voltage
-            voltage_query_timer->start();
+            ///////
+            queueSerialCommand(QString("MEASVOLT"));
+            ///////
         }
     }
     setHeinzingerStatus();
@@ -240,6 +287,7 @@ void HeinzingerPS::setOutput(bool on)
 
 void HeinzingerPS::setVoltage(uint voltage)
 {
+    emit device_message("Set voltage");
     volts_ok = false;
     if(voltage > voltage_limit){
         emit device_message(QString("Local Heinzinger: %3: Trying to set voltage %1 V, above maximum value %2 V").arg(voltage).arg(voltage_limit).arg(device_name));
@@ -254,11 +302,11 @@ void HeinzingerPS::setVoltage(uint voltage)
         activeSetFunction = 1;
         queryAfterSetTimer->start();
     }
-    setHeinzingerStatus();
 }
 
 void HeinzingerPS::setCurrent(qreal current)
 {
+    emit device_message("Set current");
     amps_ok = false;
     if(current > current_limit || current < 0){
         emit device_message(QString("Local Heinzinger: %3: Trying to set current %1 mA, above maximum value %2 mA").arg(current).arg(current_limit).arg(device_name));
@@ -273,16 +321,15 @@ void HeinzingerPS::setCurrent(qreal current)
         activeSetFunction = 2;
         queryAfterSetTimer->start();
     }
-    setHeinzingerStatus();
 }
 
 void HeinzingerPS::setHeinzingerStatus()
 {
     //voltage setpoint, current setpoint, output setpoint
     if(output_setpoint){
-        setStatus(QString("%1_%2_OutputOn_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
+        setStatus(QString("%1_%2_OutputOn_%3").arg(voltage_set).arg(current_set).arg(voltage_applied));
     }else{
-        setStatus(QString("%1_%2_OutputOff_%3").arg(voltage_setpoint).arg(current_setpoint).arg(voltage_applied));
+        setStatus(QString("%1_%2_OutputOff_%3").arg(voltage_set).arg(current_set).arg(voltage_applied));
     }
 }
 
@@ -329,6 +376,7 @@ void HeinzingerPS::queryVersion()
 //voltage setting
 void HeinzingerPS::querySetVoltage()
 {
+    emit device_message("Query set voltage");
     if(activeQuery != 0){
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
@@ -340,6 +388,7 @@ void HeinzingerPS::querySetVoltage()
 //current limit set
 void HeinzingerPS::querySetCurrent()
 {
+    emit device_message("Query set current");
     if(activeQuery != 0){
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
@@ -356,6 +405,7 @@ void HeinzingerPS::queryAppliedVoltageTimeout()
 
 void HeinzingerPS::queryAppliedVoltage()
 {
+    emit device_message("Query applied voltage");
     if(activeQuery != 0){
         emit device_message(QString("Local Heinzinger: %1: Busy waiting for reply").arg(device_name));
         return;
@@ -399,15 +449,16 @@ void HeinzingerPS::responseVersion(QString response)
 
 void HeinzingerPS::responseSetVoltage(QString response)
 {
+    emit device_message("Response set voltage");
     //If response contains a decimal point
-    QStringList response_list = response.split(".");
+    // QStringList response_list = response.split(".");
     
     bool response_status = true;
-    uint response_voltage;
-    if(response_list.first() == QString("")){
+    qreal response_voltage;
+    if(response == QString("")){
         response_voltage = 0;
     }else{
-        response_voltage = response_list.first().toUInt(&response_status);
+        response_voltage = response.toFloat(&response_status);
     }
     
     if(!response_status){
@@ -428,12 +479,18 @@ void HeinzingerPS::responseSetVoltage(QString response)
         volts_ok = true;
     }
     
+    //start querying the new voltage when the set voltage has changed
+    if(output_setpoint){
+        queueSerialCommand(QString("MEASVOLT"));
+    }
+    
     if(voltage_set == 0)
         emit voltage_set_zero();
 }
 
 void HeinzingerPS::responseSetCurrent(QString response)
 {
+    emit device_message("Response set current");
     //If response contains a decimal point
     // QStringList response_list = response.split(".");
     
@@ -466,20 +523,22 @@ void HeinzingerPS::responseSetCurrent(QString response)
 
 void HeinzingerPS::responseAppliedVoltage(QString response)
 {
-    QStringList response_list = response.split(".");
+    emit device_message("Response applied voltage");
+    // QStringList response_list = response.split(".");
 
     bool response_status = true;
-	uint response_voltage;
-    if(response_list.first() == QString("")){
+    qreal response_voltage;
+	// uint response_voltage;
+    if(response == QString("")){
         response_voltage = 0;
     }else{
-        response_voltage = response_list.first().toUInt(&response_status);
+        response_voltage = response.toFloat(&response_status);
     }
     
-    //Convert the number after the decimal to a separate integer
-    uint response_decimal = 0;
-    if(response_list.length() > 1)
-        response_decimal = response_list.at(1).toUInt(&response_status);
+    // //Convert the number after the decimal to a separate integer
+    // uint response_decimal = 0;
+    // if(response_list.length() > 1)
+        // response_decimal = response_list.at(1).toUInt(&response_status);
     
     if(!response_status){
 		emit device_message(QString("LOCAL HEINZINGER ERROR: %2: Applied voltage response invalid: %1").arg(response).arg(device_name));
@@ -488,7 +547,12 @@ void HeinzingerPS::responseAppliedVoltage(QString response)
 	}
     
     voltage_applied = response_voltage;
-    voltage_decimal_applied = response_decimal;
+    // voltage_decimal_applied = response_decimal;
+    
+    //stop the queries if reach setpoint
+    if(voltage_applied < voltage_set-voltage_buffer || voltage_applied > voltage_set+voltage_buffer){
+        queueSerialCommand(QString("MEASVOLT"));
+    }
     
     // //write the voltage to file with a timestamp
 	// QMutexLocker file_locker(file_mutex);

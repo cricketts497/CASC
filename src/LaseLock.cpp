@@ -1,7 +1,7 @@
 #include "include/LaseLock.h"
 
-LaseLock::LaseLock(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-SerialDevice(QStringList({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"}), file_path, file_mutex, deviceName, config, parent),
+LaseLock::LaseLock(QString deviceName, CascConfig * config, QObject * parent) :
+SerialDevice(deviceName, config, parent),
 queryNumber(0),
 windows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"}),
 boolValues(windows.length(),2),//boolean values for the windows, initialise with 2=>no value
@@ -40,7 +40,7 @@ offMessages({"Notlocked", "Notlocked", "Searchok", "Searchok", "Inok", "Inok", "
     setStatus(status);
     
     //save the first real values to come in
-    saveToFile = true;
+    // saveToFile = true;
     
     //initial command, regA locked
     queryNextNumber();

@@ -1,8 +1,10 @@
 #include "include/SerialDevice.h"
 
-SerialDevice::SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-LocalDataDevice(file_format,file_path, file_mutex, deviceName, config, parent),
-serial_timeout(2000),
+// SerialDevice::SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+SerialDevice::SerialDevice(QString deviceName, CascConfig * config, QObject * parent) :
+// LocalDataDevice(file_format,file_path, file_mutex, deviceName, config, parent),
+CascDevice(deviceName, config, parent),
+serial_timeout(1000),
 serial_response_wait(300),
 noResponseMessage(QByteArray("NORESP")),
 serial_port(new QSerialPort(this)),
@@ -14,7 +16,7 @@ missing_serial_response_limit(3)//failure if miss three responses in a row
 	if(device_failed)
 		return;
 	
-    connect(this, &LocalDevice::newLocalCommand, this, &SerialDevice::queueSerialCommand);
+    connect(this, &CascDevice::newWidgetCommand, this, &SerialDevice::queueSerialCommand);
     
     //setup the timeout timer for the serial communication
 	serial_timer->setSingleShot(true);

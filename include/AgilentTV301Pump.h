@@ -7,7 +7,8 @@ class AgilentTV301Pump : public SerialDevice
 {
     Q_OBJECT
 public:
-    AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent=nullptr);
+    // AgilentTV301Pump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent=nullptr);
+    AgilentTV301Pump(QString deviceName, CascConfig * config, QObject * parent=nullptr);
     
 private slots:
     void queryStatus();

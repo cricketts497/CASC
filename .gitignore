@@ -21,6 +21,7 @@ ui_*.h
 *.zip
 casc
 
+#builds
 debug
 release
 deployment
@@ -28,5 +29,7 @@ deployment
 # Editors temporary files 
 *~
 
+#data files from old versions
 #generated data files
 *.dat
+data

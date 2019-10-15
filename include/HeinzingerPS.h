@@ -8,7 +8,8 @@ class HeinzingerPS : public SerialDevice
 	Q_OBJECT
 	
 public:
-	HeinzingerPS(uint voltage_limit, uint current_limit, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent=nullptr);
+	// HeinzingerPS(uint voltage_limit, uint current_limit, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent=nullptr);
+	HeinzingerPS(uint voltage_limit, uint current_limit, QString deviceName, CascConfig * config, QObject * parent=nullptr);
  
 signals:
     void voltage_set_zero();
@@ -20,7 +21,7 @@ private slots:
     void dealWithResponse(QByteArray response);
     void queryAfterSet();
     
-    void heinzingerRemoteCommand(QString command);
+    // void heinzingerRemoteCommand(QString command);
    
     void queryAppliedVoltageTimeout();
     
@@ -73,13 +74,14 @@ private:
     bool volts_ok;
     bool amps_ok;
     
-    uint voltage_set;
+    qreal voltage_set;
     qreal current_set;
-    quint64 voltage_applied;
-    quint64 voltage_decimal_applied;
+    qreal voltage_applied;
     uint current_applied;
     uint current_decimal_applied;
     uint averages_set;
+    
+    const qreal voltage_buffer;
 };
 
 #endif // HEINZINGER_PS_H

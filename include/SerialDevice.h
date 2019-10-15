@@ -3,14 +3,20 @@
 
 #include <QSerialPort>
 
-#include "include/LocalDataDevice.h"
+#include <QMutex>
+#include <QQueue>
+#include <QThread>
 
-class SerialDevice : public LocalDataDevice
+// #include "include/LocalDataDevice.h"
+#include "include/CascDevice.h"
+
+class SerialDevice : public CascDevice
 {
 	Q_OBJECT
 	
 public:
-	SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
+	// SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent = nullptr);
+	SerialDevice(QString deviceName, CascConfig * config, QObject * parent = nullptr);
 	
 public slots:
     void queueSerialCommand(QString command);

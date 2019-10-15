@@ -1,7 +1,8 @@
  #include "include/NxdsPump.h"
 
-NxdsPump::NxdsPump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
-SerialDevice(QStringList({"speedStatus","controllerTemperature","serviceStatus"}), file_path, file_mutex, deviceName, config, parent),
+// NxdsPump::NxdsPump(QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
+NxdsPump::NxdsPump(QString deviceName, CascConfig * config, QObject * parent) :
+SerialDevice(deviceName, config, parent),
 // activeQuery(QString("NONE")),
 temperatureTimer(new QTimer(this)),
 temperatureTimeout(1000),
@@ -56,7 +57,7 @@ pumpSpeed(0)
     setStatus(QString("%1_%2_%3_%4").arg(pumpStatus).arg(pumpService).arg(pumpTemperature).arg(pumpSpeed));
     
     //save the first real values to come in
-    saveToFile = true;
+    // saveToFile = true;
 }
 
 void NxdsPump::queryTemperature()

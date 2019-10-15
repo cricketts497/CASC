@@ -32,13 +32,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += include/CascConfig.h \
            include/CascDevice.h \
 		   include/CascWidget.h \
-           include/DeviceButton.h \
-           include/Listener.h \
-           include/LocalDataDevice.h \
-           include/LocalDevice.h \
            include/MainWindow.h \
            include/MessageWindow.h \
-           include/RemoteDevice.h \
            include/ZoomChartView.h \
            include/HeinzingerVoltageWindow.h \
            include/SerialDevice.h \
@@ -58,14 +53,9 @@ HEADERS += include/CascConfig.h \
 SOURCES += src/CascConfig.cpp \
            src/CascDevice.cpp \
 		   src/CascWidget.cpp \
-           src/DeviceButton.cpp \
-           src/Listener.cpp \
-           src/LocalDataDevice.cpp \
-           src/LocalDevice.cpp \
            src/main.cpp \
            src/MainWindow.cpp \
            src/MessageWindow.cpp \
-           src/RemoteDevice.cpp \
            src/ZoomChartView.cpp \
            src/HeinzingerVoltageWindow.cpp \
            src/SerialDevice.cpp \

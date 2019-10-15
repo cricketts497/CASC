@@ -8,12 +8,13 @@
 #include <QHBoxLayout>
 
 const int MAX_N_STATUS_LABELS = 20;
+const int MAX_N_COMMAND_LABELS = 3;
 
 class EpicsDeviceButton : public QWidget
 {
     Q_OBJECT
 public:
-    EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString failTip, CascConfig * config, QWidget * parent = nullptr);
+    EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString failTip, CascConfig * config, QWidget * parent = nullptr, QStringList commandWindows = {});
     
 public slots:
     void deviceHasStarted();
@@ -25,6 +26,7 @@ public slots:
     
 signals:
     void toggle_device(bool on);
+    void widgetCommand(QString command);
     
     void buttonMessage(QString message);
     
@@ -32,6 +34,8 @@ private slots:
     void toggleSetpoint();
     void toggleOn();
     void setButtonColour();
+    
+    void emitNewCommand();
     
     void setpointTimeoutMessage();
     
@@ -42,10 +46,11 @@ private:
     QELineEdit * setpointLabel;
     QELineEdit * stateLabel;
     
-    QELineEdit * statusLabels[MAX_N_STATUS_LABELS];
-    
     const int nStatusWindows;
     QStringList compoundNames;
+    
+    const QStringList commandWindows;
+    QStringList commandList;
     
     const QColor offColour;
 	const QColor onColour;
@@ -57,6 +62,9 @@ private:
     
     QTimer * setpointTimer;
     const int setpointTimeout;
+
+    QELineEdit * statusLabels[MAX_N_STATUS_LABELS];
+    QELineEdit * commandLabels[MAX_N_COMMAND_LABELS];
 };
 
 #endif // EPICS_DEVICE_BUTTON
