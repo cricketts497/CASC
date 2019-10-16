@@ -25,6 +25,7 @@ casc
 debug
 release
 deployment
+*.rc
 
 # Editors temporary files 
 *~
