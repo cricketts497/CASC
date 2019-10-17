@@ -50,7 +50,8 @@ HEADERS += include/CascConfig.h \
            include/LaseLock.h\
            include/LaseLockStatusWindow.h\
            include/TcEpicsReadout.h\
-           include/EpicsDeviceButton.h
+           include/EpicsDeviceButton.h\
+           include/VacuumReadout.h
 					 
 SOURCES += src/CascConfig.cpp \
            src/CascDevice.cpp \
@@ -72,7 +73,8 @@ SOURCES += src/CascConfig.cpp \
            src/LaseLock.cpp\
            src/LaseLockStatusWindow.cpp\
            src/TcEpicsReadout.cpp\
-           src/EpicsDeviceButton.cpp
+           src/EpicsDeviceButton.cpp\
+           src/VacuumReadout.cpp
 					
 INCLUDEPATH += $$(QE_FRAMEWORK)/include
 
