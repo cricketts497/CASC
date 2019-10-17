@@ -4,17 +4,10 @@
 #include <QMainWindow>
 #include <QtWidgets>
 
-// #include "include/DeviceButton.h"
 #include "include/MessageWindow.h"
-// #include "include/Listener.h"
 #include "include/CascConfig.h"
-// #include "include/RemoteDataDevice.h"
 #include "include/HeinzingerPS.h"
 #include "include/HeinzingerVoltageWindow.h"
-// #include "include/DataSaver.h"
-// #include "include/DummyScanner.h"
-// #include "include/RemoteDataSaver.h"
-// #include "include/RemoteDevice.h"
 #include "include/NxdsPump.h"
 #include "include/NxdsPumpStatusWindow.h"
 #include "include/SimpleGraph.h"
@@ -25,6 +18,7 @@
 #include "include/LaseLockStatusWindow.h"
 #include "include/TcEpicsReadout.h"
 #include "include/EpicsDeviceButton.h"
+#include "include/VacuumReadout.h"
 
 class MainWindow: public QMainWindow
 {
@@ -42,51 +36,24 @@ private slots:
     
 	void toggleHeinzinger30k();
 	void toggleHeinzinger20k();
-    // void toggleDummyScanner();
     void toggleNxdsPumpWindow();
     void toggleAgilentTV301Window();
     void toggleLaseLockWindow();
     void toggleTcReadout();
-    
-    //command re-emission functions
-    // void heinzinger30kCommand(QString command);
-    // void heinzinger20kCommand(QString command);
-    // void dummyScannerCommand(QString command);
-	
+    void toggleVacuumReadout();
 
 	//devices
-	// void toggleDevice(QString device, bool start);
-	// void setupDevice(CascDevice * device, DeviceButton * button, QThread * thread);
 	void setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread);
 	
-	// void toggleListener();
-    // void toggleDataSaver();
 	void startHeinzinger30kDevice(bool start);
 	void startHeinzinger20kDevice(bool start);
     void startNxdsPumpDevice(bool start);
     void startAgilentTV301Device(bool start);
     void startLaseLockDevice(bool start);
     
-    //status re-emission functions
-    // void heinzinger30kStatus(QString status);
-    // void heinzinger20kStatus(QString status);
-    // void nxdsPumpStatus(QString status);
-    // void agilentTV301Status(QString status);
     
 signals:
 	void new_message(QString message);
-	// void newDataSaverStart(QString device);
-    
-    //command signals to devices
-	// void newHeinzinger30kCommand(QString command);
-	// void newHeinzinger20kCommand(QString command);
-    // void newDummyScannerCommand(QString command);
-    
-    //status reemission signals
-    // void newHeinzinger30kStatus(QString status);
-    // void newHeinzinger20kStatus(QString status);
-    // void newNxdsPumpStatus(QString status);
-    // void newAgilentTV301Status(QString status);
 
 private:
 	const QString config_file_path = "./config.txt";
@@ -105,23 +72,9 @@ private:
 
 	QString messages_string;
 	QTextStream messages;
-
-	//file paths
-	// const QString heinzinger30k_temp_path = "./temp/heinzinger30k_temp.csv";
-	// const QString heinzinger20k_temp_path = "./temp/heinzinger20k_temp.csv";
-    // const QString nxdsPump_temp_path = "./temp/nxdsPump_temp.csv";
-    // const QString agilentTV301_temp_path = "./temp/agilentTV301_temp.csv";
-    // const QString laseLock_temp_path = "./temp/laseLock_temp.csv";
     
     //base path containing the scan directories
-    const QString finalBasePath = "./data";
-
-    //file mutexes to prevent files from being opened concurently in separate threads
-	// QMutex heinzinger30kFileMutex;
-	// QMutex heinzinger20kFileMutex;
-    // QMutex nxdsPumpFileMutex;
-    // QMutex agilentTV301FileMutex;
-    // QMutex laseLockFileMutex;
+    // const QString finalBasePath = "./data";
 
 	//graph widget as central of main window
 	SimpleGraph *centralGraph;
@@ -129,38 +82,24 @@ private:
 	//task widgets
     ////////////////////////////////////////////////////////////////////////
 	CascAction * messageAct;
-	// QAction *messageAct;
 	MessageWindow * messageWindow;
-	// bool messageWindow_open;
 	
 	CascAction *heinzinger30kAct;
-	// QAction *heinzinger30kAct;
 	HeinzingerVoltageWindow * heinzinger30kWindow;
-	// bool heinzinger30kWindow_open;
 	const uint maxHeinzinger30kVoltage;
     const uint maxHeinzinger30kCurrent;
     
     CascAction *heinzinger20kAct;
-    // QAction *heinzinger20kAct;
 	HeinzingerVoltageWindow * heinzinger20kWindow;
-	// bool heinzinger20kWindow_open;
     const uint maxHeinzinger20kVoltage;
     const uint maxHeinzinger20kCurrent;
     
-    // CascAction * dummyScannerAct;
-    // DummyScanner * dummyScanner;
-    // // bool dummyScanner_open;
-    
     CascAction * nxdsPumpAct;
-    // QAction * nxdsPumpAct;
     NxdsPumpStatusWindow * nxdsPumpWindow;
-    // bool nxdsPumpWindow_open;
     const QStringList nxdsPumpNames;
 
     CascAction * agilentTV301Act;
-    // QAction * agilentTV301Act;
     AgilentTV301StatusWindow * agilentTV301Window;
-    // bool agilentTV301Window_open;
     const QStringList agilentTV301Names;
     
     CascAction * laseLockAct;
@@ -168,43 +107,29 @@ private:
     
     CascAction * tcReadoutAct;
     TcEpicsReadout * tcReadoutWindow;
+    
+    CascAction * vacuumReadoutAct;
+    VacuumReadout * vacuumReadoutWindow;
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////
-	// DeviceButton * listenerButton;
-	// Listener * listener;
-	// bool listener_running;
-    
-    // DeviceButton * dataSaverDeviceButton;
-    // // bool data_saver_started;
-    // QThread dataSaverDeviceThread;
-    // void dataSaverStart(QString device);
 
-	// DeviceButton * heinzinger30kDeviceButton;
 	EpicsDeviceButton * heinzinger30kDeviceButton;
-	// bool heinzinger30k_started;
 	QThread heinzinger30kDeviceThread;
     const QStringList heinzingerStatusWindows;
     const QStringList heinzingerCommandWindows;
     
-    // DeviceButton * heinzinger20kDeviceButton;
     EpicsDeviceButton * heinzinger20kDeviceButton;
-	// bool heinzinger20k_started;
 	QThread heinzinger20kDeviceThread;
     
-    // DeviceButton * nxdsPumpDeviceButton;
     EpicsDeviceButton * nxdsPumpDeviceButton;
-    // bool nxdsPumpSet_started;
     QThread nxdsPumpDeviceThread;
     const QStringList nxdsPumpStatusWindows;
     
-    // DeviceButton * agilentTV301DeviceButton;
     EpicsDeviceButton * agilentTV301DeviceButton;
-    // bool agilentTV301_started;
     QThread agilentTV301DeviceThread;
     const QStringList agilentTV301StatusWindows;
     
-    // DeviceButton * laseLockDeviceButton;
     EpicsDeviceButton * laseLockDeviceButton;
     QThread laseLockDeviceThread;
     const QStringList laseLockStatusWindows;

@@ -4,7 +4,7 @@
 SerialDevice::SerialDevice(QString deviceName, CascConfig * config, QObject * parent) :
 // LocalDataDevice(file_format,file_path, file_mutex, deviceName, config, parent),
 CascDevice(deviceName, config, parent),
-serial_timeout(1000),
+serial_timeout(2000),
 serial_response_wait(300),
 noResponseMessage(QByteArray("NORESP")),
 serial_port(new QSerialPort(this)),
