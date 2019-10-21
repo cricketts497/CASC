@@ -24,7 +24,7 @@ laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "I
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v4.4");
+	setWindowTitle("CASC v4.5");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));

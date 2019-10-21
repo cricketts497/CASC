@@ -1,9 +1,12 @@
 #ifndef CASC_CONFIG_H
 #define CASC_CONFIG_H
 
-#include <QObject>
 #include <QStringList>
 #include <QVector>
+#include <QFile>
+#include <QHostInfo>
+#include <QNetworkInterface>
+#include <QProcess>
 
 class CascConfig : public QObject
 {
@@ -20,6 +23,8 @@ signals:
 private:
 	//device has structure: deviceName, hostName, hostListenPort, hostDevicePort
 	QVector<QStringList> devices;
+    
+    QProcess * serverProcess;
 };
 
 #endif // CASC_CONFIG_H

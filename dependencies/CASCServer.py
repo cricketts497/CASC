@@ -1,6 +1,4 @@
 from pcaspy import Driver, SimpleServer, Severity
-import random
-import copy
 
 #####################################################!!! EDITING may break CASC.exe !!!###########################################################################
 prefix = "CASC:"
