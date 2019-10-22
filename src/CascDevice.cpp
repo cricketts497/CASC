@@ -13,52 +13,52 @@
 CascDevice::CascDevice(QString deviceName, CascConfig * config, QObject * parent) :
 QObject(parent),
 device_name(deviceName),
-connection_timer(new QTimer(this)),
-noDataMessage("no data"),
-okMessage("ok"),
-failMessage("fail"),
-askStatusMessage("Status?"),
+// connection_timer(new QTimer(this)),
+// noDataMessage("no data"),
+// okMessage("ok"),
+// failMessage("fail"),
+// askStatusMessage("Status?"),
 device_failed(false),
 deviceStatus(QString("Status")),
-connection_timeout(3000),
+// connection_timeout(3000),
 broadcast_status_timer(new QTimer(this)),
 broadcast_status_timeout(20)
 {
-	connection_timer->setSingleShot(true);
-	connection_timer->setInterval(connection_timeout);
+	// connection_timer->setSingleShot(true);
+	// connection_timer->setInterval(connection_timeout);
 	
 	messages.setString(&messages_string);
 	
-	QStringList listener = config->getDevice(QString("listener"));
-	if(listener.isEmpty() || listener.size() != 2){
-		storeMessage(QString("DEVICE ERROR: %1: Listener not found in config").arg(deviceName), true);
-		return;
-	}
+	// QStringList listener = config->getDevice(QString("listener"));
+	// if(listener.isEmpty() || listener.size() != 2){
+		// storeMessage(QString("DEVICE ERROR: %1: Listener not found in config").arg(deviceName), true);
+		// return;
+	// }
     
-    bool conv_ok;
-	hostListenPort = listener.at(1).toUShort(&conv_ok);
-    if(hostListenPort == 0 || !conv_ok){
-        storeMessage(QString("DEVICE ERROR: %1: TCP listener port is invalid in config").arg(deviceName), true);
-		return;
-	}
+    // bool conv_ok;
+	// hostListenPort = listener.at(1).toUShort(&conv_ok);
+    // if(hostListenPort == 0 || !conv_ok){
+        // storeMessage(QString("DEVICE ERROR: %1: TCP listener port is invalid in config").arg(deviceName), true);
+		// return;
+	// }
 
-	QStringList device = config->getDevice(deviceName);
-	if(device.size() < 3){
-		storeMessage(QString("DEVICE ERROR: %1: Device not found in config").arg(deviceName), true);
-		return;
-	}
+	// QStringList device = config->getDevice(deviceName);
+	// if(device.size() < 3){
+		// storeMessage(QString("DEVICE ERROR: %1: Device not found in config").arg(deviceName), true);
+		// return;
+	// }
     
-	hostAddress = device.at(1);
-    if(hostAddress.isEmpty()){
-        storeMessage(QString("DEVICE ERROR: %1: TCP host address is empty in config").arg(deviceName), true);
-		return;
-	}
+	// hostAddress = device.at(1);
+    // if(hostAddress.isEmpty()){
+        // storeMessage(QString("DEVICE ERROR: %1: TCP host address is empty in config").arg(deviceName), true);
+		// return;
+	// }
     
-	hostDevicePort = device.at(2).toUShort(&conv_ok);
-    if(hostDevicePort == 0 || !conv_ok){
-        storeMessage(QString("DEVICE ERROR: %1: TCP device port is invalid in config").arg(deviceName), true);
-		return;
-	}
+	// hostDevicePort = device.at(2).toUShort(&conv_ok);
+    // if(hostDevicePort == 0 || !conv_ok){
+        // storeMessage(QString("DEVICE ERROR: %1: TCP device port is invalid in config").arg(deviceName), true);
+		// return;
+	// }
 	
     connect(this, SIGNAL(device_fail()), this, SLOT(setFailed()));
     
@@ -133,9 +133,9 @@ void CascDevice::setStatus(QString status)
         return;
     }
     
-    if(status_list.at(0) == QString("Status") && status_list.at(1) == device_name){
+    if((status_list.at(0) == QString("Status")) && (status_list.at(1) == device_name)){
         deviceStatus = status;
-    }else if(status_list.at(0) == QString("Status") != status_list.at(1) == device_name){
+    }else if((status_list.at(0) == QString("Status")) != (status_list.at(1) == device_name)){
         emit device_message(QString("DEVICE ERROR: %1: setStatus()").arg(device_name));
         emit device_fail();
     }else{

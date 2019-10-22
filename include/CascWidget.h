@@ -13,6 +13,10 @@ public:
 	
 protected:
 	void closeEvent(QCloseEvent *event);
+    
+    const QColor offColour;
+	const QColor onColour;
+    const QColor failColour;
 	
 signals:
 	void closing();

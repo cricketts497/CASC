@@ -12,7 +12,9 @@ nxdsPumpNames({"BL20MT","BL20Ebara","BLIR","BLDP","BLQT"}),
 nxdsPumpStatusWindows({"20MT:Status","20MT:Service","20MT:Temperature","20MT:Speed","20Ebara:Status","20Ebara:Service","20Ebara:Temperature","20Ebara:Speed","IR:Status","IR:Service","IR:Temperature","IR:Speed","DP:Status","DP:Service","DP:Temperature","DP:Speed","QT:Status","QT:Service","QT:Temperature","QT:Speed"}),
 agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"}),
 agilentTV301StatusWindows({"IRTop:Status", "IRTop:Error", "IRTop:Temperature", "IRTop:Drive", "IRBottom:Status", "IRBottom:Error", "IRBottom:Temperature", "IRBottom:Drive", "DP:Status", "DP:Error", "DP:Temperature", "DP:Drive"}),
-laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"})
+laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"}),
+FC0StatusWindows({"State"}),
+FC0CommandWindows({"StateCommanded"})
 {
 	messages.setString(&messages_string);
 
@@ -24,7 +26,7 @@ laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "I
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v4.5");
+	setWindowTitle("CASC v4.6");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -69,6 +71,10 @@ void MainWindow::createActions()
     vacuumReadoutAct = new CascAction("./resources/vacuumReadout.png", "Pressure readout monitor", "Open the pressure viewer", "Close the pressure viewer", taskBar);
     connect(vacuumReadoutAct, &QAction::triggered, this, &MainWindow::toggleVacuumReadout);
     taskBar->addAction(vacuumReadoutAct);
+    
+    FC0Act = new CascAction("./resources/FC0Window.png", "FC0 State", "Open the FC0 control window", "Close the FC0 control window", taskBar);
+    connect(FC0Act, &QAction::triggered, this, &MainWindow::toggleFC0Window);
+    taskBar->addAction(FC0Act);
 }
 
 void MainWindow::createStatusBar()
@@ -96,12 +102,16 @@ void MainWindow::createDevicesBar()
     laseLockDeviceButton = new EpicsDeviceButton("Laselock", laseLockStatusWindows, "Start the TEM LaseLock box device", "Stop the TEM LaseLock box device", "LASELOCK FAIL", config, devicesBar);
     connect(laseLockDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startLaseLockDevice(bool)));
     
+    FC0DeviceButton = new EpicsDeviceButton("FC0Servo", FC0StatusWindows, "Start the FC0 servo device", "Stop the FC0 servo device", "FC0 FAIL", config, devicesBar, FC0CommandWindows);
+    connect(FC0DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startFC0Device(bool)));
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
     devicesBar->addWidget(nxdsPumpDeviceButton);
     devicesBar->addWidget(agilentTV301DeviceButton);
     devicesBar->addWidget(laseLockDeviceButton);
+    devicesBar->addWidget(FC0DeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -136,6 +146,7 @@ void MainWindow::toggleMessage()
         connect(nxdsPumpDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(agilentTV301DeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(laseLockDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
+        connect(FC0DeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         
         connect(heinzinger20kDeviceButton, SIGNAL(widgetCommand(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(heinzinger30kDeviceButton, SIGNAL(widgetCommand(QString)), messageWindow, SLOT(addMessage(QString)));
@@ -268,6 +279,17 @@ void MainWindow::toggleVacuumReadout()
     }
 }
 
+void MainWindow::toggleFC0Window()
+{
+    if(FC0Act->widgetToggle()){
+        delete FC0Window;
+    }else{
+        FC0Window = new FC0ServoWindow(QString("FC0Servo"), this);
+        setupWidget(FC0Window, FC0Act);
+        
+        addDockWidget(Qt::TopDockWidgetArea, FC0Window);
+    }    
+}
 
 /////////////////////////////////////////
 
@@ -393,16 +415,33 @@ void MainWindow::startLaseLockDevice(bool start)
         laseLockDeviceButton->deviceHasStopped();
         return;
     //only need local devices as status variables accessed through epics
-    }else if(!start || !config->deviceLocal(QString("laselock"))){
+    }else if(!start || !config->deviceLocal(QString("Laselock"))){
         return;
     }
     
-    LaseLock * laseLockDevice = new LaseLock(QString("laselock"),config);
+    LaseLock * laseLockDevice = new LaseLock(QString("Laselock"),config);
     setupDevice(laseLockDevice, laseLockDeviceButton, &laseLockDeviceThread);
         
     if(!laseLockDevice->getDeviceFailed()){
         laseLockDeviceButton->deviceHasStarted();
     } 
+}
+
+void MainWindow::startFC0Device(bool start)
+{
+    if(!start && !FC0DeviceThread.isRunning()){
+        FC0DeviceButton->deviceHasStopped();
+        return;
+    }else if(!start || !config->deviceLocal(QString("FC0Servo"))){
+        return;
+    }
+    
+    FC0Servo * FC0ServoDevice = new FC0Servo(QString("FC0Servo"), config);
+    setupDevice(FC0ServoDevice, FC0DeviceButton, &FC0DeviceThread);
+    
+    if(!FC0ServoDevice->getDeviceFailed()){
+        FC0DeviceButton->deviceHasStarted();
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

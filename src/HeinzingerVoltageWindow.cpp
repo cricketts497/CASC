@@ -2,8 +2,6 @@
 
 HeinzingerVoltageWindow::HeinzingerVoltageWindow(QString deviceName, uint maxVoltage, qreal maxCurrent, QWidget * parent) :
 CascWidget(deviceName, parent),
-offColour(QColor(Qt::white)),
-onColour(QColor(Qt::green)),
 outputSetpointTimer(new QTimer(this)),
 outputSetpointTimeout(5000)
 {

@@ -1,12 +1,12 @@
 #ifndef CASC_DEVICE_H
 #define CASC_DEVICE_H
 
-#include <QObject>
-#include <QFile>
-#include <QDataStream>
-#include <QTextStream>
+// #include <QObject>
+// #include <QFile>
+// #include <QDataStream>
+// #include <QTextStream>
 #include <QTimer>
-#include <QHostAddress>
+// #include <QHostAddress>
 
 #include "include/CascConfig.h"
   
@@ -41,17 +41,17 @@ protected:
 
 	const QString device_name;
 	
-	QTimer * connection_timer = nullptr;
+	// QTimer * connection_timer = nullptr;
 
-	QString hostAddress;
-	quint16 hostListenPort;
-	quint16 hostDevicePort;
+	// QString hostAddress;
+	// quint16 hostListenPort;
+	// quint16 hostDevicePort;
 
-	const char * noDataMessage;
-    const char * okMessage;
-    const char * failMessage;
+	// const char * noDataMessage;
+    // const char * okMessage;
+    // const char * failMessage;
     
-    const char * askStatusMessage;
+    // const char * askStatusMessage;
 
 	bool device_failed;
     	
@@ -62,7 +62,7 @@ private slots:
 private:
     QString deviceStatus;
     
-    const int connection_timeout;
+    // const int connection_timeout;
     
     QTimer * broadcast_status_timer = nullptr;
     const int broadcast_status_timeout;

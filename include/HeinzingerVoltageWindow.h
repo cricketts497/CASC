@@ -19,9 +19,6 @@ private slots:
     void outputSetpointTimeoutMessage();
 
 private:    
-    const QColor offColour;
-	const QColor onColour;
-    
     QTimer * outputSetpointTimer;
     const int outputSetpointTimeout;
     

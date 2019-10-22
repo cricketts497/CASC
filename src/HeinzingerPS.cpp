@@ -131,7 +131,7 @@ void HeinzingerPS::heinzingerCommand()
         return;
     }
     
-    if(command_list.first() != "Command"){
+    if(command_list.first() != "Command" || command_list.length() != 3){
         return;
     }
     

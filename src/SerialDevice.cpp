@@ -82,6 +82,8 @@ void SerialDevice::setBaudRate(int rate)
         serial_port->setBaudRate(QSerialPort::Baud9600);
     }else if(rate == 57600){
         serial_port->setBaudRate(QSerialPort::Baud57600);
+    }else if(rate == 115200){
+        serial_port->setBaudRate(QSerialPort::Baud115200);
     }else{
         emit device_message(QString("LOCAL SERIAL ERROR: %1: Invalid Baud rate").arg(device_name));
         emit device_fail();

@@ -19,6 +19,8 @@
 #include "include/TcEpicsReadout.h"
 #include "include/EpicsDeviceButton.h"
 #include "include/VacuumReadout.h"
+#include "include/FC0Servo.h"
+#include "include/FC0ServoWindow.h"
 
 class MainWindow: public QMainWindow
 {
@@ -41,6 +43,7 @@ private slots:
     void toggleLaseLockWindow();
     void toggleTcReadout();
     void toggleVacuumReadout();
+    void toggleFC0Window();
 
 	//devices
 	void setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread);
@@ -50,6 +53,7 @@ private slots:
     void startNxdsPumpDevice(bool start);
     void startAgilentTV301Device(bool start);
     void startLaseLockDevice(bool start);
+    void startFC0Device(bool start);
     
     
 signals:
@@ -110,6 +114,9 @@ private:
     
     CascAction * vacuumReadoutAct;
     VacuumReadout * vacuumReadoutWindow;
+    
+    CascAction * FC0Act;
+    FC0ServoWindow * FC0Window;
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////
@@ -133,6 +140,11 @@ private:
     EpicsDeviceButton * laseLockDeviceButton;
     QThread laseLockDeviceThread;
     const QStringList laseLockStatusWindows;
+    
+    EpicsDeviceButton * FC0DeviceButton;
+    QThread FC0DeviceThread;
+    const QStringList FC0StatusWindows;
+    const QStringList FC0CommandWindows;
     
     // EpicsDeviceButton * testDeviceButton;
 };
