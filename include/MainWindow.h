@@ -28,6 +28,7 @@ class MainWindow: public QMainWindow
 
 public:
 	MainWindow();
+    ~MainWindow();
 
 private slots:
 	//widgets
@@ -62,6 +63,9 @@ signals:
 private:
 	const QString config_file_path = "./config.txt";
 	CascConfig * config;
+    
+    QProcess * serverProcess;
+    QThread serverThread;
 
 	void createActions();
 	void createStatusBar();

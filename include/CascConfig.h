@@ -23,8 +23,6 @@ signals:
 private:
 	//device has structure: deviceName, hostName, hostListenPort, hostDevicePort
 	QVector<QStringList> devices;
-    
-    QProcess * serverProcess;
 };
 
 #endif // CASC_CONFIG_H

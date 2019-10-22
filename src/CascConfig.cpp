@@ -3,8 +3,6 @@
 CascConfig::CascConfig(QString config_file_path, QObject * parent) :
 QObject(parent)
 {
-    const QString epicsServerName = "CASCServer";
-    
 	//load the config file
 	QFile * configFile = new QFile(config_file_path);
 	if(!configFile->open(QIODevice::ReadOnly)){
@@ -21,17 +19,6 @@ QObject(parent)
 		devices.append(device);
 	}
 	configFile->close();
-    
-    //setup the server
-    if(deviceLocal(epicsServerName)){
-        serverProcess = new QProcess(this);
-        const QStringList arguments = {"./dependencies/CASCServer.py"};
-        serverProcess->start("python", arguments);
-    }else{
-        QStringList serverDevice = getDevice(epicsServerName);
-        QString serverHost = QString("%1.cern.ch").arg(serverDevice.at(1));
-        qputenv("EPICS_CA_ADDR_LIST", serverHost.toUtf8());//add the host name of the EPICS server pc to the list of addresses the clients look at
-    }
 }
 
 QStringList CascConfig::getDevice(QString deviceName)
