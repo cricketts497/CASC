@@ -4,7 +4,7 @@ from pcaspy import Driver, SimpleServer, Severity
 prefix = "CASC:"
 
 pvdb = {}
-for device in ["Laselock", "Turbo", "BL", "Heinzinger30k", "Heinzinger20k", "FC0Servo"]:
+for device in ["Laselock", "Turbo", "BL", "Heinzinger30k", "Heinzinger20k"]:#, "FC0Servo"]:
     pvdb["{}:SET".format(device)] = {'type' : 'enum', 'enums':['OFF', 'ON']}
     pvdb["{}:IS".format(device)] = {'type': 'enum', 'enums':['OFF', 'ON', 'FAIL'], 'states':[Severity.NO_ALARM, Severity.NO_ALARM, Severity.MINOR_ALARM]}
         
@@ -51,8 +51,8 @@ pvdb["Heinzinger20k:CurrentCommanded"] = {'type':'float', 'low':-1,'high':1, 'hi
 pvdb["Heinzinger20k:OutputCommanded"] = {'type':'enum', 'enums':['OutputOff','OutputOn']}
 
 #FC0 Servo device
-pvdb["FC0Servo:StateCommanded"] = {'type':'enum', 'enums':['Out', 'In']}
-pvdb["FC0Servo:State"] = {'type':'enum', 'enums':['Out', 'In', 'InvalidAngle', 'off'], 'states':[Severity.NO_ALARM,Severity.NO_ALARM,Severity.MAJOR_ALARM,Severity.NO_ALARM], 'value':3}
+# pvdb["FC0Servo:StateCommanded"] = {'type':'enum', 'enums':['Out', 'In']}
+# pvdb["FC0Servo:State"] = {'type':'enum', 'enums':['Out', 'In', 'InvalidAngle', 'off'], 'states':[Severity.NO_ALARM,Severity.NO_ALARM,Severity.MAJOR_ALARM,Severity.NO_ALARM], 'value':3}
 
     
 class myDriver(Driver):

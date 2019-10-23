@@ -15,8 +15,8 @@ CascWidget(QString("LaseLock"),parent)
     layout->addWidget(regBLab,0,1);
 
     for(int i=0; i<4; i++){
-        QELabel * regALabel = new QELabel(QString("CASC:laselock:%1").arg(laselockStatusWindows.at(2*i)), this);
-        QELabel * regBLabel = new QELabel(QString("CASC:laselock:%1").arg(laselockStatusWindows.at(2*i+1)), this);
+        QELabel * regALabel = new QELabel(QString("CASC:Laselock:%1").arg(laselockStatusWindows.at(2*i)), this);
+        QELabel * regBLabel = new QELabel(QString("CASC:Laselock:%1").arg(laselockStatusWindows.at(2*i+1)), this);
         
         regALabel->activate();
         regBLabel->activate();
