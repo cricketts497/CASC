@@ -8,7 +8,6 @@ class FC0Servo : public SerialDevice
     Q_OBJECT
 public:
     FC0Servo(QString deviceName, CascConfig * config, QObject * parent = nullptr);
-    ~FC0Servo();
     
 private slots:
     void cupCommand();

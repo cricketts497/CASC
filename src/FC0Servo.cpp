@@ -28,11 +28,6 @@ outAngle(0)
     queueSerialCommand("QUERYANGLE");
 }
 
-FC0Servo::~FC0Servo()
-{
-    emit device_status(QString("Status_%1_off").arg(device_name));
-}
-
 void FC0Servo::cupCommand()
 {
     //no further commands

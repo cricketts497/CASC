@@ -2,6 +2,7 @@
 #define HEINZINGER_VOLTAGE_WINDOW_H
 
 #include "include/CascWidget.h"
+
 #include "QESpinBox.h"
 #include "QELabel.h"
 #include "QELineEdit.h"

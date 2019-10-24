@@ -3,7 +3,7 @@
 // SerialDevice::SerialDevice(QStringList file_format, QString file_path, QMutex * file_mutex, QString deviceName, CascConfig * config, QObject * parent) :
 SerialDevice::SerialDevice(QString deviceName, CascConfig * config, QObject * parent) :
 // LocalDataDevice(file_format,file_path, file_mutex, deviceName, config, parent),
-CascDevice(deviceName, config, parent),
+CascDevice(deviceName, parent),
 serial_timeout(2000),
 serial_response_wait(300),
 noResponseMessage(QByteArray("NORESP")),
@@ -85,8 +85,10 @@ void SerialDevice::setBaudRate(int rate)
     }else if(rate == 115200){
         serial_port->setBaudRate(QSerialPort::Baud115200);
     }else{
-        emit device_message(QString("LOCAL SERIAL ERROR: %1: Invalid Baud rate").arg(device_name));
-        emit device_fail();
+        if(!serial_port->setBaudRate(rate)){
+            emit device_message(QString("LOCAL SERIAL ERROR: %1: Failed setting Baud rate").arg(device_name));
+            emit device_fail();
+        }
     }
 }
 

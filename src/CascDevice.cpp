@@ -10,7 +10,7 @@
     Sets up a QTimer connection_timer which signals local/remote TCP connection timeout. Records the port the listener is connected to on all PCs from the config in hostListenPort. Records the host name of the PC where the device is local in hostAddress and the port which the device is connected to in hostDevicePort from the config.
 */
   
-CascDevice::CascDevice(QString deviceName, CascConfig * config, QObject * parent) :
+CascDevice::CascDevice(QString deviceName, QObject * parent) :
 QObject(parent),
 device_name(deviceName),
 // connection_timer(new QTimer(this)),

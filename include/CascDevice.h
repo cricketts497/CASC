@@ -14,7 +14,7 @@ class CascDevice : public QObject
 {
 	Q_OBJECT
 public:
-	CascDevice(QString deviceName, CascConfig * config, QObject * parent = nullptr);
+	CascDevice(QString deviceName, QObject * parent = nullptr);
 	~CascDevice();
     
 	void sendMessages();
