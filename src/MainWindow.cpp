@@ -42,11 +42,6 @@ FC0CommandWindows({"StateCommanded"})
     // qputenv("EPICS_CA_AUTO_ADDR_LIST", QString("NO").toUtf8());
 }
 
-MainWindow::~MainWindow()
-{
-    serverThread.terminate();
-}
-
 void MainWindow::createActions()
 {
 	//The main icon task bar to open tasks
@@ -88,6 +83,10 @@ void MainWindow::createActions()
     // FC0Act = new CascAction("./resources/FC0Window.png", "FC0 State", "Open the FC0 control window", "Close the FC0 control window", taskBar);
     // connect(FC0Act, &QAction::triggered, this, &MainWindow::toggleFC0Window);
     // taskBar->addAction(FC0Act);
+    
+    agilisMirrorsAct = new CascAction("./resources/agilisMirrors.png", "Remote mirror control", "Open the Agilis remote mirror control", "Close the Agilis remote mirror control", taskBar);
+    connect(agilisMirrorsAct, &QAction::triggered, this, &MainWindow::toggleAgilisMirrorsWindow);
+    taskBar->addAction(agilisMirrorsAct);
 }
 
 void MainWindow::createStatusBar()
@@ -300,6 +299,18 @@ void MainWindow::toggleFC0Window()
         setupWidget(FC0Window, FC0Act);
         
         addDockWidget(Qt::TopDockWidgetArea, FC0Window);
+    }    
+}
+
+void MainWindow::toggleAgilisMirrorsWindow()
+{
+    if(agilisMirrorsAct->widgetToggle()){
+        delete agilisMirrorsWindow;
+    }else{
+        agilisMirrorsWindow = new AgilisMirrorsWindow(QString("AgilisMirrors"), 3, this);
+        setupWidget(agilisMirrorsWindow, agilisMirrorsAct);
+        
+        addDockWidget(Qt::TopDockWidgetArea, agilisMirrorsWindow);
     }    
 }
 

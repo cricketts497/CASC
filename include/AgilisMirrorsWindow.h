@@ -3,13 +3,14 @@
 
 #include "include/CascWidget.h"
 
+#include "QELabel.h"
 #include "QEPushButton.h"
 
 class AgilisMirrorsWindow : public CascWidget
 {
     Q_OBJECT
 public:
-    AgilisMirrorsWindow(QString deviceName, QWidget * parent=nullptr);
+    AgilisMirrorsWindow(QString deviceName, uint nMirrors, QWidget * parent=nullptr);
 
 };
 

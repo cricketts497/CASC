@@ -21,6 +21,7 @@
 #include "include/VacuumReadout.h"
 #include "include/FC0Servo.h"
 #include "include/FC0ServoWindow.h"
+#include "include/AgilisMirrorsWindow.h"
 
 class MainWindow: public QMainWindow
 {
@@ -28,7 +29,6 @@ class MainWindow: public QMainWindow
 
 public:
 	MainWindow();
-    ~MainWindow();
 
 private slots:
 	//widgets
@@ -45,6 +45,7 @@ private slots:
     void toggleTcReadout();
     void toggleVacuumReadout();
     void toggleFC0Window();
+    void toggleAgilisMirrorsWindow();
 
 	//devices
 	void setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread);
@@ -63,9 +64,6 @@ signals:
 private:
 	const QString config_file_path = "./config.txt";
 	CascConfig * config;
-    
-    QProcess * serverProcess;
-    QThread serverThread;
 
 	void createActions();
 	void createStatusBar();
@@ -121,6 +119,9 @@ private:
     
     CascAction * FC0Act;
     FC0ServoWindow * FC0Window;
+    
+    CascAction * agilisMirrorsAct;
+    AgilisMirrorsWindow * agilisMirrorsWindow;
 
 	//devices
     ////////////////////////////////////////////////////////////////////////////
