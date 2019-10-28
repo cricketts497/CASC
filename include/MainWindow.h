@@ -22,6 +22,7 @@
 #include "include/FC0Servo.h"
 #include "include/FC0ServoWindow.h"
 #include "include/AgilisMirrorsWindow.h"
+#include "include/AgilisMirrors.h"
 
 class MainWindow: public QMainWindow
 {
@@ -56,6 +57,7 @@ private slots:
     void startAgilentTV301Device(bool start);
     void startLaseLockDevice(bool start);
     void startFC0Device(bool start);
+    void startAgilisMirrorsDevice(bool start);
     
     
 signals:
@@ -150,6 +152,12 @@ private:
     QThread FC0DeviceThread;
     const QStringList FC0StatusWindows;
     const QStringList FC0CommandWindows;
+    
+    EpicsDeviceButton * agilisMirrorsDeviceButton;
+    QThread agilisMirrorsDeviceThread;
+    const QStringList agilisMirrorsStatusWindows;
+    const QStringList agilisMirrorsCommandWindows;
+    const QStringList agilisMirrorsUrgentCommandWindows;
     
     // EpicsDeviceButton * testDeviceButton;
 };

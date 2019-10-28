@@ -54,7 +54,8 @@ HEADERS += include/CascConfig.h \
            include/VacuumReadout.h\
            include/FC0Servo.h\
            include/FC0ServoWindow.h\
-           include/AgilisMirrorsWindow.h
+           include/AgilisMirrorsWindow.h\
+           include/AgilisMirrors.h
 					 
 SOURCES += src/CascConfig.cpp \
            src/CascDevice.cpp \
@@ -80,7 +81,8 @@ SOURCES += src/CascConfig.cpp \
            src/VacuumReadout.cpp\
            src/FC0Servo.cpp\
            src/FC0ServoWindow.cpp\
-           src/AgilisMirrorsWindow.cpp
+           src/AgilisMirrorsWindow.cpp\
+           src/AgilisMirrors.cpp
 					
 INCLUDEPATH += $$(QE_FRAMEWORK)/include
 

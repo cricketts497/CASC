@@ -17,6 +17,7 @@ missing_serial_response_limit(3)//failure if miss three responses in a row
 		return;
 	
     connect(this, &CascDevice::newWidgetCommand, this, &SerialDevice::queueSerialCommand);
+    connect(this, &CascDevice::newUrgentWidgetCommand, this, &SerialDevice::urgentSerialCommand);
     
     //setup the timeout timer for the serial communication
 	serial_timer->setSingleShot(true);
@@ -74,8 +75,33 @@ void SerialDevice::queueSerialCommand(QString command)
     }
 }
 
+//commands that have to be executed straight away
+void SerialDevice::urgentSerialCommand(QString command)
+{
+    serialCommandQueue.clear();
+    queueSerialCommand(command);
+}
+
 //protected settings
 ///////////////////////////////////////////////////////
+void SerialDevice::setSerialTimeout(int timeout)
+{
+    if(timeout <= 0){
+        return;
+    }
+    
+    serial_timer->setInterval(timeout);
+}
+
+void SerialDevice::setSerialResponseWait(int timeout)
+{
+    if(timeout <= 0){
+        return;
+    }
+    
+    serial_response_wait = timeout;
+}
+
 void SerialDevice::setBaudRate(int rate)
 {
     if(rate == 9600){

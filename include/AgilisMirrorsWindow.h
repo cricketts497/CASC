@@ -10,7 +10,7 @@ class AgilisMirrorsWindow : public CascWidget
 {
     Q_OBJECT
 public:
-    AgilisMirrorsWindow(QString deviceName, uint nMirrors, QWidget * parent=nullptr);
+    AgilisMirrorsWindow(QString deviceName, int nMirrors, QWidget * parent=nullptr);
 
 };
 

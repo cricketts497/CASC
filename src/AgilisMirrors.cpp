@@ -2,12 +2,12 @@
 
 AgilisMirrors::AgilisMirrors(QString deviceName, CascConfig * config, QObject * parent):
 SerialDevice(deviceName, config, parent),
-travelRange(4.0),
+travelRange(14400),
 currentAxis(1),
 currentChannel(1),
 calibrating(false),
-command(QString("NONE")),
-limitSign(0)
+limitSign(0),
+moving(false)
 {
     if(device_failed)
         return;
@@ -19,6 +19,9 @@ limitSign(0)
 	setStopBits(1);
 	setFlowControl(1);//NoFlowControl
     
+    setSerialTimeout(40);
+    setSerialResponseWait(5);
+    
     //response from device
     connect(this, SIGNAL(newSerialResponse(QByteArray)), this, SLOT(dealWithResponse(QByteArray)));
     
@@ -29,56 +32,66 @@ limitSign(0)
         return;
     
     //assumes axes are not at limits initially
+    QString status = "";
     for(int i=0; i<AGILIS_MIRRORS_N_CHANNELS*2; i++){
         axisLimitSwitches[i] = false;
-        axisStatus[i] = 0;
-        stepRange[i] = 0.0;
+        stepRange[i] = 0;
+        axisPos[i] = 0;
+        if(i!=AGILIS_MIRRORS_N_CHANNELS*2-1){
+            status.append(QString("%1_").arg(axisPos[i]));
+        }else{
+            status.append(QString("%1").arg(axisPos[i]));
+        }
     }
+    setStatus(status);
     
     //put the mirror controller in remote mode
     queueSerialCommand("SETREMOTE");
-    queueSerialCommand("QUERYERROR");
+    // queueSerialCommand("QUERYERROR");
     queueSerialCommand("QUERYCHANNEL");
-    queueSerialCommand("QUERYERROR");
+    // queueSerialCommand("QUERYERROR");
+    // queueSerialCommand("QUERYSTATUS_1");
+    // queueSerialCommand("QUERYERROR");
+    // queueSerialCommand("QUERYSTATUS_2");
+    // queueSerialCommand("QUERYERROR");
 }
 
-//set of commands to calibrate the axis step size
-//1 <= axis <= 8
-void AgilisMirrors::calibrate(int axis)
-{
-    //queue to sequence of calibration commands, then call mirrorCommand() again to execute these commands
-    int channelToCalibrate = axis/2;//1,2,3,4
-    int axisToCalibrate = (axis+1)%2+1;//1,2
+// //set of commands to calibrate the axis step size
+// //1 <= axis <= 8
+// void AgilisMirrors::calibrate(uint axis)
+// {
+    // //queue to sequence of calibration commands, then call mirrorCommand() again to execute these commands
+    // uint channelToCalibrate = (axis/2)+axis%2;//1,2,3,4
+    // uint axisToCalibrate = (axis+1)%2+1;//1,2
     
-    if(channelToCalibrate != currentChannel){
-        queueSerialCommand(QString("SETCHANNEL_%1").arg(channelToCalibrate));
-        queueSerialCommand("QUERYERROR");
-    }
+    // if(channelToCalibrate != currentChannel){
+        // queueSerialCommand(QString("SETCHANNEL_%1").arg(channelToCalibrate));
+        // queueSerialCommand("QUERYERROR");
+    // }
     
-    queueSerialCommand(QString("MOVENEGLIMIT_%1_%4").arg(axisToCalibrate).arg(3));//1700 steps/s at max step amplitude
-    queueSerialCommand("QUERYERROR");
-    queueSerialCommand("QUERYLIMITSTATUS");
+    // queueSerialCommand(QString("MOVENEGLIMIT_%1_%4").arg(axisToCalibrate).arg(3));//1700 steps/s at max step amplitude
+    // // queueSerialCommand("QUERYERROR");
+    // queueSerialCommand("QUERYSTATUS");
+    // nextCalibrationCommand = "QUERYLIMITSTATUS";
     
-    // keep querying the limit status until it reaches the limit
-    // queueSerialCommand(QString("ZEROSTEPCOUNTER_%1").arg(axisToCalibrate));
-    // queueSerialCommand("QUERYERROR");
-    // queueSerialCommand(QString("MOVEREL_%1_%2").arg(axisToCalibrate).arg(100));//Move 100 steps to get out of the limit
-    // queueSerialCommand("QUERYERROR");
-    // query status
+    // // keep querying the limit status until it reaches the limit
+    // // queueSerialCommand(QString("ZEROSTEPCOUNTER_%1").arg(axisToCalibrate));
+    // // queueSerialCommand("QUERYERROR");
+    // // queueSerialCommand(QString("MOVEREL_%1_%2").arg(axisToCalibrate).arg(100));//Move 100 steps to get out of the limit
+    // // queueSerialCommand("QUERYERROR");
+    // // query status
     
-    //keep querying the status until it stops and returns 'Ready' i.e. statusCode==0
-    // queueSerialCommand(QString("MOVEPOSLIMIT_%1_%4").arg(axisToCalibrate).arg(4));//666 steps/s at defined step amplitude
-    // queueSerialCommand("QUERYERROR");
-    // queueSerialCommand("QUERYLIMITSTATUS");
-    // queueSerialCommand("QUERYERROR");
+    // //keep querying the status until it stops and returns 'Ready' i.e. statusCode==0
+    // // queueSerialCommand(QString("MOVEPOSLIMIT_%1_%4").arg(axisToCalibrate).arg(4));//666 steps/s at defined step amplitude
+    // // queueSerialCommand("QUERYERROR");
+    // // queueSerialCommand("QUERYLIMITSTATUS");
+    // // queueSerialCommand("QUERYERROR");
     
-    // keep querying the limit status until it reaches the positive limit
-    // queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(axisToCalibrate));
+    // // keep querying the limit status until it reaches the positive limit
+    // // queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(axisToCalibrate));
 
-    calibrating = true;
-
-    mirrorCommand();
-}
+    // calibrating = true;
+// }
 
 
 //dealing with queued commands
@@ -89,7 +102,9 @@ void AgilisMirrors::mirrorCommand()
     if(serialCommandQueue.isEmpty())
         return;
     
-    command = serialCommandQueue.dequeue();    
+    QString command = serialCommandQueue.dequeue();    
+    
+    // emit device_message(QString("AgilisMirrors: Command %1").arg(command));
     
     QStringList command_list = command.split("_");
     
@@ -105,11 +120,11 @@ void AgilisMirrors::mirrorCommand()
 }
 
 void AgilisMirrors::mirrorSingleWordCommand(QString command)    
-    //commands from within the device
+{    //commands from within the device
     if(command == QString("QUERYERROR")){
         writeCommand(QString("TE?\r\n").toUtf8(), true);
     }else if(command == QString("QUERYLIMITSTATUS")){
-        writeCommand(QString("PH?\r\n").toUtf8(), true);
+        writeCommand(QString("1PH?\r\n").toUtf8(), true);
     }else if(command == QString("SETREMOTE")){
         writeCommand(QString("MR\r\n").toUtf8(), false);
     }else if(command == QString("QUERYCHANNEL")){
@@ -133,38 +148,41 @@ void AgilisMirrors::mirrorWidgetCommand(QStringList command_list)
         return;
     }
     
+    bool conv_ok;
     if(paramList.at(2) == "StopCommanded" && command_list.at(2) == "Stop"){//enum EPICS variable
         writeCommand(QString("%1ST\r\n").arg(currentAxis).toUtf8(), false);
-    }else if(paramList.at(2) == "CalibrateCommanded"){//int EPICS variable
-        int axisToCalibrate = command_list.at(2).toUInt(&conv_ok);
-        if(!conv_ok || axisToCalibrate < 1 || axisToCalibrate > 8){
-            emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid axis to calibrate").arg(device_name));
-            return;
-        }
-        calibrate(axisToCalibrate);
-    }else if(paramList.at(2) == "StepSizeCommanded"){
-        //use hundreds for channel/axis and tens/digits for step size
-        //could be positive or negative
-        int stepAxis = command_list.at(2).toUInt(&conv_ok);
-        if(!conv_ok || stepAxis < 100 || stepAxis > 850){
-            emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid step size").arg(device_name));
+        queueSerialCommand("QUERYERROR");
+        // calibrating = false;
+    // }else if(paramList.at(2) == "CalibrateCommanded"){//int EPICS variable
+        // uint axisToCalibrate = command_list.at(2).toUInt(&conv_ok);
+        // if(!conv_ok || axisToCalibrate < 1 || axisToCalibrate > 8){
+            // emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid axis to calibrate").arg(device_name));
+            // return;
+        // }
+        // calibrate(axisToCalibrate);
+    }else if(paramList.at(2).startsWith("Jog")){
+        uint axisToJog = paramList.at(2).mid(3).toUInt(&conv_ok);
+        int jog = command_list.at(2).toInt(&conv_ok);
+        if(!conv_ok || axisToJog < 1 || axisToJog > 8 || jog > 4 || jog < -4){
+            emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid axis or speed to jog").arg(device_name));
             return;
         }
         
-        int channel = (abs(stepAxis)/100)/2;
-        int axis = ((abs(stepAxis)/100)+1)%2+1;
-        int step = stepAxis%100;
-        
+        uint channel = (axisToJog/2)+axisToJog%2;//1/2=0+1%2=1 => 1, 2/2=1+2%2=0 => 1, 3/2=1+3%2=1 => 2
+                
         if(channel != currentChannel){
             queueSerialCommand(QString("SETCHANNEL_%1").arg(channel));
-            queueSerialCommand("QUERYERROR");
+            // queueSerialCommand("QUERYERROR");
         }
-        queueSerialCommand(QString("SETSTEP_%1_%2").arg(axis).arg(step));
+        
+        uint axis = (axisToJog+1)%2+1;//(1+1)%2=0+1 => 1, (4+1)%2=1+1 => 2
+        queueSerialCommand(QString("SETJOG_%1_%2").arg(axis).arg(jog));
+        // queueSerialCommand("QUERYERROR");
+        queueSerialCommand(QString("QUERYSTATUS_%1").arg(axis));
+        queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(currentAxis));
     }else{
         return;
     }
-    
-    queueSerialCommand("QUERYERROR");
 }
 
 void AgilisMirrors::mirrorTwoWordCommand(QStringList command_list)
@@ -182,8 +200,20 @@ void AgilisMirrors::mirrorTwoWordCommand(QStringList command_list)
         if(value == 0 || value > 2){
             return;
         }
-        if(writeCommand(QString("%1TS\r\n").arg(value).toUtf8(), false)){
+        if(writeCommand(QString("%1TS?\r\n").arg(value).toUtf8(), true)){
             currentAxis = value;
+        }
+    }else if(command_list.first() == "QUERYNUMSTEPS" && command_list.length() == 2){
+        //check axis
+        if(value == 0 || value > 2){
+            return;
+        }
+        if((calibrating && axisLimitSwitches[channelAxis]) || !calibrating){
+            if(writeCommand(QString("%1TP?\r\n").arg(value).toUtf8(), true)){
+                currentAxis = value;
+            }
+        }else{
+            return;
         }
     }else if(command_list.first() == QString("SETCHANNEL")){
         //check channel
@@ -206,23 +236,9 @@ void AgilisMirrors::mirrorTwoWordCommand(QStringList command_list)
         }else{
             return;
         }
-    }else if(command_list.first() == "QUERYNUMSTEPS" && command_list.length() == 2){
-        //check axis
-        if(value == 0 || value > 2){
-            return;
-        }
-        if((calibrating && axisLimitSwitches[channelAxis]) || !calibrating){
-            if(writeCommand(QString("%1TP\r\n").arg(value).toUtf8(), true)){
-                currentAxis = value;
-            }
-        }else{
-            return;
-        }
     }
     
-    if(!calibrating){
-        queueSerialCommand("QUERYERROR");
-    }
+    queueSerialCommand("QUERYERROR");
 }
 
 void AgilisMirrors::mirrorThreeWordCommand(QStringList command_list)
@@ -234,10 +250,15 @@ void AgilisMirrors::mirrorThreeWordCommand(QStringList command_list)
         return;
     }
     
-    uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
+    // uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
     
     QString toWrite;
-    if(command_list.first() == "MOVEREL"){
+    if(command_list.first() == "SETJOG"){
+        if(param > 4 || param < -4){
+            return;
+        }
+        toWrite = QString("%1JA%2\r\n").arg(axis).arg(param);
+    }else if(command_list.first() == "MOVEREL"){
         toWrite = QString("%1PR%2\r\n").arg(axis).arg(param);
         if(param > 0){
             limitSign = 1;
@@ -269,9 +290,7 @@ void AgilisMirrors::mirrorThreeWordCommand(QStringList command_list)
         currentAxis = axis;
     }
     
-    if(!calibrating){
-        queueSerialCommand("QUERYERROR");
-    }
+    queueSerialCommand("QUERYERROR");
 }
 
 //response handling
@@ -283,27 +302,32 @@ void AgilisMirrors::dealWithResponse(QByteArray resp)
         return;
     }
     
-    QString response = QString::fromUtf8(resp);
+    QString responseFull = QString::fromUtf8(resp);
     
-    QStringList command_list = command.split("_");
+    // emit device_message(QString("Agilis Mirrors: %1: response %2").arg(device_name).arg(responseFull));
     
-    //send the response to the correct function for the last command/ query sent
-    if(command == QString("QUERYERROR")){
-        responseErrorCode(response);
-    }else if(command_list.first() == QString("QUERYSTATUS")){
-        responseAxisStatus(response);
-    }else if(command == QString("QUERYCHANNEL")){
-        responseChannel(response);
-    }else if(command == QString("QUERYLIMITSTATUS")){
-        responseLimitStatus(response);
-    }else if(command_list.first() == QString("QUERYNUMSTEPS")){
-        responseNumSteps(response);
-    }else{
-        emit device_message(QString("AgilisMirrors: %1: Received response %1 for command %2").arg(response).arg(command));
+    QStringList responseList = responseFull.split("\r\n");
+    
+    for(int i=0; i<responseList.length(); i++){
+        QString response = responseList.at(i);
+        if(response.size() >= 3){
+            QString responsePart = response.mid(2);
+            
+            if(response.startsWith("TE")){
+                responseErrorCode(responsePart);
+            }else if(response.contains("TS")){
+                responseAxisStatus(response);
+            }else if(response.startsWith("CC")){
+                responseChannel(responsePart);
+            }else if(response.startsWith("PH")){
+                responseLimitStatus(responsePart);
+            }else if(response.contains("TP")){
+                responseNumSteps(response);
+            }else{
+                emit device_message(QString("AgilisMirrors: %1: Invalid response %2").arg(device_name).arg(response));
+            }
+        }
     }
-    
-    //set the status
-    
     
     //free up the serial device to take the next command
     fullResponseReceived();
@@ -344,22 +368,42 @@ void AgilisMirrors::responseErrorCode(QString response)
 void AgilisMirrors::responseAxisStatus(QString response)
 {
     bool conv_ok;
-    int statusCode = response.toUInt(&conv_ok);
+    QStringList responseParts = response.split("TS");
+    
+    uint axis = 0; 
+    uint statusCode = 5;
+    if(responseParts.length() == 2){
+        axis = responseParts.first().toUInt(&conv_ok);
+        statusCode = responseParts.at(1).toUInt(&conv_ok);
+        
+        currentAxis = axis;
+    }else{
+        conv_ok = false;
+    }
     
     if(!conv_ok || statusCode > 4){
         emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid response to axis status query, %2").arg(device_name).arg(response));
     }else{
-        uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
-        axisStatus[channelAxis] = statusCode;
+        // uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
         
         //keep querying the status until the mirror has stopped and is ready
-        if(calibrating && statusCode == 0 && limitSign < 0){
-            queueSerialCommand(QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4));//666 steps/s at defined step amplitude
-            queueSerialCommand("QUERYERROR");
-            queueSerialCommand("QUERYLIMITSTATUS");
-        }else if(statusCode != 0){
-            queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
-            queueSerialCommand("QUERYERROR");
+        if(calibrating && statusCode == 0){
+            queueSerialCommand(nextCalibrationCommand);
+            queueSerialCommand("QUERYSTATUS");
+            
+            if(nextCalibrationCommand == "QUERYLIMITSTATUS" && limitSign < 0){
+                nextCalibrationCommand = QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4);
+            }else if(nextCalibrationCommand == QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4)){
+                nextCalibrationCommand = "QUERYLIMITSTATUS";
+            }
+        // }else if(statusCode != 0){
+            // queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
+        }
+        
+        if(statusCode != 0){
+            moving = true;
+        }else{
+            moving = false;
         }
     }
 }
@@ -376,26 +420,87 @@ void AgilisMirrors::responseChannel(QString response)
     }
 }
 
+//number of steps taken either since zeroing the step count or since powering on the mirror
+void AgilisMirrors::responseNumSteps(QString response)
+{
+    bool conv_ok;
+    uint axis = 0;
+    int steps = 1;
+    QStringList responseParts = response.split("TP");
+    if(responseParts.length() == 2){
+        axis = responseParts.first().toUInt(&conv_ok);
+        steps = responseParts.at(1).toInt(&conv_ok);
+        
+        currentAxis = axis;
+    }else{
+        conv_ok = false;
+    }
+    
+    uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
+    if(conv_ok && calibrating){
+        //positive limit in terms of number of steps
+        stepRange[channelAxis] = steps;
+    }
+    
+    if(!conv_ok){
+        emit device_message(QString("AgilisMirrors: %1: Invalid response to number of steps query, %2").arg(device_name).arg(response));
+    }else{
+        //position relative to negative limit in arc seconds as travel range = 14400 = 4 degrees in arc seconds
+        // if(stepRange[channelAxis] == 0){
+        axisPos[channelAxis] = steps;
+        // }else{
+            // //calibrated
+            // axisPos[channelAxis] = (steps*travelRange)/stepRange[channelAxis];
+        // }
+        
+        //set the status positions as one has changed
+        QString status = "";
+        for(int i=0; i<AGILIS_MIRRORS_N_CHANNELS*2; i++){
+            if(i!=AGILIS_MIRRORS_N_CHANNELS*2-1){
+                status.append(QString("%1_").arg(axisPos[i]));
+            }else{
+                status.append(QString("%1").arg(axisPos[i]));
+            }
+        }
+        // emit device_message(QString("AgilisMirrors: Status %1").arg(status));
+        setStatus(status);
+    }
+
+    //continuously probe the position while moving
+    if(moving){
+        queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(currentAxis));
+    }    
+}
+
 void AgilisMirrors::responseLimitStatus(QString response)
 {
+    bool conv_ok;
+    uint limitStatusCode = response.toUInt(&conv_ok);
+    if(!conv_ok || limitStatusCode > 3){
+        emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid response to limit status query, %2").arg(device_name).arg(response));
+        return;
+    }
+    
     uint axis1 = (currentChannel-1)*2;//0,2,4,6
     uint axis2 = currentChannel*2-1;//1,3,5,7
     
-    if(response == "PH0"){
-        axisLimitSwitches[axis1] = false;
-        axisLimitSwitches[axis2] = false;
-    }else if(response == "PH1"){
-        axisLimitSwitches[axis1] = true;
-        axisLimitSwitches[axis2] = false;
-    }else if(response == "PH2"){
-        axisLimitSwitches[axis1] = false;
-        axisLimitSwitches[axis2] = true;
-    }else if(response == "PH3"){
-        axisLimitSwitches[axis1] = true;
-        axisLimitSwitches[axis2] = true;
-    }else{
-        emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid response to limit status query, %2").arg(device_name).arg(response));
-        return;
+    switch(limitStatusCode){
+        case 0:
+            axisLimitSwitches[axis1] = false;
+            axisLimitSwitches[axis2] = false;
+            break;
+        case 1:
+            axisLimitSwitches[axis1] = true;
+            axisLimitSwitches[axis2] = false;
+            break;
+        case 2:
+            axisLimitSwitches[axis1] = false;
+            axisLimitSwitches[axis2] = true;
+            break;
+        case 3:
+            axisLimitSwitches[axis1] = true;
+            axisLimitSwitches[axis2] = true;
+            break;
     }
     
     //When calibrating, keep querying the axis limit until at the limit
@@ -403,38 +508,11 @@ void AgilisMirrors::responseLimitStatus(QString response)
     if(calibrating && axisLimitSwitches[channelAxis]){
         if(limitSign < 0){//at the negative limit while calibrating
             queueSerialCommand(QString("ZEROSTEPCOUNTER_%1").arg(currentAxis));
-            queueSerialCommand("QUERYERROR");
             queueSerialCommand(QString("MOVEREL_%1_%2").arg(currentAxis).arg(100));//Move 100 steps to get out of the negative limit
-            queueSerialCommand("QUERYERROR");
             queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
-            queueSerialCommand("QUERYERROR");
         }else{
             queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(currentAxis));
-            queueSerialCommand("QUERYERROR");
         }
-    }else if(calibrating){
-        queueSerialCommand("QUERYLIMITSTATUS");
     }
 }
 
-//number of steps taken either since zeroing the step count or since powering on the mirror
-void AgilisMirrors::responseNumSteps(QString response)
-{
-    bool conv_ok = response.startsWith("TP");
-    QStringList parts = response.split("P");
-    
-    uint steps;
-    if(parts.length() == 2){
-        steps = parts.at(1).toUInt(&conv_ok);
-    }else{
-        conv_ok = false;
-    }
-    
-    uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
-    if(conv_ok && calibrating){
-        stepRange[channelAxis] = steps;
-    }else if(!conv_ok){
-        emit device_message(QString("AGILIS MIRRORS ERROR: %1: Invalid response to number of steps query, %2").arg(device_name).arg(response));
-    }
-    calibrating = false;
-}

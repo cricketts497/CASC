@@ -35,8 +35,11 @@ protected:
     void setStopBits(int bits);
     void setFlowControl(int type);
     
+    void setSerialTimeout(int timeout);
+    void setSerialResponseWait(int timeout);
+    
     const int serial_timeout;
-    const int serial_response_wait;
+    
     
     QQueue<QString> serialCommandQueue;
     bool writeCommand(QByteArray command, bool response=false);
@@ -46,6 +49,7 @@ protected:
     void fullResponseReceived();
 
 private slots:
+    void urgentSerialCommand(QString command);
 	void readResponse();
 	
 	void serialTimeout();
@@ -56,11 +60,15 @@ private:
     
     QTimer * serial_timer = nullptr;
     
+    int serial_response_wait;
+    
     bool expectResponse;
     bool commandInProgress;
     
     int missing_serial_response_count;
     const int missing_serial_response_limit;
+    
+    
 };
 
 #endif //SERIAL_DEVICE_H

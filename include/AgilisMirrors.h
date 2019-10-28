@@ -1,7 +1,7 @@
 #ifndef AGILIS_MIRRORS_H
 #define AGILIS_MIRRORS_H
 
-#include "include/SeriaDevice.h"
+#include "include/SerialDevice.h"
 
 const int AGILIS_MIRRORS_N_CHANNELS = 4;
 
@@ -21,25 +21,30 @@ private:
     void mirrorTwoWordCommand(QStringList command_list);
     void mirrorThreeWordCommand(QStringList command_list);
     
-    void calibrate(int axis);
+    // void calibrate(uint axis);
     
     void responseErrorCode(QString response);
+    void responseAxisStatus(QString response);
     void responseChannel(QString response);
     void responseLimitStatus(QString response);
     void responseNumSteps(QString response);
 
-    const qreal travelRange;
+    const int travelRange;
 
     uint currentAxis;
     uint currentChannel;
     
     bool calibrating;
+    
     uint stepRange[AGILIS_MIRRORS_N_CHANNELS*2];
     bool axisLimitSwitches[AGILIS_MIRRORS_N_CHANNELS*2];
-    uint axisStatus[AGILIS_MIRRORS_N_CHANNELS*2];
+    int axisPos[AGILIS_MIRRORS_N_CHANNELS*2];
     
-    QString command;
     int limitSign;
+    
+    QString nextCalibrationCommand;
+    
+    bool moving;
 };
 
 #endif // AGILIS_MIRRORS_H

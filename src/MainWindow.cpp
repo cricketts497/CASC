@@ -14,7 +14,10 @@ agilentTV301Names({"TurboIRTop", "TurboIRBottom", "TurboDP"}),
 agilentTV301StatusWindows({"IRTop:Status", "IRTop:Error", "IRTop:Temperature", "IRTop:Drive", "IRBottom:Status", "IRBottom:Error", "IRBottom:Temperature", "IRBottom:Drive", "DP:Status", "DP:Error", "DP:Temperature", "DP:Drive"}),
 laseLockStatusWindows({"LockedA", "LockedB", "SearchA", "SearchB", "InClipA", "InClipB", "HoldA", "HoldB"}),
 FC0StatusWindows({"State"}),
-FC0CommandWindows({"StateCommanded"})
+FC0CommandWindows({"StateCommanded"}),
+agilisMirrorsStatusWindows({"Position1", "Position2", "Position3", "Position4", "Position5", "Position6", "Position7", "Position8"}),
+agilisMirrorsCommandWindows({}),
+agilisMirrorsUrgentCommandWindows({"StopCommanded", "Jog1", "Jog2", "Jog3", "Jog4", "Jog5", "Jog6", "Jog7", "Jog8"})
 {
 	messages.setString(&messages_string);
 
@@ -26,7 +29,7 @@ FC0CommandWindows({"StateCommanded"})
 	
 	setCentralWidget(centralGraph);
 	
-	setWindowTitle("CASC v4.5");
+	setWindowTitle("CASC v4.6");
     setWindowIcon(QIcon("./resources/casc_logo.png"));
 
     connect(config, SIGNAL(config_message(QString)), this, SLOT(keepMessage(QString)));
@@ -117,6 +120,9 @@ void MainWindow::createDevicesBar()
     // FC0DeviceButton = new EpicsDeviceButton("FC0Servo", FC0StatusWindows, "Start the FC0 servo device", "Stop the FC0 servo device", "FC0 FAIL", config, devicesBar, FC0CommandWindows);
     // connect(FC0DeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startFC0Device(bool)));
     
+    agilisMirrorsDeviceButton = new EpicsDeviceButton("AgilisMirrors", agilisMirrorsStatusWindows, "Start the Newport Agilis Remote control mirrors", "Stop the Newport Agilis remote mirrors", "AGILIS MIRRORS FAIL", config, devicesBar, agilisMirrorsCommandWindows, agilisMirrorsUrgentCommandWindows);
+    connect(agilisMirrorsDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startAgilisMirrorsDevice(bool)));
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
@@ -124,6 +130,7 @@ void MainWindow::createDevicesBar()
     devicesBar->addWidget(agilentTV301DeviceButton);
     devicesBar->addWidget(laseLockDeviceButton);
     // devicesBar->addWidget(FC0DeviceButton);
+    devicesBar->addWidget(agilisMirrorsDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -158,6 +165,7 @@ void MainWindow::toggleMessage()
         connect(nxdsPumpDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(agilentTV301DeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(laseLockDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
+        connect(agilisMirrorsDeviceButton, SIGNAL(buttonMessage(QString)), messageWindow, SLOT(addMessage(QString)));
         
         connect(heinzinger20kDeviceButton, SIGNAL(widgetCommand(QString)), messageWindow, SLOT(addMessage(QString)));
         connect(heinzinger30kDeviceButton, SIGNAL(widgetCommand(QString)), messageWindow, SLOT(addMessage(QString)));
@@ -467,14 +475,33 @@ void MainWindow::startFC0Device(bool start)
     }
 }
 
+void MainWindow::startAgilisMirrorsDevice(bool start)
+{
+    if(!start && !agilisMirrorsDeviceThread.isRunning()){
+        agilisMirrorsDeviceButton->deviceHasStopped();
+        return;
+    }else if(!start || !config->deviceLocal(QString("AgilisMirrors"))){
+        return;
+    }
+    
+    AgilisMirrors * agilisMirrorsDevice = new AgilisMirrors(QString("AgilisMirrors"), config);
+    setupDevice(agilisMirrorsDevice, agilisMirrorsDeviceButton, &agilisMirrorsDeviceThread);
+    
+    if(!agilisMirrorsDevice->getDeviceFailed()){
+        agilisMirrorsDeviceButton->deviceHasStarted();
+    }     
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::setupDevice(CascDevice * device, EpicsDeviceButton * button, QThread * thread)
 {
     //////
     connect(button, SIGNAL(widgetCommand(QString)), device, SLOT(receiveWidgetCommand(QString)));
+    connect(button, SIGNAL(urgentWidgetCommand(QString)), device, SLOT(receiveUrgentWidgetCommand(QString)));
     //////
     connect(device, SIGNAL(device_status(QString)), button, SLOT(device_status(QString)));
+    
 	connect(device, SIGNAL(device_fail()), button, SLOT(setFail()));
 	connect(device, SIGNAL(device_message(QString)), this, SLOT(keepMessage(QString)));
 

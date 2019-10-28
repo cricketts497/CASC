@@ -153,6 +153,10 @@ void CascDevice::receiveWidgetCommand(QString command)
     emit newWidgetCommand(command);
 }
 
+void CascDevice::receiveUrgentWidgetCommand(QString command)
+{
+    emit newUrgentWidgetCommand(command);
+}
 
 
 

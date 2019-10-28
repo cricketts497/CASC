@@ -8,7 +8,7 @@ pvdb["AgilisMirrors:SET"] = {'type' : 'enum', 'enums':['OFF', 'ON']}
 pvdb["AgilisMirrors:IS"] = {'type': 'enum', 'enums':['OFF', 'ON', 'FAIL'], 'states':[Severity.NO_ALARM, Severity.NO_ALARM, Severity.MINOR_ALARM]}
         
 pvdb["AgilisMirrors:StopCommanded"] = {'type':'enum', 'enums':['OK', 'Stop']}
-pvdb["AgilisMirrors:CalibrateCommanded"] = {'type':'int'}
+# pvdb["AgilisMirrors:CalibrateCommanded"] = {'type':'int'}
 for axis in range(1,9):
     pvdb["AgilisMirrors:Position{}".format(axis)] = {'type':'int'}
     pvdb["AgilisMirrors:Jog{}".format(axis)] = {'type':'int'}

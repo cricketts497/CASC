@@ -9,12 +9,13 @@
 
 const int MAX_N_STATUS_LABELS = 20;
 const int MAX_N_COMMAND_LABELS = 3;
+const int MAX_N_URGENT_COMMAND_LABELS = 9;
 
 class EpicsDeviceButton : public QWidget
 {
     Q_OBJECT
 public:
-    EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString failTip, CascConfig * config, QWidget * parent = nullptr, QStringList commandWindows = {});
+    EpicsDeviceButton(QString deviceName, QStringList statusWindows, QString start_tip, QString stop_tip, QString failTip, CascConfig * config, QWidget * parent = nullptr, QStringList commandWindows = {}, QStringList urgentCommandWindows = {});
     
 public slots:
     void deviceHasStarted();
@@ -26,6 +27,8 @@ public slots:
     
 signals:
     void toggle_device(bool on);
+    
+    void urgentWidgetCommand(QString command);
     void widgetCommand(QString command);
     
     void buttonMessage(QString message);
@@ -36,6 +39,7 @@ private slots:
     void setButtonColour();
     
     void emitNewCommand();
+    void emitNewUrgentCommand();
     
     void setpointTimeoutMessage();
     
@@ -50,7 +54,9 @@ private:
     QStringList compoundNames;
     
     const QStringList commandWindows;
+    const QStringList urgentCommandWindows;
     QStringList commandList;
+    QStringList urgentCommandList;
     
     const QColor offColour;
 	const QColor onColour;
@@ -65,6 +71,7 @@ private:
 
     QELineEdit * statusLabels[MAX_N_STATUS_LABELS];
     QELineEdit * commandLabels[MAX_N_COMMAND_LABELS];
+    QELineEdit * urgentCommandLabels[MAX_N_URGENT_COMMAND_LABELS];
 };
 
 #endif // EPICS_DEVICE_BUTTON
