@@ -34,15 +34,15 @@ private:
     uint currentAxis;
     uint currentChannel;
     
-    bool calibrating;
+    // bool calibrating;
     
-    uint stepRange[AGILIS_MIRRORS_N_CHANNELS*2];
-    bool axisLimitSwitches[AGILIS_MIRRORS_N_CHANNELS*2];
+    // uint stepRange[AGILIS_MIRRORS_N_CHANNELS*2];
+    // bool axisLimitSwitches[AGILIS_MIRRORS_N_CHANNELS*2];
     int axisPos[AGILIS_MIRRORS_N_CHANNELS*2];
     
     int limitSign;
     
-    QString nextCalibrationCommand;
+    // QString nextCalibrationCommand;
     
     bool moving;
 };

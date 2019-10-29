@@ -5,7 +5,7 @@ SerialDevice(deviceName, config, parent),
 travelRange(14400),
 currentAxis(1),
 currentChannel(1),
-calibrating(false),
+// calibrating(false),
 limitSign(0),
 moving(false)
 {
@@ -19,7 +19,7 @@ moving(false)
 	setStopBits(1);
 	setFlowControl(1);//NoFlowControl
     
-    setSerialTimeout(40);
+    setSerialTimeout(70);
     setSerialResponseWait(5);
     
     //response from device
@@ -34,8 +34,8 @@ moving(false)
     //assumes axes are not at limits initially
     QString status = "";
     for(int i=0; i<AGILIS_MIRRORS_N_CHANNELS*2; i++){
-        axisLimitSwitches[i] = false;
-        stepRange[i] = 0;
+        // axisLimitSwitches[i] = false;
+        // stepRange[i] = 0;
         axisPos[i] = 0;
         if(i!=AGILIS_MIRRORS_N_CHANNELS*2-1){
             status.append(QString("%1_").arg(axisPos[i]));
@@ -208,13 +208,13 @@ void AgilisMirrors::mirrorTwoWordCommand(QStringList command_list)
         if(value == 0 || value > 2){
             return;
         }
-        if((calibrating && axisLimitSwitches[channelAxis]) || !calibrating){
-            if(writeCommand(QString("%1TP?\r\n").arg(value).toUtf8(), true)){
-                currentAxis = value;
-            }
-        }else{
-            return;
+        // if((calibrating && axisLimitSwitches[channelAxis]) || !calibrating){
+        if(writeCommand(QString("%1TP?\r\n").arg(value).toUtf8(), true)){
+            currentAxis = value;
         }
+        // }else{
+            // return;
+        // }
     }else if(command_list.first() == QString("SETCHANNEL")){
         //check channel
         if(value == 0 || value > 4){
@@ -229,13 +229,13 @@ void AgilisMirrors::mirrorTwoWordCommand(QStringList command_list)
             return;
         }
         //If calibrating, only set the zero point once we have reached the extreme
-        if((calibrating && axisLimitSwitches[channelAxis]) || !calibrating){
-            if(writeCommand(QString("%1ZP\r\n").arg(value).toUtf8(), false)){
-                currentAxis = value;
-            }
-        }else{
-            return;
+        // if((calibrating && axisLimitSwitches[channelAxis]) || !calibrating){
+        if(writeCommand(QString("%1ZP\r\n").arg(value).toUtf8(), false)){
+            currentAxis = value;
         }
+        // }else{
+            // return;
+        // }
     }
     
     queueSerialCommand("QUERYERROR");
@@ -386,19 +386,19 @@ void AgilisMirrors::responseAxisStatus(QString response)
     }else{
         // uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
         
-        //keep querying the status until the mirror has stopped and is ready
-        if(calibrating && statusCode == 0){
-            queueSerialCommand(nextCalibrationCommand);
-            queueSerialCommand("QUERYSTATUS");
+        // //keep querying the status until the mirror has stopped and is ready
+        // if(calibrating && statusCode == 0){
+            // queueSerialCommand(nextCalibrationCommand);
+            // queueSerialCommand("QUERYSTATUS");
             
-            if(nextCalibrationCommand == "QUERYLIMITSTATUS" && limitSign < 0){
-                nextCalibrationCommand = QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4);
-            }else if(nextCalibrationCommand == QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4)){
-                nextCalibrationCommand = "QUERYLIMITSTATUS";
-            }
-        // }else if(statusCode != 0){
-            // queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
-        }
+            // if(nextCalibrationCommand == "QUERYLIMITSTATUS" && limitSign < 0){
+                // nextCalibrationCommand = QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4);
+            // }else if(nextCalibrationCommand == QString("MOVEPOSLIMIT_%1_%4").arg(currentAxis).arg(4)){
+                // nextCalibrationCommand = "QUERYLIMITSTATUS";
+            // }
+        // // }else if(statusCode != 0){
+            // // queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
+        // }
         
         if(statusCode != 0){
             moving = true;
@@ -437,10 +437,10 @@ void AgilisMirrors::responseNumSteps(QString response)
     }
     
     uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
-    if(conv_ok && calibrating){
-        //positive limit in terms of number of steps
-        stepRange[channelAxis] = steps;
-    }
+    // if(conv_ok && calibrating){
+        // //positive limit in terms of number of steps
+        // stepRange[channelAxis] = steps;
+    // }
     
     if(!conv_ok){
         emit device_message(QString("AgilisMirrors: %1: Invalid response to number of steps query, %2").arg(device_name).arg(response));
@@ -481,38 +481,38 @@ void AgilisMirrors::responseLimitStatus(QString response)
         return;
     }
     
-    uint axis1 = (currentChannel-1)*2;//0,2,4,6
-    uint axis2 = currentChannel*2-1;//1,3,5,7
+    // uint axis1 = (currentChannel-1)*2;//0,2,4,6
+    // uint axis2 = currentChannel*2-1;//1,3,5,7
     
-    switch(limitStatusCode){
-        case 0:
-            axisLimitSwitches[axis1] = false;
-            axisLimitSwitches[axis2] = false;
-            break;
-        case 1:
-            axisLimitSwitches[axis1] = true;
-            axisLimitSwitches[axis2] = false;
-            break;
-        case 2:
-            axisLimitSwitches[axis1] = false;
-            axisLimitSwitches[axis2] = true;
-            break;
-        case 3:
-            axisLimitSwitches[axis1] = true;
-            axisLimitSwitches[axis2] = true;
-            break;
-    }
+    // switch(limitStatusCode){
+        // case 0:
+            // axisLimitSwitches[axis1] = false;
+            // axisLimitSwitches[axis2] = false;
+            // break;
+        // case 1:
+            // axisLimitSwitches[axis1] = true;
+            // axisLimitSwitches[axis2] = false;
+            // break;
+        // case 2:
+            // axisLimitSwitches[axis1] = false;
+            // axisLimitSwitches[axis2] = true;
+            // break;
+        // case 3:
+            // axisLimitSwitches[axis1] = true;
+            // axisLimitSwitches[axis2] = true;
+            // break;
+    // }
     
-    //When calibrating, keep querying the axis limit until at the limit
-    uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
-    if(calibrating && axisLimitSwitches[channelAxis]){
-        if(limitSign < 0){//at the negative limit while calibrating
-            queueSerialCommand(QString("ZEROSTEPCOUNTER_%1").arg(currentAxis));
-            queueSerialCommand(QString("MOVEREL_%1_%2").arg(currentAxis).arg(100));//Move 100 steps to get out of the negative limit
-            queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
-        }else{
-            queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(currentAxis));
-        }
-    }
+    // //When calibrating, keep querying the axis limit until at the limit
+    // uint channelAxis = (currentChannel-1)*2+currentAxis-1;//0 to 7
+    // if(calibrating && axisLimitSwitches[channelAxis]){
+        // if(limitSign < 0){//at the negative limit while calibrating
+            // queueSerialCommand(QString("ZEROSTEPCOUNTER_%1").arg(currentAxis));
+            // queueSerialCommand(QString("MOVEREL_%1_%2").arg(currentAxis).arg(100));//Move 100 steps to get out of the negative limit
+            // queueSerialCommand(QString("QUERYSTATUS_%1").arg(currentAxis));
+        // }else{
+            // queueSerialCommand(QString("QUERYNUMSTEPS_%1").arg(currentAxis));
+        // }
+    // }
 }
 

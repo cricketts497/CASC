@@ -4,7 +4,7 @@ from pcaspy import Driver, SimpleServer, Severity
 prefix = "CASC:"
 
 pvdb = {}
-for device in ["Laselock", "Turbo", "BL", "Heinzinger30k", "Heinzinger20k"]:#, "FC0Servo"]:
+for device in ["Laselock", "Turbo", "BL", "Heinzinger30k", "Heinzinger20k", "AgilisMirrors"]:#, "FC0Servo"]:
     pvdb["{}:SET".format(device)] = {'type' : 'enum', 'enums':['OFF', 'ON']}
     pvdb["{}:IS".format(device)] = {'type': 'enum', 'enums':['OFF', 'ON', 'FAIL'], 'states':[Severity.NO_ALARM, Severity.NO_ALARM, Severity.MINOR_ALARM]}
         
@@ -49,6 +49,12 @@ pvdb["Heinzinger20k:VoltageApplied"] = {'type':'float', 'low':-1,'high':20001, '
 pvdb["Heinzinger20k:VoltageCommanded"] = {'type':'int', 'low':-1, 'high':20001, 'unit':'V'}
 pvdb["Heinzinger20k:CurrentCommanded"] = {'type':'float', 'low':-1,'high':1, 'hihi':3, 'prec':2, 'unit':'mA'}
 pvdb["Heinzinger20k:OutputCommanded"] = {'type':'enum', 'enums':['OutputOff','OutputOn']}
+
+#agilis mirrors device
+pvdb["AgilisMirrors:StopCommanded"] = {'type':'enum', 'enums':['OK', 'Stop']}
+for axis in range(1,9):
+    pvdb["AgilisMirrors:Position{}".format(axis)] = {'type':'int'}
+    pvdb["AgilisMirrors:Jog{}".format(axis)] = {'type':'int'}
 
 #FC0 Servo device
 # pvdb["FC0Servo:StateCommanded"] = {'type':'enum', 'enums':['Out', 'In']}
