@@ -36,6 +36,7 @@ protected:
     void setFlowControl(int type);
     
     void setSerialTimeout(int timeout);
+    void setSerialWaitAfterWriteTimeout(int timeout);
     void setSerialResponseWait(int timeout);
     
     const int serial_timeout;
@@ -59,6 +60,7 @@ private:
     QSerialPort * serial_port = nullptr;
     
     QTimer * serial_timer = nullptr;
+    QTimer * waitAfterWriteTimer = nullptr;
     
     int serial_response_wait;
     

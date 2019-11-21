@@ -9,6 +9,7 @@ serial_response_wait(300),
 noResponseMessage(QByteArray("NORESP")),
 serial_port(new QSerialPort(this)),
 serial_timer(new QTimer(this)),
+waitAfterWriteTimer(new QTimer(this)),
 commandInProgress(false),
 missing_serial_response_count(2),
 missing_serial_response_limit(3)//failure if miss three responses in a row
@@ -22,6 +23,9 @@ missing_serial_response_limit(3)//failure if miss three responses in a row
     //setup the timeout timer for the serial communication
 	serial_timer->setSingleShot(true);
 	serial_timer->setInterval(serial_timeout);
+    
+    waitAfterWriteTimer->setSingleShot(true);
+    waitAfterWriteTimer->setInterval(serial_timeout);
 	
     //error handling
 	connect(serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialError()));
@@ -91,6 +95,15 @@ void SerialDevice::setSerialTimeout(int timeout)
     }
     
     serial_timer->setInterval(timeout);
+}
+
+void SerialDevice::setSerialWaitAfterWriteTimeout(int timeout)
+{
+    if(timeout <= 0){
+        return;
+    }
+    
+    waitAfterWriteTimer->setInterval(timeout);
 }
 
 void SerialDevice::setSerialResponseWait(int timeout)
