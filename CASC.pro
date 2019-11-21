@@ -30,6 +30,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 RC_ICONS = CASCIcon.ico
 
+
 # Input
 HEADERS += include/CascConfig.h \
            include/CascDevice.h \
@@ -55,8 +56,9 @@ HEADERS += include/CascConfig.h \
            include/FC0Servo.h\
            include/FC0ServoWindow.h\
            include/AgilisMirrorsWindow.h\
-           include/AgilisMirrors.h
-					 
+           include/AgilisMirrors.h\
+           include/ThorlabsPowerMeters.h
+           
 SOURCES += src/CascConfig.cpp \
            src/CascDevice.cpp \
 		   src/CascWidget.cpp \
@@ -82,9 +84,12 @@ SOURCES += src/CascConfig.cpp \
            src/FC0Servo.cpp\
            src/FC0ServoWindow.cpp\
            src/AgilisMirrorsWindow.cpp\
-           src/AgilisMirrors.cpp
+           src/AgilisMirrors.cpp\
+           src/ThorlabsPowerMeters.cpp
 					
 INCLUDEPATH += $$(QE_FRAMEWORK)/include
+INCLUDEPATH += "C:/Program Files/IVI Foundation/VISA/Win64/Include"
 
 LIBS += -L$$(EPICS_BASE)/lib/$$(EPICS_HOST_ARCH) -lca -lCom
 LIBS += -L$$(QE_FRAMEWORK)/lib/$$(EPICS_HOST_ARCH) -lQEFramework
+LIBS += "-LC:\Program Files (x86)\IVI Foundation\VISA\WinNT\lib\msc" -lTLPM_32

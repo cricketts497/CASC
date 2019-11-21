@@ -17,7 +17,8 @@ FC0StatusWindows({"State"}),
 FC0CommandWindows({"StateCommanded"}),
 agilisMirrorsStatusWindows({"Position1", "Position2", "Position3", "Position4", "Position5", "Position6", "Position7", "Position8"}),
 agilisMirrorsCommandWindows({}),
-agilisMirrorsUrgentCommandWindows({"StopCommanded", "Jog1", "Jog2", "Jog3", "Jog4", "Jog5", "Jog6", "Jog7", "Jog8"})
+agilisMirrorsUrgentCommandWindows({"StopCommanded", "Jog1", "Jog2", "Jog3", "Jog4", "Jog5", "Jog6", "Jog7", "Jog8"}),
+powerMeterStatusWindows({})
 {
 	messages.setString(&messages_string);
 
@@ -123,6 +124,9 @@ void MainWindow::createDevicesBar()
     agilisMirrorsDeviceButton = new EpicsDeviceButton("AgilisMirrors", agilisMirrorsStatusWindows, "Start the Newport Agilis Remote control mirrors", "Stop the Newport Agilis remote mirrors", "AGILIS MIRRORS FAIL", config, devicesBar, agilisMirrorsCommandWindows, agilisMirrorsUrgentCommandWindows);
     connect(agilisMirrorsDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startAgilisMirrorsDevice(bool)));
     
+    powerMeterDeviceButton = new EpicsDeviceButton("PowerMeters", powerMeterStatusWindows, "Start the Thorlabs power meter control and monitoring", "Stop the Thorlabs power meters", "THORLABS POWER METER FAIL", config, devicesBar);
+    connect(powerMeterDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startPowerMeterDevice(bool)));
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(heinzinger30kDeviceButton);
 	devicesBar->addWidget(heinzinger20kDeviceButton);
@@ -131,6 +135,7 @@ void MainWindow::createDevicesBar()
     devicesBar->addWidget(laseLockDeviceButton);
     // devicesBar->addWidget(FC0DeviceButton);
     devicesBar->addWidget(agilisMirrorsDeviceButton);
+    devicesBar->addWidget(powerMeterDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -490,6 +495,23 @@ void MainWindow::startAgilisMirrorsDevice(bool start)
     if(!agilisMirrorsDevice->getDeviceFailed()){
         agilisMirrorsDeviceButton->deviceHasStarted();
     }     
+}
+
+void MainWindow::startPowerMeterDevice(bool start)
+{
+    if(!start && !powerMeterDeviceThread.isRunning()){
+        powerMeterDeviceButton->deviceHasStopped();
+        return;
+    }else if(!start || !config->deviceLocal(QString("PowerMeters"))){
+        return;
+    }
+    
+    ThorlabsPowerMeters * powerMeterDevice = new ThorlabsPowerMeters(QString("PowerMeters"));
+    setupDevice(powerMeterDevice, powerMeterDeviceButton, &powerMeterDeviceThread);
+    
+    if(!powerMeterDevice->getDeviceFailed()){
+        powerMeterDeviceButton->deviceHasStarted();
+    }       
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

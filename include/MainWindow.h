@@ -23,6 +23,7 @@
 #include "include/FC0ServoWindow.h"
 #include "include/AgilisMirrorsWindow.h"
 #include "include/AgilisMirrors.h"
+#include "include/ThorlabsPowerMeters.h"
 
 class MainWindow: public QMainWindow
 {
@@ -58,6 +59,7 @@ private slots:
     void startLaseLockDevice(bool start);
     void startFC0Device(bool start);
     void startAgilisMirrorsDevice(bool start);
+    void startPowerMeterDevice(bool start);
     
     
 signals:
@@ -159,6 +161,10 @@ private:
     const QStringList agilisMirrorsCommandWindows;
     const QStringList agilisMirrorsUrgentCommandWindows;
     
+    EpicsDeviceButton * powerMeterDeviceButton;
+    QThread powerMeterDeviceThread;
+    const QStringList powerMeterStatusWindows;
+        
     // EpicsDeviceButton * testDeviceButton;
 };
 
