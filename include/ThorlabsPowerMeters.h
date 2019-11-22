@@ -11,8 +11,16 @@ class ThorlabsPowerMeters : public CascDevice
 public:
     ThorlabsPowerMeters(QString deviceName, QObject * parent=nullptr);
 
+public slots:
+    void stop_device();
+
 private:
-    uint nDevices;
+    bool queryStatus(ViStatus status);
+
+    ViUInt32 nDevices;
+    
+    QList<ViSession> sessions;
+    
 
 };
 

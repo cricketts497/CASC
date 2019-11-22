@@ -18,7 +18,7 @@ FC0CommandWindows({"StateCommanded"}),
 agilisMirrorsStatusWindows({"Position1", "Position2", "Position3", "Position4", "Position5", "Position6", "Position7", "Position8"}),
 agilisMirrorsCommandWindows({}),
 agilisMirrorsUrgentCommandWindows({"StopCommanded", "Jog1", "Jog2", "Jog3", "Jog4", "Jog5", "Jog6", "Jog7", "Jog8"}),
-powerMeterStatusWindows({})
+powerMeterStatusWindows({"device", "device2"})
 {
 	messages.setString(&messages_string);
 
@@ -124,8 +124,8 @@ void MainWindow::createDevicesBar()
     agilisMirrorsDeviceButton = new EpicsDeviceButton("AgilisMirrors", agilisMirrorsStatusWindows, "Start the Newport Agilis Remote control mirrors", "Stop the Newport Agilis remote mirrors", "AGILIS MIRRORS FAIL", config, devicesBar, agilisMirrorsCommandWindows, agilisMirrorsUrgentCommandWindows);
     connect(agilisMirrorsDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startAgilisMirrorsDevice(bool)));
     
-    powerMeterDeviceButton = new EpicsDeviceButton("PowerMeters", powerMeterStatusWindows, "Start the Thorlabs power meter control and monitoring", "Stop the Thorlabs power meters", "THORLABS POWER METER FAIL", config, devicesBar);
-    connect(powerMeterDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startPowerMeterDevice(bool)));
+    // powerMeterDeviceButton = new EpicsDeviceButton("PowerMeters", powerMeterStatusWindows, "Start the Thorlabs power meter control and monitoring", "Stop the Thorlabs power meters", "THORLABS POWER METER FAIL", config, devicesBar);
+    // connect(powerMeterDeviceButton, SIGNAL(toggle_device(bool)), this, SLOT(startPowerMeterDevice(bool)));
     
     //////////////////////////////////////////////////////////////////////////////////////////////
 	devicesBar->addWidget(heinzinger30kDeviceButton);
@@ -135,7 +135,7 @@ void MainWindow::createDevicesBar()
     devicesBar->addWidget(laseLockDeviceButton);
     // devicesBar->addWidget(FC0DeviceButton);
     devicesBar->addWidget(agilisMirrorsDeviceButton);
-    devicesBar->addWidget(powerMeterDeviceButton);
+    // devicesBar->addWidget(powerMeterDeviceButton);
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 	addToolBar(Qt::LeftToolBarArea, devicesBar);
@@ -511,7 +511,7 @@ void MainWindow::startPowerMeterDevice(bool start)
     
     if(!powerMeterDevice->getDeviceFailed()){
         powerMeterDeviceButton->deviceHasStarted();
-    }       
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -533,11 +533,15 @@ void MainWindow::setupDevice(CascDevice * device, EpicsDeviceButton * button, QT
 	//independent thread for each device
 	device->moveToThread(thread);
 	connect(thread, SIGNAL(finished()), device, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), button, SLOT(deviceHasStopped()));
 	thread->start();
 	connect(device, SIGNAL(stopped()), thread, SLOT(quit()));
     
 	//stop the device before quitting and destroying it
 	connect(button, SIGNAL(toggle_device(bool)), device, SLOT(stop_device()));
-    connect(device, SIGNAL(stopped()), button, SLOT(deviceHasStopped()));
+    
+    // connect(device, SIGNAL(stopped()), button, SLOT(deviceHasStopped()));
+    // connect(device, SIGNAL(stopped()), device, SLOT(deleteLater()));
+    
 }
 

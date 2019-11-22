@@ -92,4 +92,9 @@ INCLUDEPATH += "C:/Program Files/IVI Foundation/VISA/Win64/Include"
 
 LIBS += -L$$(EPICS_BASE)/lib/$$(EPICS_HOST_ARCH) -lca -lCom
 LIBS += -L$$(QE_FRAMEWORK)/lib/$$(EPICS_HOST_ARCH) -lQEFramework
-LIBS += "-LC:\Program Files (x86)\IVI Foundation\VISA\WinNT\lib\msc" -lTLPM_32
+LIBS += "-LC:\Program Files\IVI Foundation\VISA\Win64\Lib_x64\msc" -lTLPM_64
+
+
+
+
+

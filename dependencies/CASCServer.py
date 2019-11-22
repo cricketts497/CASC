@@ -4,7 +4,7 @@ from pcaspy import Driver, SimpleServer, Severity
 prefix = "CASC:"
 
 pvdb = {}
-for device in ["Laselock", "Turbo", "BL", "Heinzinger30k", "Heinzinger20k", "AgilisMirrors"]:#, "FC0Servo"]:
+for device in ["Laselock", "Turbo", "BL", "Heinzinger30k", "Heinzinger20k", "AgilisMirrors", "PowerMeters"]:#, "FC0Servo"]:
     pvdb["{}:SET".format(device)] = {'type' : 'enum', 'enums':['OFF', 'ON']}
     pvdb["{}:IS".format(device)] = {'type': 'enum', 'enums':['OFF', 'ON', 'FAIL'], 'states':[Severity.NO_ALARM, Severity.NO_ALARM, Severity.MINOR_ALARM]}
         
@@ -59,6 +59,10 @@ for axis in range(1,9):
 #FC0 Servo device
 # pvdb["FC0Servo:StateCommanded"] = {'type':'enum', 'enums':['Out', 'In']}
 # pvdb["FC0Servo:State"] = {'type':'enum', 'enums':['Out', 'In', 'InvalidAngle', 'off'], 'states':[Severity.NO_ALARM,Severity.NO_ALARM,Severity.MAJOR_ALARM,Severity.NO_ALARM], 'value':3}
+
+#Thorlabs power meters device
+pvdb["PowerMeters:device"] = {'type':'int'}
+pvdb["PowerMeters:device2"] = {'type':'int'}
 
     
 class myDriver(Driver):
